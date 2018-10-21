@@ -1,0 +1,26 @@
+<component name="libraryTable">
+  <library name="SX">
+    <CLASSES>
+      <root url="file://$USER_HOME$/Downloads/SX" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="file://$USER_HOME$/Downloads/SX/javadoc" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="file://$USER_HOME$/Downloads/SX/Autofilter" />
+      <root url="file://$USER_HOME$/Downloads/SX/CSV" />
+      <root url="file://$USER_HOME$/Downloads/SX/Charts" />
+      <root url="file://$USER_HOME$/Downloads/SX/Comments" />
+      <root url="file://$USER_HOME$/Downloads/SX/ConditionalFormats" />
+      <root url="file://$USER_HOME$/Downloads/SX/DataValidation" />
+      <root url="file://$USER_HOME$/Downloads/SX/Drawing" />
+      <root url="file://$USER_HOME$/Downloads/SX/Formatting" />
+      <root url="file://$USER_HOME$/Downloads/SX/Formulas" />
+      <root url="file://$USER_HOME$/Downloads/SX/Hyperlink" />
+      <root url="file://$USER_HOME$/Downloads/SX/Images" />
+      <root url="file://$USER_HOME$/Downloads/SX/Table" />
+      <root url="file://$USER_HOME$/Downloads/SX/WorksheetManipulation" />
+    </SOURCES>
+    <jarDirectory url="file://$USER_HOME$/Downloads/SX" recursive="false" />
+  </library>
+</component>

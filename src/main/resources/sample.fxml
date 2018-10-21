@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<GridPane alignment="center" hgap="10" vgap="10" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.121" fx:controller="sample.Controller">
+    <children>
+        <!--<Button fx:id="sitesBu" mnemonicParsing="false" text="Sites" textAlignment="CENTER" GridPane.rowIndex="2" />-->
+        <!--<Button fx:id="nodesBu" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" text="NodeBs"-->
+        <!--GridPane.rowIndex="4" />-->
+        <!--<Button fx:id="thirdCarrierBu" mnemonicParsing="false" text="ThirdCarrier" GridPane.rowIndex="5" />-->
+        <!--<Button fx:id="u900Bu" contentDisplay="CENTER" mnemonicParsing="false" text="U900" textAlignment="CENTER"-->
+        <!--GridPane.rowIndex="6" />-->
+        <Button fx:id="exportBu" mnemonicParsing="false" text="Export Dashboard"
+                GridPane.rowIndex="6" />
+        <Button fx:id="load2R1DumpBu" mnemonicParsing="false" text="Load 2G RAN1 Dump" GridPane.rowIndex="0" />
+        <Button fx:id="load2R2DumpBu" mnemonicParsing="false" text="Load 2G RAN2 Dump" GridPane.rowIndex="1" />
+        <Button fx:id="load3R1DumpBu" mnemonicParsing="false" text="Load 3G RAN1 Dump" GridPane.rowIndex="2" />
+        <Button fx:id="load3R2DumpBu" mnemonicParsing="false" text="Load 3G RAN2 Dump" GridPane.rowIndex="3" />
+        <Button fx:id="load4R1DumpBu" mnemonicParsing="false" text="Load 4G RAN1 Dump" GridPane.rowIndex="4" />
+        <Button fx:id="load4R2DumpBu" mnemonicParsing="false" text="Load 4G RAN2 Dump" GridPane.rowIndex="5" />
+
+    </children>
+   <columnConstraints>
+      <ColumnConstraints />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints />
+   </rowConstraints>
+</GridPane>
