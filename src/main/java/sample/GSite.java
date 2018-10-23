@@ -7,6 +7,7 @@ public class GSite {
     private int siteNumberOfBCFs, siteNumberOfTRXs, siteNumberOfSectors, siteNumberOfCells,siteNumberOfDcsCells,siteNumberOfGsmCells,
             siteNumberOfE1s, siteNumberOfOnAirCells, siteNumberOfGTRXs;
     private Constants.gTxMode gSiteTxMode;
+    private GHardware gHardware;
 
 
     public String getSiteName() {
@@ -156,5 +157,13 @@ public class GSite {
         this.setSiteCode();
         this.setRegion();
         this.setSiteNumberOfGsmCells();
+    }
+
+    public void setGHardware(GHardware gHardware) {
+        this.gHardware=gHardware;
+    }
+
+    public GHardware getGHardware() {
+        return gHardware;
     }
 }

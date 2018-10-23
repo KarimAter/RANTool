@@ -102,48 +102,42 @@ public class Main extends Application {
 
             try {
                 Exporter.getWorkbook();
-//                export2G();
+                export2G();
                 export3G();
-//                export4G();
+                export4G();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
     }
 
-    private void export2G() throws IOException, SQLException {
+    private void export2G() throws IOException {
         System.out.println("Exporting 2G..."+calendar.getTime());
         Exporter.export2GSitesList(gSitesList, "2G Sites");
-        Exporter.export2GHardWare(gHWResultSet1, gHWResultSet2, "2G HW");
+        Exporter.exportNew2GHardWare(gSitesList, "new 2G HW");
         System.out.println("2G Dashboard is ready.."+calendar.getTime());
     }
 
-    private void export3G() throws IOException, SQLException {
+    private void export3G() throws IOException {
         System.out.println("Exporting 3G...");
 //        Exporter.exportNodeBList(nodeBList, "NodeBs");
         Exporter.export3GSitesList(uSitesList, "Sites");
         Exporter.exportCarrierList(thirdCarrierList, "3rd Carrier");
         Exporter.exportCarrierList(u900List, "U900");
-        Exporter.export3GHardWare(uHWResultSet1, uHWResultSet2, "3G HW");
         Exporter.exportNew3GHardWare(uSitesList, "new 3G HW");
         System.out.println("3G Dashboard is ready.."+calendar.getTime());
     }
 
-    private void export4G() throws IOException, SQLException {
+    private void export4G() throws IOException {
         System.out.println("Exporting 4G..."+calendar.getTime());
         Exporter.export4GSitesList(lSitesList, "LTE");
-        Exporter.export4GHardWare(lHWResultSet1, lHWResultSet2, "4G HW");
+        Exporter.exportNew4GHardWare(lSitesList, "new 4G HW");
         System.out.println("4G Dashboard is ready.."+calendar.getTime());
-
     }
 
     private void process2GDump(DatabaseConnector databaseConnector, int ran) {
         try {
             gSitesList = databaseConnector.get2GSites(gSitesList);
-            if (ran == 1)
-                gHWResultSet1 = databaseConnector.get2GHW();
-            else if (ran == 2)
-                gHWResultSet2 = databaseConnector.get2GHW();
             System.out.println(gSitesList.size());
         } catch (Exception e) {
             e.printStackTrace();
@@ -156,10 +150,6 @@ public class Main extends Application {
             uSitesList = databaseConnector.get3GSites(ran, uSitesList);
             thirdCarrierList = databaseConnector.getThirdCarrierSites(thirdCarrierList);
             u900List = databaseConnector.getU900List(u900List);
-            if (ran == 1)
-                uHWResultSet1 = databaseConnector.get3GHW();
-            else if (ran == 2)
-                uHWResultSet2 = databaseConnector.get3GHW();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -168,10 +158,7 @@ public class Main extends Application {
     private void process4GDump(DatabaseConnector databaseConnector, int ran) {
         try {
             lSitesList = databaseConnector.get4GSites(ran, lSitesList);
-            if (ran == 1)
-                lHWResultSet1 = databaseConnector.get4GHW();
-            else if (ran == 2)
-                lHWResultSet2 = databaseConnector.get4GHW();
+            System.out.println(lSitesList.size());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -340,6 +327,5 @@ public class Main extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
 
 }

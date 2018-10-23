@@ -65,7 +65,7 @@ class Exporter {
 
     static void export3GSitesList(ArrayList<USite> sitesList, String sites) throws IOException {
 
-        int numOfColumns = uSiteHeader.length;
+        int numOfColumns = 30;
         XSSFSheet sheet = wb.getSheet(sites);
         int r = 1;
         for (USite site : sitesList) {
@@ -109,6 +109,8 @@ class Exporter {
             cells.get(25).setCellValue(site.getSiteNumberOfCarriers());
             cells.get(26).setCellValue(site.isStandAloneU900());
             cells.get(27).setCellValue(site.isRfSharing());
+            cells.get(28).setCellValue(site.getSitePower());
+            cells.get(29).setCellValue(site.getSiteU900Power());
             r++;
         }
         FileOutputStream fileOut = new FileOutputStream(excelFileName);
@@ -200,6 +202,44 @@ class Exporter {
         fileOut.close();
     }
 
+    static void exportNew2GHardWare(ArrayList<GSite> sitesList, String sheetName) throws IOException {
+        int numOfColumns = 14;
+        XSSFSheet sheet = wb.getSheet(sheetName);
+        int r = 1;
+
+        for (GSite site : sitesList) {
+            ArrayList<XSSFCell> cells = new ArrayList<>();
+            XSSFRow row = sheet.createRow(r);
+            //iterating c number of columns
+            for (int i = 0; i < numOfColumns; i++) {
+                XSSFCell cell = row.createCell(i);
+                cells.add(i, cell);
+            }
+            GHardware gHardware = site.getGHardware();
+            cells.get(0).setCellValue(site.getRegion());
+            cells.get(1).setCellValue(site.getSiteName());
+            cells.get(2).setCellValue(site.getSiteCode());
+            cells.get(3).setCellValue(gHardware.ESMB);
+            cells.get(4).setCellValue(gHardware.ESMC);
+            cells.get(5).setCellValue(gHardware.FIQA);
+            cells.get(6).setCellValue(gHardware.FIQB);
+            cells.get(7).setCellValue(gHardware.FSMF);
+            cells.get(8).setCellValue(gHardware.FTIF);
+            cells.get(9).setCellValue(gHardware.FXDA);
+            cells.get(10).setCellValue(gHardware.FXDB);
+            cells.get(11).setCellValue(gHardware.FXEA);
+            cells.get(12).setCellValue(gHardware.FXEB);
+            cells.get(13).setCellValue(gHardware.FXX);
+            r++;
+        }
+
+        FileOutputStream fileOut = new FileOutputStream(excelFileName);
+        //write this workbook to an Outputstream.
+        wb.write(fileOut);
+        fileOut.flush();
+        fileOut.close();
+    }
+
     static void export3GHardWare(ResultSet hwResultSet, ResultSet hWResultSet2, String sheetName) throws SQLException, IOException {
         int numOfColumns = 7;
         XSSFSheet sheet = wb.getSheet(sheetName);
@@ -247,8 +287,9 @@ class Exporter {
         fileOut.flush();
         fileOut.close();
     }
-    static void exportNew3GHardWare(ArrayList<USite> sitesList, String sheetName) throws SQLException, IOException {
-        int numOfColumns = 21;
+
+    static void exportNew3GHardWare(ArrayList<USite> sitesList, String sheetName) throws IOException {
+        int numOfColumns = 23;
         XSSFSheet sheet = wb.getSheet(sheetName);
         int r = 1;
 
@@ -260,28 +301,30 @@ class Exporter {
                 XSSFCell cell = row.createCell(i);
                 cells.add(i, cell);
             }
-            UHardware uHardware=site.getUHardware();
-            cells.get(0).setCellValue(site.getSiteCode());
-            cells.get(1).setCellValue(uHardware.FBBA);
-            cells.get(2).setCellValue(uHardware.FRGC);
-            cells.get(3).setCellValue(uHardware.FRGD);
-            cells.get(4).setCellValue(uHardware.FRGF);
-            cells.get(5).setCellValue(uHardware.FRGL);
-            cells.get(6).setCellValue(uHardware.FRGM);
-            cells.get(7).setCellValue(uHardware.FRGP);
-            cells.get(8).setCellValue(uHardware.FRGT);
-            cells.get(9).setCellValue(uHardware.FRGU);
-            cells.get(10).setCellValue(uHardware.FRGX);
-            cells.get(11).setCellValue(uHardware.FSMB);
-            cells.get(12).setCellValue(uHardware.FSMD);
-            cells.get(13).setCellValue(uHardware.FSME);
-            cells.get(14).setCellValue(uHardware.FSMF);
-            cells.get(15).setCellValue(uHardware.FTIA);
-            cells.get(16).setCellValue(uHardware.FTIB);
-            cells.get(17).setCellValue(uHardware.FTIF);
-            cells.get(18).setCellValue(uHardware.FTPB);
-            cells.get(19).setCellValue(uHardware.FXDA);
-            cells.get(20).setCellValue(uHardware.FXDB);
+            UHardware gHardware = site.getUHardware();
+            cells.get(0).setCellValue(site.getSiteRegion());
+            cells.get(1).setCellValue(site.getSiteName());
+            cells.get(2).setCellValue(site.getSiteCode());
+            cells.get(3).setCellValue(gHardware.FBBA);
+            cells.get(4).setCellValue(gHardware.FRGC);
+            cells.get(5).setCellValue(gHardware.FRGD);
+            cells.get(6).setCellValue(gHardware.FRGF);
+            cells.get(7).setCellValue(gHardware.FRGL);
+            cells.get(8).setCellValue(gHardware.FRGM);
+            cells.get(9).setCellValue(gHardware.FRGP);
+            cells.get(10).setCellValue(gHardware.FRGT);
+            cells.get(11).setCellValue(gHardware.FRGU);
+            cells.get(12).setCellValue(gHardware.FRGX);
+            cells.get(13).setCellValue(gHardware.FSMB);
+            cells.get(14).setCellValue(gHardware.FSMD);
+            cells.get(15).setCellValue(gHardware.FSME);
+            cells.get(16).setCellValue(gHardware.FSMF);
+            cells.get(17).setCellValue(gHardware.FTIA);
+            cells.get(18).setCellValue(gHardware.FTIB);
+            cells.get(19).setCellValue(gHardware.FTIF);
+            cells.get(20).setCellValue(gHardware.FTPB);
+            cells.get(21).setCellValue(gHardware.FXDA);
+            cells.get(22).setCellValue(gHardware.FXDB);
             r++;
         }
 
@@ -435,6 +478,42 @@ class Exporter {
             cells.get(5).setCellValue(hWResultSet2.getString(4));
             r++;
         }
+        FileOutputStream fileOut = new FileOutputStream(excelFileName);
+        //write this workbook to an Outputstream.
+        wb.write(fileOut);
+        fileOut.flush();
+        fileOut.close();
+    }
+
+    static void exportNew4GHardWare(ArrayList<LSite> sitesList, String sheetName) throws IOException {
+        int numOfColumns = 12;
+        XSSFSheet sheet = wb.getSheet(sheetName);
+        int r = 1;
+
+        for (LSite site : sitesList) {
+            ArrayList<XSSFCell> cells = new ArrayList<>();
+            XSSFRow row = sheet.createRow(r);
+            //iterating c number of columns
+            for (int i = 0; i < numOfColumns; i++) {
+                XSSFCell cell = row.createCell(i);
+                cells.add(i, cell);
+            }
+            LHardware lHardware = site.getLHardware();
+            cells.get(0).setCellValue(site.getENodeBRegion());
+            cells.get(1).setCellValue(site.getENodeBName());
+            cells.get(2).setCellValue(site.getENodeBCode());
+            cells.get(3).setCellValue(Integer.valueOf(site.getENodeBId()));
+            cells.get(4).setCellValue(lHardware.FBBA);
+            cells.get(5).setCellValue(lHardware.FBBC);
+            cells.get(6).setCellValue(lHardware.FRGT);
+            cells.get(7).setCellValue(lHardware.FSMF);
+            cells.get(8).setCellValue(lHardware.FSPD);
+            cells.get(9).setCellValue(lHardware.FTIF);
+            cells.get(10).setCellValue(lHardware.FXEB);
+            cells.get(11).setCellValue(lHardware.FXED);
+            r++;
+        }
+
         FileOutputStream fileOut = new FileOutputStream(excelFileName);
         //write this workbook to an Outputstream.
         wb.write(fileOut);

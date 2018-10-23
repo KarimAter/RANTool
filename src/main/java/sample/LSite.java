@@ -3,6 +3,7 @@ package sample;
 public class LSite {
     String eNodeBName, eNodeBCode, eNodeBRegion, eNodeBId, eNodeBVersion;
     private int eNodeBNumberOfSectors, eNodeBNumberOfCells, eNodeBNumberOfOnAirCells,eNodeBBW,eNodeBMimo;
+    private LHardware lHardware;
 
     public String getENodeBName() {
         return eNodeBName;
@@ -104,5 +105,11 @@ public class LSite {
         this.setENodeBRegion();
     }
 
+    public LHardware getLHardware() {
+        return lHardware;
+    }
 
+    public void setLHardware(LHardware lHardware) {
+        this.lHardware = lHardware;
+    }
 }

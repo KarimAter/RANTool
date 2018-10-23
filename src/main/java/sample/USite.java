@@ -6,13 +6,14 @@ import java.util.ArrayList;
 
 public class USite {
 
-    private String siteName, siteCode,siteRegion, siteRncId, siteWbtsId, siteVersion;
+    private String siteName, siteCode, siteRegion, siteRncId, siteWbtsId, siteVersion;
     private int siteNumberOfNodeBs, siteNumberOfSectors, siteNumberOfCells,
             siteNumberOfCarriers, siteNumberOfE1s, siteNumberOfOnAirCells, siteNumberOfFirstCarriersCells, siteNumberOfOnAirFirstCarriersCells,
             siteNumberOfSecondCarriersCells, siteNumberOfOnAirSecondCarriersCells, siteNumberOfThirdCarriersCells, siteNumberOfOnAirThirdCarriersCells,
             siteNumberOfU900CarriersCells, siteNumberOfOnAirU900CarriersCells, siteNumberOfOffAirCells,
             siteNumberOfHSDPASet1, siteNumberOfHSDPASet2, siteNumberOfHSDPASet3, siteNumberOfHSUPASet1,
             siteNumberOfChannelElements;
+    double sitePower, siteU900Power;
     private ArrayList<NodeB> nodeBsList;
     private boolean firstCarrier;
     private boolean u900;
@@ -264,6 +265,62 @@ public class USite {
         }
     }
 
+    public double getSitePower() {
+        return sitePower;
+    }
+
+    public void setSitePower(int sitePower, int vam) {
+        int vamCoeff = 1;
+        if (vam > 0)
+            vamCoeff = 2;
+        if (sitePower == 210)
+            this.sitePower = vamCoeff * .125;
+        else if (sitePower == 240)
+            this.sitePower = vamCoeff * 0.25;
+        else if (sitePower == 400)
+            this.sitePower = vamCoeff * 10;
+        else if (sitePower == 418)
+            this.sitePower = vamCoeff * 15;
+        else if (sitePower == 430)
+            this.sitePower = vamCoeff * 20;
+        else if (sitePower == 442)
+            this.sitePower = vamCoeff * 26.65;
+        else if (sitePower == 448 || sitePower == 450)
+            this.sitePower = vamCoeff * 30;
+        else if (sitePower == 460)
+            this.sitePower = vamCoeff * 40;
+        else if (sitePower == 478)
+            this.sitePower = 60;
+        else if (sitePower == 490)
+            this.sitePower = 80;
+        else if (sitePower == 65535 || sitePower == 0)
+            this.sitePower = 0;
+    }
+
+    public double getSiteU900Power() {
+        return siteU900Power;
+    }
+
+    public void setSiteU900Power(int siteU900Power, int vam) {
+        int vamCoeff = 1;
+        if (vam > 0)
+            vamCoeff = 2;
+        if (siteU900Power == 430)
+            this.siteU900Power = vamCoeff * 20;
+        else if (siteU900Power == 442)
+            this.siteU900Power = vamCoeff * 26.65;
+        else if (siteU900Power == 448 || siteU900Power == 450)
+            this.siteU900Power = vamCoeff * 30;
+        else if (siteU900Power == 460)
+            this.siteU900Power = vamCoeff * 40;
+        else if (siteU900Power == 478)
+            this.siteU900Power = 60;
+        else if (siteU900Power == 490)
+            this.siteU900Power = 80;
+        else if (siteU900Power == 65535 || siteU900Power == 0)
+            this.siteU900Power = 0;
+    }
+
     public int getSiteNumberOfCarriers() {
         return siteNumberOfCarriers;
     }
@@ -284,26 +341,43 @@ public class USite {
     private void setRegion() {
         if (siteCode != null) {
             try {
-                String region = siteCode.substring(siteCode.length()-2);
+                String region = siteCode.substring(siteCode.length() - 2);
                 if (region.equalsIgnoreCase("UP") || region.equalsIgnoreCase("SI") || region.equalsIgnoreCase("RE")
                         || region.equalsIgnoreCase("DE") || region.equalsIgnoreCase("AL"))
                     this.siteRegion = region;
                 else {
-                    switch (this.siteRncId){
-                        case "30": case "22": case "38": case "48":
+                    switch (this.siteRncId) {
+                        case "30":
+                        case "22":
+                        case "38":
+                        case "48":
                             this.siteRegion = "AL";
-                        case "36": case "54": case "28": case "46": case "52": case "44": case "24": case "4": case "56":
-                            this.siteRegion="DE";
-                        case "26": case"18":
-                            this.siteRegion="RE";
-                        case "14": case "34": case "50": case "58": case"60": case"62":
-                            this.siteRegion="UP";
+                        case "36":
+                        case "54":
+                        case "28":
+                        case "46":
+                        case "52":
+                        case "44":
+                        case "24":
+                        case "4":
+                        case "56":
+                            this.siteRegion = "DE";
+                        case "26":
+                        case "18":
+                            this.siteRegion = "RE";
+                        case "14":
+                        case "34":
+                        case "50":
+                        case "58":
+                        case "60":
+                        case "62":
+                            this.siteRegion = "UP";
                     }
                 }
-            }catch (StringIndexOutOfBoundsException e){
+            } catch (StringIndexOutOfBoundsException e) {
                 e.printStackTrace();
                 System.out.println(this.siteCode);
-                this.siteRegion="";
+                this.siteRegion = "";
             }
 
         }
@@ -314,8 +388,8 @@ public class USite {
     }
 
     public void setRfSharing(int cSharing) {
-        if (cSharing>0)
-        this.rfSharing = true;
+        if (cSharing > 0)
+            this.rfSharing = true;
     }
 
     public UHardware getUHardware() {
