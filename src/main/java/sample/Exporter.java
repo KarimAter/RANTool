@@ -183,7 +183,7 @@ class Exporter {
         fileOut.flush();
         fileOut.close();
     }
-    
+
     static void export3GHardWare(ArrayList<USite> sitesList, String sheetName) throws IOException {
         int numOfColumns = 25;
         XSSFSheet sheet = wb.getSheet(sheetName);
