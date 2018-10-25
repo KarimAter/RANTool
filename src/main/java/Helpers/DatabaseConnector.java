@@ -1,6 +1,7 @@
 package Helpers;
 
 import sample.*;
+import sample.GSite.GHardware;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -102,7 +103,7 @@ public class DatabaseConnector {
             site.setSiteNumberOfE1s(gResultSet.getInt(8));
             site.setSiteNumberOfGTRXs(gResultSet.getInt(9));
             site.setSiteNumberOfDcsCells(gResultSet.getInt(10));
-            GHardware gHardware = new GHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
+            GSite.GHardware gHardware = new GSite.GHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
                     hwResultSet.getInt(5), hwResultSet.getInt(6), hwResultSet.getInt(7), hwResultSet.getInt(8),
                     hwResultSet.getInt(9), hwResultSet.getInt(10), hwResultSet.getInt(11), hwResultSet.getInt(12));
             site.setGHardware(gHardware);
@@ -316,7 +317,7 @@ public class DatabaseConnector {
             site.setSiteName(uResultSet.getString(28));
             site.setSitePower(uResultSet.getInt(29),uResultSet.getInt(31));
             site.setSiteU900Power(uResultSet.getInt(30),uResultSet.getInt(32));
-            UHardware uHardware = new UHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
+             USite.UHardware uHardware = new USite.UHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
                     hwResultSet.getInt(5), hwResultSet.getInt(6), hwResultSet.getInt(7), hwResultSet.getInt(8),
                     hwResultSet.getInt(9), hwResultSet.getInt(10), hwResultSet.getInt(11),
                     hwResultSet.getInt(12), hwResultSet.getInt(13), hwResultSet.getInt(14),
@@ -420,7 +421,7 @@ public class DatabaseConnector {
             site.setENodeBName(lResultSet.getString(5));
             site.setENodeBBW(lResultSet.getInt(6));
             site.setENodeBMimo(lResultSet.getInt(7));
-            LHardware lHardware = new LHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
+            LSite.LHardware lHardware = new LSite.LHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
                     hwResultSet.getInt(5), hwResultSet.getInt(6), hwResultSet.getInt(7), hwResultSet.getInt(8),
                     hwResultSet.getInt(9));
             site.setLHardware(lHardware);
@@ -429,24 +430,6 @@ public class DatabaseConnector {
         }
 
         return lSites;
-    }
-
-    public ResultSet get2GHW() throws SQLException {
-        Statement statement = connection.createStatement();
-        String hwQuery = "Select BSCName,siteName ,BCF_ID,unitTypeActual,serialNumber from HW ";
-        return statement.executeQuery(hwQuery);
-    }
-
-    public ResultSet get3GHW() throws SQLException {
-        Statement statement = connection.createStatement();
-        String hwQuery = "Select RNCId,SiteCode,SiteName,WBTSId,HWType,SerialNumber from HW ";
-        return statement.executeQuery(hwQuery);
-    }
-
-    public ResultSet get4GHW() throws SQLException {
-        Statement statement = connection.createStatement();
-        String hwQuery = "Select MrBTSId,siteName ,unitTypeActual,serialNumber from HW ";
-        return statement.executeQuery(hwQuery);
     }
 
     public ArrayList<USite> getThirdCarrierSites(ArrayList<USite> thirdCarrierList) throws SQLException {

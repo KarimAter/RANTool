@@ -1,13 +1,8 @@
 package sample;
 
-
-import Helpers.Utils;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.xssf.usermodel.*;
-
 import java.io.*;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 
 class Exporter {
@@ -21,10 +16,6 @@ class Exporter {
             "TX Mode", "E1s", "GTRXs"};
     static String[] lSiteHeader = {"Region", "Name", "Code", "Id", "Cells", "OnAir", "Version", "BW", "Mimo"};
     static String[] carrierHeader = {"Code", "Name", "Rnc"};
-    static String[] uHWHeader = {"RNC", "Code", "Name", "WBTSId", "HWType", "Serial"};
-    static String[] gHWHeader = {"BSC", "SiteName", "BCF", "HWType", "Serial"};
-    static String[] lHWHeader = {"MrBTSId", "SiteName", "HWTYpe", "Serial"};
-
     static String excelFileName = "C:\\Users\\Ater\\Desktop\\Dashboard.xlsx";
     static XSSFWorkbook wb;
 
@@ -153,57 +144,8 @@ class Exporter {
         System.out.println("4G Site list done..");
     }
 
-    static void export2GHardWare(ResultSet gHWResultSet, ResultSet gHWResultSet2, String sheetName) throws SQLException, IOException {
-        int numOfColumns = 7;
-        XSSFSheet sheet = wb.getSheet(sheetName);
-        int r = 1;
-        while (gHWResultSet.next()) {
-            ArrayList<XSSFCell> cells = new ArrayList<>();
-            XSSFRow row = sheet.createRow(r);
-            //iterating c number of columns
-            for (int i = 0; i < numOfColumns; i++) {
-                XSSFCell cell = row.createCell(i);
-                cells.add(i, cell);
-            }
-            String siteName = gHWResultSet.getString(2);
-            String siteCode = Utils.extractSiteCode(siteName);
-            cells.get(0).setCellValue(Utils.extractRegion(siteCode));
-            cells.get(1).setCellValue(gHWResultSet.getString(1));
-            cells.get(2).setCellValue(siteName);
-            cells.get(3).setCellValue(siteCode);
-            cells.get(4).setCellValue(Double.valueOf(gHWResultSet.getString(3)));
-            cells.get(5).setCellValue(gHWResultSet.getString(4));
-            cells.get(6).setCellValue(gHWResultSet.getString(5));
-            r++;
-        }
-        while (gHWResultSet2.next()) {
-            ArrayList<XSSFCell> cells = new ArrayList<>();
-            XSSFRow row = sheet.createRow(r);
-            //iterating c number of columns
-            for (int i = 0; i < numOfColumns; i++) {
-                XSSFCell cell = row.createCell(i);
-                cells.add(i, cell);
-            }
-            String siteName = gHWResultSet2.getString(2);
-            String siteCode = Utils.extractSiteCode(siteName);
-            cells.get(0).setCellValue(Utils.extractRegion(siteCode));
-            cells.get(1).setCellValue(gHWResultSet2.getString(1));
-            cells.get(2).setCellValue(siteName);
-            cells.get(3).setCellValue(siteCode);
-            cells.get(4).setCellValue(Double.valueOf(gHWResultSet2.getString(3)));
-            cells.get(5).setCellValue(gHWResultSet2.getString(4));
-            cells.get(6).setCellValue(gHWResultSet2.getString(5));
-            r++;
-        }
-        FileOutputStream fileOut = new FileOutputStream(excelFileName);
-        //write this workbook to an Outputstream.
-        wb.write(fileOut);
-        fileOut.flush();
-        fileOut.close();
-    }
-
-    static void exportNew2GHardWare(ArrayList<GSite> sitesList, String sheetName) throws IOException {
-        int numOfColumns = 14;
+    static void export2GHardWare(ArrayList<GSite> sitesList, String sheetName) throws IOException {
+        int numOfColumns = 16;
         XSSFSheet sheet = wb.getSheet(sheetName);
         int r = 1;
 
@@ -215,7 +157,7 @@ class Exporter {
                 XSSFCell cell = row.createCell(i);
                 cells.add(i, cell);
             }
-            GHardware gHardware = site.getGHardware();
+            GSite.GHardware gHardware = site.getGHardware();
             cells.get(0).setCellValue(site.getRegion());
             cells.get(1).setCellValue(site.getSiteName());
             cells.get(2).setCellValue(site.getSiteCode());
@@ -230,6 +172,8 @@ class Exporter {
             cells.get(11).setCellValue(gHardware.FXEA);
             cells.get(12).setCellValue(gHardware.FXEB);
             cells.get(13).setCellValue(gHardware.FXX);
+            cells.get(14).setCellValue(gHardware.rfString);
+            cells.get(15).setCellValue(gHardware.smString);
             r++;
         }
 
@@ -239,57 +183,9 @@ class Exporter {
         fileOut.flush();
         fileOut.close();
     }
-
-    static void export3GHardWare(ResultSet hwResultSet, ResultSet hWResultSet2, String sheetName) throws SQLException, IOException {
-        int numOfColumns = 7;
-        XSSFSheet sheet = wb.getSheet(sheetName);
-        int r = 1;
-        while (hwResultSet.next()) {
-            ArrayList<XSSFCell> cells = new ArrayList<>();
-            XSSFRow row = sheet.createRow(r);
-            //iterating c number of columns
-            for (int i = 0; i < numOfColumns; i++) {
-                XSSFCell cell = row.createCell(i);
-                cells.add(i, cell);
-            }
-            String siteCode = hwResultSet.getString(2);
-            cells.get(0).setCellValue(Utils.extractRegion(siteCode));
-            cells.get(1).setCellValue(Double.valueOf(hwResultSet.getString(1)));
-            cells.get(2).setCellValue(siteCode);
-            cells.get(3).setCellValue(hwResultSet.getString(3));
-            cells.get(4).setCellValue(Double.valueOf(hwResultSet.getString(4)));
-            cells.get(5).setCellValue(hwResultSet.getString(5));
-            cells.get(6).setCellValue(hwResultSet.getString(6));
-            r++;
-        }
-
-        while (hWResultSet2.next()) {
-            ArrayList<XSSFCell> cells = new ArrayList<>();
-            XSSFRow row = sheet.createRow(r);
-            //iterating c number of columns
-            for (int i = 0; i < numOfColumns; i++) {
-                XSSFCell cell = row.createCell(i);
-                cells.add(i, cell);
-            }
-            String siteCode = hWResultSet2.getString(2);
-            cells.get(0).setCellValue(Utils.extractRegion(siteCode));
-            cells.get(1).setCellValue(Double.valueOf(hWResultSet2.getString(1)));
-            cells.get(2).setCellValue(siteCode);
-            cells.get(3).setCellValue(hWResultSet2.getString(3));
-            cells.get(4).setCellValue(Double.valueOf(hWResultSet2.getString(4)));
-            cells.get(5).setCellValue(hWResultSet2.getString(5));
-            cells.get(6).setCellValue(hWResultSet2.getString(6));
-            r++;
-        }
-        FileOutputStream fileOut = new FileOutputStream(excelFileName);
-        //write this workbook to an Outputstream.
-        wb.write(fileOut);
-        fileOut.flush();
-        fileOut.close();
-    }
-
-    static void exportNew3GHardWare(ArrayList<USite> sitesList, String sheetName) throws IOException {
-        int numOfColumns = 23;
+    
+    static void export3GHardWare(ArrayList<USite> sitesList, String sheetName) throws IOException {
+        int numOfColumns = 25;
         XSSFSheet sheet = wb.getSheet(sheetName);
         int r = 1;
 
@@ -301,7 +197,7 @@ class Exporter {
                 XSSFCell cell = row.createCell(i);
                 cells.add(i, cell);
             }
-            UHardware gHardware = site.getUHardware();
+            USite.UHardware gHardware = site.getUHardware();
             cells.get(0).setCellValue(site.getSiteRegion());
             cells.get(1).setCellValue(site.getSiteName());
             cells.get(2).setCellValue(site.getSiteCode());
@@ -325,6 +221,8 @@ class Exporter {
             cells.get(20).setCellValue(gHardware.FTPB);
             cells.get(21).setCellValue(gHardware.FXDA);
             cells.get(22).setCellValue(gHardware.FXDB);
+            cells.get(23).setCellValue(gHardware.rfString);
+            cells.get(24).setCellValue(gHardware.smString);
             r++;
         }
 
@@ -437,56 +335,8 @@ class Exporter {
         fileOut.close();
     }
 
-    static void export4GHardWare(ResultSet hWResultSet1, ResultSet hWResultSet2, String sheetName) throws IOException, SQLException {
-        int numOfColumns = 6;
-        XSSFSheet sheet = wb.getSheet(sheetName);
-        int r = 1;
-        while (hWResultSet1.next()) {
-            ArrayList<XSSFCell> cells = new ArrayList<>(4);
-            XSSFRow row = sheet.createRow(r);
-            //iterating c number of columns
-            for (int i = 0; i < numOfColumns; i++) {
-                XSSFCell cell = row.createCell(i);
-                cells.add(i, cell);
-            }
-            String siteName = hWResultSet1.getString(2);
-            String siteCode = Utils.extractSiteCode(siteName);
-            cells.get(0).setCellValue(Utils.extractRegion(siteCode));
-            cells.get(1).setCellValue(Double.valueOf(hWResultSet1.getString(1)));
-            cells.get(2).setCellValue(siteName);
-            cells.get(3).setCellValue(siteCode);
-            cells.get(4).setCellValue(hWResultSet1.getString(3));
-            cells.get(5).setCellValue(hWResultSet1.getString(4));
-            r++;
-        }
-
-        while (hWResultSet2.next()) {
-            ArrayList<XSSFCell> cells = new ArrayList<>(4);
-            XSSFRow row = sheet.createRow(r);
-            //iterating c number of columns
-            for (int i = 0; i < numOfColumns; i++) {
-                XSSFCell cell = row.createCell(i);
-                cells.add(i, cell);
-            }
-            String siteName = hWResultSet2.getString(2);
-            String siteCode = Utils.extractSiteCode(siteName);
-            cells.get(0).setCellValue(Utils.extractRegion(siteCode));
-            cells.get(1).setCellValue(Double.valueOf(hWResultSet2.getString(1)));
-            cells.get(2).setCellValue(siteName);
-            cells.get(3).setCellValue(siteCode);
-            cells.get(4).setCellValue(hWResultSet2.getString(3));
-            cells.get(5).setCellValue(hWResultSet2.getString(4));
-            r++;
-        }
-        FileOutputStream fileOut = new FileOutputStream(excelFileName);
-        //write this workbook to an Outputstream.
-        wb.write(fileOut);
-        fileOut.flush();
-        fileOut.close();
-    }
-
-    static void exportNew4GHardWare(ArrayList<LSite> sitesList, String sheetName) throws IOException {
-        int numOfColumns = 12;
+    static void export4GHardWare(ArrayList<LSite> sitesList, String sheetName) throws IOException {
+        int numOfColumns = 14;
         XSSFSheet sheet = wb.getSheet(sheetName);
         int r = 1;
 
@@ -498,7 +348,7 @@ class Exporter {
                 XSSFCell cell = row.createCell(i);
                 cells.add(i, cell);
             }
-            LHardware lHardware = site.getLHardware();
+            LSite.LHardware lHardware = site.getLHardware();
             cells.get(0).setCellValue(site.getENodeBRegion());
             cells.get(1).setCellValue(site.getENodeBName());
             cells.get(2).setCellValue(site.getENodeBCode());
@@ -511,6 +361,8 @@ class Exporter {
             cells.get(9).setCellValue(lHardware.FTIF);
             cells.get(10).setCellValue(lHardware.FXEB);
             cells.get(11).setCellValue(lHardware.FXED);
+            cells.get(12).setCellValue(lHardware.rfString);
+            cells.get(13).setCellValue(lHardware.smString);
             r++;
         }
 

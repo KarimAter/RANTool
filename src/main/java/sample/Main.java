@@ -15,8 +15,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -29,9 +27,7 @@ public class Main extends Application {
     ArrayList<GSite> gSitesList;
     ArrayList<USite> thirdCarrierList;
     ArrayList<USite> u900List;
-    ResultSet uHWResultSet1, uHWResultSet2, gHWResultSet1, gHWResultSet2,lHWResultSet1,lHWResultSet2;
     Button exportBu, load2R1DumpBu, load2R2DumpBu, load3R1DumpBu, load3R2DumpBu, load4R1DumpBu, load4R2DumpBu;
-    int gCursor, uCursor, lCursor;
     Calendar calendar;
 
     @Override
@@ -43,43 +39,36 @@ public class Main extends Application {
         primaryStage.show();
         initializeButtonsAndArrays(scene);
         calendar=Calendar.getInstance();
+        // load 2G RAN1 Dump from path from the machine
         load2R1DumpBu.setOnAction(event -> {
-
             String dump2R1Path = Utils.loadDumpFromMachine(primaryStage);
             if (dump2R1Path != null) {
                 DatabaseConnector databaseConnector = new DatabaseConnector(dump2R1Path);
                 process2GDump(databaseConnector, 1);
                 System.out.println("Loading Complete..");
             }
-
         });
         load2R2DumpBu.setOnAction(event -> {
-
             String dump2R2Path = Utils.loadDumpFromMachine(primaryStage);
             if (dump2R2Path != null) {
                 DatabaseConnector databaseConnector = new DatabaseConnector(dump2R2Path);
                 process2GDump(databaseConnector, 2);
             }
-
         });
 
         load3R1DumpBu.setOnAction(event -> {
-
             String dump3R1Path = Utils.loadDumpFromMachine(primaryStage);
             if (dump3R1Path != null) {
                 DatabaseConnector databaseConnector = new DatabaseConnector(dump3R1Path);
                 process3GDump(databaseConnector, 1);
             }
-
         });
-
         load3R2DumpBu.setOnAction(event -> {
             String dump3R2Path = Utils.loadDumpFromMachine(primaryStage);
             if (dump3R2Path != null) {
                 DatabaseConnector databaseConnector = new DatabaseConnector(dump3R2Path);
                 process3GDump(databaseConnector, 2);
             }
-
         });
 
         load4R1DumpBu.setOnAction(event -> {
@@ -98,9 +87,10 @@ public class Main extends Application {
             }
         });
 
+        // export dahboard button
         exportBu.setOnAction(event -> {
-
             try {
+                // prepare the excel file that will have the output
                 Exporter.getWorkbook();
                 export2G();
                 export3G();
@@ -114,7 +104,7 @@ public class Main extends Application {
     private void export2G() throws IOException {
         System.out.println("Exporting 2G..."+calendar.getTime());
         Exporter.export2GSitesList(gSitesList, "2G Sites");
-        Exporter.exportNew2GHardWare(gSitesList, "new 2G HW");
+        Exporter.export2GHardWare(gSitesList, "new 2G HW");
         System.out.println("2G Dashboard is ready.."+calendar.getTime());
     }
 
@@ -124,19 +114,20 @@ public class Main extends Application {
         Exporter.export3GSitesList(uSitesList, "Sites");
         Exporter.exportCarrierList(thirdCarrierList, "3rd Carrier");
         Exporter.exportCarrierList(u900List, "U900");
-        Exporter.exportNew3GHardWare(uSitesList, "new 3G HW");
+        Exporter.export3GHardWare(uSitesList, "new 3G HW");
         System.out.println("3G Dashboard is ready.."+calendar.getTime());
     }
 
     private void export4G() throws IOException {
         System.out.println("Exporting 4G..."+calendar.getTime());
         Exporter.export4GSitesList(lSitesList, "LTE");
-        Exporter.exportNew4GHardWare(lSitesList, "new 4G HW");
+        Exporter.export4GHardWare(lSitesList, "new 4G HW");
         System.out.println("4G Dashboard is ready.."+calendar.getTime());
     }
 
     private void process2GDump(DatabaseConnector databaseConnector, int ran) {
         try {
+            // get a list of 2G sites and their parameters
             gSitesList = databaseConnector.get2GSites(gSitesList);
             System.out.println(gSitesList.size());
         } catch (Exception e) {

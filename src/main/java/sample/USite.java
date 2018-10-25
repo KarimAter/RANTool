@@ -14,12 +14,14 @@ public class USite {
             siteNumberOfHSDPASet1, siteNumberOfHSDPASet2, siteNumberOfHSDPASet3, siteNumberOfHSUPASet1,
             siteNumberOfChannelElements;
     double sitePower, siteU900Power;
+    double processingSetsIdentifier, channelElementsIdentifier, carriersIdentifier, powerIdentifier;
     private ArrayList<NodeB> nodeBsList;
     private boolean firstCarrier;
     private boolean u900;
     private boolean rfSharing;
     private boolean standAloneU900;
     private UHardware uHardware;
+
 
 
     private enum onOff {ON_AIR, OFF_AIR}
@@ -404,5 +406,100 @@ public class USite {
         this.setSiteNumberOfSectors();
         this.setStandAloneU900();
         this.setRegion();
+        setIdentifiers();
+    }
+
+    private void setIdentifiers() {
+        processingSetsIdentifier = 0.01 * siteNumberOfHSDPASet1 + 0.1 * siteNumberOfHSDPASet2 + siteNumberOfHSDPASet3
+                + 10 * siteNumberOfHSUPASet1;
+        channelElementsIdentifier = siteNumberOfChannelElements;
+        carriersIdentifier = 0.01 * siteNumberOfOnAirFirstCarriersCells + 0.1 * siteNumberOfOnAirSecondCarriersCells
+                + siteNumberOfOnAirThirdCarriersCells + 10 * siteNumberOfOnAirU900CarriersCells;
+        powerIdentifier = 0.1 * sitePower + siteU900Power;
+    }
+
+    public static class UHardware {
+        int FBBA, FRGC, FRGD, FRGF, FRGL, FRGM, FRGP, FRGT, FRGU, FRGX,
+                FSMB, FSMD, FSME, FSMF, FTIA, FTIB, FTIF, FTPB, FXDA, FXDB;
+        double rFModuleIdentifier, systemModuleIdentifier, systemModuleExtentionIdentifier, transmissionModuleIdentifier;
+        String rfString, smString;
+
+        public UHardware(int FBBA, int FRGC, int FRGD, int FRGF, int FRGL, int FRGM, int FRGP, int FRGT, int FRGU, int FRGX,
+                         int FSMB, int FSMD, int FSME, int FSMF, int FTIA, int FTIB, int FTIF, int FTPB, int FXDA, int FXDB) {
+            this.FBBA = FBBA;
+            this.FRGC = FRGC;
+            this.FRGD = FRGD;
+            this.FRGF = FRGF;
+            this.FRGL = FRGL;
+            this.FRGM = FRGM;
+            this.FRGP = FRGP;
+            this.FRGT = FRGT;
+            this.FRGU = FRGU;
+            this.FRGX = FRGX;
+            this.FSMB = FSMB;
+            this.FSMD = FSMD;
+            this.FSME = FSME;
+            this.FSMF = FSMF;
+            this.FTIA = FTIA;
+            this.FTIB = FTIB;
+            this.FTIF = FTIF;
+            this.FTPB = FTPB;
+            this.FXDA = FXDA;
+            this.FXDB = FXDB;
+            setIdentifiers();
+            buildHWText();
+        }
+        private void buildHWText() {
+            getRfModuleString();
+            getSModuleString();
+        }
+
+        private void getSModuleString() {
+            smString = "";
+            if (FSMB > 0)
+                smString = FSMB + " FSMB ";
+            if (FSMD > 0)
+                smString = smString + " " + FSMD + "FSMD ";
+            if (FSME > 0)
+                smString = smString + " " + FSME + "FSME ";
+            if (FSMF > 0)
+                smString = smString + " " + FSMF + "FSMF ";
+            if (FBBA > 0)
+                smString = smString + " " + FBBA + "FBBA ";
+        }
+
+        private void getRfModuleString() {
+            rfString = "";
+            if (FRGC > 0)
+                rfString = FRGC + "FRGC ";
+            if (FRGD > 0)
+                rfString = rfString + " " + FRGD + "FRGD ";
+            if (FRGF > 0)
+                rfString = rfString + " " + FRGF + "FRGF ";
+            if (FRGL > 0)
+                rfString = rfString + " " + FRGL + "FRGL ";
+            if (FRGM > 0)
+                rfString = rfString + " " + FRGM + "FRGM ";
+            if (FRGP > 0)
+                rfString = rfString + " " + FRGP + "FRGP ";
+            if (FRGT > 0)
+                rfString = rfString + " " + FRGT + "FRGT ";
+            if (FRGU > 0)
+                rfString = rfString + " " + FRGU + "FRGU ";
+            if (FRGX > 0)
+                rfString = rfString + " " + FRGX + "FRGX ";
+            if (FXDA > 0)
+                rfString = rfString + " " + FXDA + "FXDA ";
+            if (FXDB > 0)
+                rfString = rfString + " " + FXDB + "FXDB ";
+        }
+
+        private void setIdentifiers() {
+            rFModuleIdentifier = 0.00001 * FRGC + 0.0001 * FRGD + 0.001 * FRGF + 0.01 * FRGL + 0.1 * FRGM +
+                    FRGP + 10 * FRGT + 100 * FRGU + 1000 * FRGX + 10000 * FXDA + 100000 * FXDB;
+            systemModuleIdentifier = 0.01 * FSMB + 0.1 * FSMD + FSME + 10 * FSMF;
+            systemModuleExtentionIdentifier = FBBA;
+            transmissionModuleIdentifier = 0.01 * FTIA + 0.1 * FTIB + FTIF + 10 * FTPB;
+        }
     }
 }

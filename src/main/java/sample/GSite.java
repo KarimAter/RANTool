@@ -4,11 +4,11 @@ import Helpers.Constants;
 
 public class GSite {
     private String siteName, siteCode, region, siteBSCName, siteBCFId, siteVersion;
-    private int siteNumberOfBCFs, siteNumberOfTRXs, siteNumberOfSectors, siteNumberOfCells,siteNumberOfDcsCells,siteNumberOfGsmCells,
+    private int siteNumberOfBCFs, siteNumberOfTRXs, siteNumberOfSectors, siteNumberOfCells, siteNumberOfDcsCells, siteNumberOfGsmCells,
             siteNumberOfE1s, siteNumberOfOnAirCells, siteNumberOfGTRXs;
     private Constants.gTxMode gSiteTxMode;
     private GHardware gHardware;
-
+    double trxIdentifier, gTrxIdentifier;
 
     public String getSiteName() {
         return siteName;
@@ -150,20 +150,88 @@ public class GSite {
     }
 
     public void setSiteNumberOfGsmCells() {
-        this.siteNumberOfGsmCells = siteNumberOfCells-siteNumberOfDcsCells;
+        this.siteNumberOfGsmCells = siteNumberOfCells - siteNumberOfDcsCells;
     }
 
     public void finalizeProperties() {
         this.setSiteCode();
         this.setRegion();
         this.setSiteNumberOfGsmCells();
+        setIdentifiers();
+    }
+
+    private void setIdentifiers() {
+        trxIdentifier = siteNumberOfTRXs;
+        gTrxIdentifier = siteNumberOfGTRXs;
     }
 
     public void setGHardware(GHardware gHardware) {
-        this.gHardware=gHardware;
+        this.gHardware = gHardware;
     }
 
     public GHardware getGHardware() {
         return gHardware;
     }
+
+    public static class GHardware {
+        int ESMB, ESMC, FIQA, FIQB, FSMF, FTIF, FXDA, FXDB, FXEA, FXEB, FXX;
+        double rFModuleIdentifier, systemModuleIdentifier, transmissionModuleIdentifier;
+        String rfString, smString;
+
+
+        public GHardware(int ESMB, int ESMC, int FIQA, int FIQB, int FSMF, int FTIF,
+                         int FXDA, int FXDB, int FXEA, int FXEB, int FXX) {
+            this.ESMB = ESMB;
+            this.ESMC = ESMC;
+            this.FIQA = FIQA;
+            this.FIQB = FIQB;
+            this.FSMF = FSMF;
+            this.FTIF = FTIF;
+            this.FXDA = FXDA;
+            this.FXDB = FXDB;
+            this.FXEA = FXEA;
+            this.FXEB = FXEB;
+            this.FXX = FXX;
+            setIdentifiers();
+            buildHWText();
+        }
+
+        private void buildHWText() {
+            getRfModuleString();
+            getSModuleString();
+        }
+
+        private void getSModuleString() {
+            smString = "";
+            if (ESMB > 0)
+                smString = ESMB + " ESMB ";
+            if (ESMC > 0)
+                smString = smString + " " + ESMC + "ESMC ";
+            if (FSMF > 0)
+                smString = smString + " " + FSMF + "FSMF ";
+        }
+
+        private void getRfModuleString() {
+            rfString = "";
+            if (FXDA > 0)
+                rfString = FXDA + "FXDA ";
+            if (FXDB > 0)
+                rfString = rfString + " " + FXDB + "FXDB ";
+            if (FXEA > 0)
+                rfString = rfString + " " + FXEA + "FXEA ";
+            if (FXEB > 0)
+                rfString = rfString + " " + FXEB + "FXEB ";
+            if (FXX > 0)
+                rfString = rfString + " " + FXX + "FXX ";
+        }
+
+        private void setIdentifiers() {
+            rFModuleIdentifier = 0.01 * FXDA + 0.1 * FXDB + FXEA + 10 * FXEB + 100 * FXX;
+            systemModuleIdentifier = 0.1 * ESMB + ESMC + 10 * FSMF;
+            transmissionModuleIdentifier = 0.1 * FIQA + FIQB + 10 * FTIF;
+        }
+
+
+    }
+
 }
