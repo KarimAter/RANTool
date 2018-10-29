@@ -65,27 +65,27 @@ public class DatabaseConnector {
                 "(Select name from (Select BSCId,BCFId from A_TRX group by BSCId,BCFId) as A left join (Select BSCId,BCFId,name from A_BCF group by BSCId,BCFId) as B  " +
                 "on (A.BSCId=B.BSCId and A.BCFId=B.BCFId) group by name) as SiteSet  " +
                 "left join " +
-                "(Select siteName,count(unitTypeActual) as ESMB from HW where unitTypeActual = 'ESMB' group by siteName) as  ESMBSet on (SiteSet.name=ESMBSet.siteName) " +
+                "(Select siteName,count(unitTypeActual) as ESMB from 2GHW where unitTypeActual = 'ESMB' group by siteName) as  ESMBSet on (SiteSet.name=ESMBSet.siteName) " +
                 "left join " +
-                "(Select siteName,count(unitTypeActual) as ESMC from HW where unitTypeActual = 'ESMC' group by siteName) as  ESMCSet on (SiteSet.name=ESMCSet.siteName) " +
+                "(Select siteName,count(unitTypeActual) as ESMC from 2GHW where unitTypeActual = 'ESMC' group by siteName) as  ESMCSet on (SiteSet.name=ESMCSet.siteName) " +
                 "left join " +
-                "(Select siteName,count(unitTypeActual) as FIQA from HW where unitTypeActual = 'FIQA' group by siteName) as  FIQASet on (SiteSet.name=FIQASet.siteName) " +
+                "(Select siteName,count(unitTypeActual) as FIQA from 2GHW where unitTypeActual = 'FIQA' group by siteName) as  FIQASet on (SiteSet.name=FIQASet.siteName) " +
                 "left join " +
-                "(Select siteName,count(unitTypeActual) as FIQB from HW where unitTypeActual = 'FIQB' group by siteName) as  FIQBSet on (SiteSet.name=FIQBSet.siteName) " +
+                "(Select siteName,count(unitTypeActual) as FIQB from 2GHW where unitTypeActual = 'FIQB' group by siteName) as  FIQBSet on (SiteSet.name=FIQBSet.siteName) " +
                 "left join " +
-                "(Select siteName,count(unitTypeActual) as FSMF from HW where unitTypeActual = 'FSMF' group by siteName) as  FSMFSet on (SiteSet.name=FSMFSet.siteName) " +
+                "(Select siteName,count(unitTypeActual) as FSMF from 2GHW where unitTypeActual = 'FSMF' group by siteName) as  FSMFSet on (SiteSet.name=FSMFSet.siteName) " +
                 "left join " +
-                "(Select siteName,count(unitTypeActual) as FTIF from HW where unitTypeActual = 'FTIF' group by siteName) as  FTIFSet on (SiteSet.name=FTIFSet.siteName) " +
+                "(Select siteName,count(unitTypeActual) as FTIF from 2GHW where unitTypeActual = 'FTIF' group by siteName) as  FTIFSet on (SiteSet.name=FTIFSet.siteName) " +
                 "left join " +
-                "(Select siteName,count(unitTypeActual) as FXDA from HW where unitTypeActual = 'FXDA' group by siteName) as  FXDASet on (SiteSet.name=FXDASet.siteName) " +
+                "(Select siteName,count(unitTypeActual) as FXDA from 2GHW where unitTypeActual = 'FXDA' group by siteName) as  FXDASet on (SiteSet.name=FXDASet.siteName) " +
                 "left join " +
-                "(Select siteName,count(unitTypeActual) as FXDB from HW where unitTypeActual = 'FXDB' group by siteName) as  FXDBSet on (SiteSet.name=FXDBSet.siteName) " +
+                "(Select siteName,count(unitTypeActual) as FXDB from 2GHW where unitTypeActual = 'FXDB' group by siteName) as  FXDBSet on (SiteSet.name=FXDBSet.siteName) " +
                 "left join " +
-                "(Select siteName,count(unitTypeActual) as FXEA from HW where unitTypeActual = 'FXEA' group by siteName) as  FXEASet on (SiteSet.name=FXEASet.siteName) " +
+                "(Select siteName,count(unitTypeActual) as FXEA from 2GHW where unitTypeActual = 'FXEA' group by siteName) as  FXEASet on (SiteSet.name=FXEASet.siteName) " +
                 "left join " +
-                "(Select siteName,count(unitTypeActual) as FXEB from HW where unitTypeActual = 'FXEB' group by siteName) as  FXEBSet on (SiteSet.name=FXEBSet.siteName) " +
+                "(Select siteName,count(unitTypeActual) as FXEB from 2GHW where unitTypeActual = 'FXEB' group by siteName) as  FXEBSet on (SiteSet.name=FXEBSet.siteName) " +
                 "left join " +
-                "(Select siteName,count(unitTypeActual) as FXX from HW where unitTypeActual = 'FXX' group by siteName) as  FXXSet on (SiteSet.name=FXXSet.siteName) " +
+                "(Select siteName,count(unitTypeActual) as FXX from 2GHW where unitTypeActual = 'FXX' group by siteName) as  FXXSet on (SiteSet.name=FXXSet.siteName) " +
                 ") group by name";
         ResultSet gResultSet = statement.executeQuery(gQuery);
         ResultSet hwResultSet = statement.executeQuery(gHardwareQuery);
@@ -246,45 +246,45 @@ public class DatabaseConnector {
                 " from (" +
                 "(Select BTSAdditionalInfo as Code from A_WBTS ) as SiteSet " +
                 "left join\n" +
-                "(Select SiteCode,count(HWType) as FBBA from HW where HWType = 'FBBA' group by SiteCode) as  FBBASet on (SiteSet.Code=FBBASet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FBBA from 3GHW where HWType = 'FBBA' group by SiteCode) as  FBBASet on (SiteSet.Code=FBBASet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FRGC from HW where HWType = 'FRGC' group by SiteCode) as  FRGCSet  on (SiteSet.Code=FRGCSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FRGC from 3GHW where HWType = 'FRGC' group by SiteCode) as  FRGCSet  on (SiteSet.Code=FRGCSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FRGD from HW where HWType = 'FRGD' group by SiteCode) as  FRGDSet  on (SiteSet.Code=FRGDSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FRGD from 3GHW where HWType = 'FRGD' group by SiteCode) as  FRGDSet  on (SiteSet.Code=FRGDSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FRGF from HW where HWType = 'FRGF' group by SiteCode) as  FRGFSet  on (SiteSet.Code=FRGFSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FRGF from 3GHW where HWType = 'FRGF' group by SiteCode) as  FRGFSet  on (SiteSet.Code=FRGFSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FRGL from HW where HWType = 'FRGL' group by SiteCode) as  FRGLSet  on (SiteSet.Code=FRGLSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FRGL from 3GHW where HWType = 'FRGL' group by SiteCode) as  FRGLSet  on (SiteSet.Code=FRGLSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FRGM from HW where HWType = 'FRGM' group by SiteCode) as  FRGMSet  on (SiteSet.Code=FRGMSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FRGM from 3GHW where HWType = 'FRGM' group by SiteCode) as  FRGMSet  on (SiteSet.Code=FRGMSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FRGP from HW where HWType = 'FRGP' group by SiteCode) as  FRGPSet  on (SiteSet.Code=FRGPSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FRGP from 3GHW where HWType = 'FRGP' group by SiteCode) as  FRGPSet  on (SiteSet.Code=FRGPSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FRGT from HW where HWType = 'FRGT' group by SiteCode) as  FRGTSet  on (SiteSet.Code=FRGTSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FRGT from 3GHW where HWType = 'FRGT' group by SiteCode) as  FRGTSet  on (SiteSet.Code=FRGTSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FRGU from HW where HWType = 'FRGU' group by SiteCode) as  FRGUSet  on (SiteSet.Code=FRGUSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FRGU from 3GHW where HWType = 'FRGU' group by SiteCode) as  FRGUSet  on (SiteSet.Code=FRGUSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FRGX from HW where HWType = 'FRGX' group by SiteCode) as  FRGXSet  on (SiteSet.Code=FRGXSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FRGX from 3GHW where HWType = 'FRGX' group by SiteCode) as  FRGXSet  on (SiteSet.Code=FRGXSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FSMB from HW where HWType = 'FSMB' group by SiteCode) as  FSMBSet  on (SiteSet.Code=FSMBSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FSMB from 3GHW where HWType = 'FSMB' group by SiteCode) as  FSMBSet  on (SiteSet.Code=FSMBSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FSMD from HW where HWType = 'FSMD' group by SiteCode) as  FSMDSet  on (SiteSet.Code=FSMDSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FSMD from 3GHW where HWType = 'FSMD' group by SiteCode) as  FSMDSet  on (SiteSet.Code=FSMDSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FSME from HW where HWType = 'FSME' group by SiteCode) as  FSMESet  on (SiteSet.Code=FSMESet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FSME from 3GHW where HWType = 'FSME' group by SiteCode) as  FSMESet  on (SiteSet.Code=FSMESet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FSMF from HW where HWType = 'FSMF' group by SiteCode) as  FSMFSet  on (SiteSet.Code=FSMFSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FSMF from 3GHW where HWType = 'FSMF' group by SiteCode) as  FSMFSet  on (SiteSet.Code=FSMFSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FTIA from HW where HWType = 'FTIA' group by SiteCode) as  FTIASet  on (SiteSet.Code=FTIASet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FTIA from 3GHW where HWType = 'FTIA' group by SiteCode) as  FTIASet  on (SiteSet.Code=FTIASet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FTIB from HW where HWType = 'FTIB' group by SiteCode) as  FTIBSet  on (SiteSet.Code=FTIBSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FTIB from 3GHW where HWType = 'FTIB' group by SiteCode) as  FTIBSet  on (SiteSet.Code=FTIBSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FTIF from HW where HWType = 'FTIF' group by SiteCode) as  FTIFSet  on (SiteSet.Code=FTIFSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FTIF from 3GHW where HWType = 'FTIF' group by SiteCode) as  FTIFSet  on (SiteSet.Code=FTIFSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FTPB from HW where HWType = 'FTPB' group by SiteCode) as  FTPBSet  on (SiteSet.Code=FTPBSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FTPB from 3GHW where HWType = 'FTPB' group by SiteCode) as  FTPBSet  on (SiteSet.Code=FTPBSet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FXDA from HW where HWType = 'FXDA' group by SiteCode) as  FXDASet  on (SiteSet.Code=FXDASet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FXDA from 3GHW where HWType = 'FXDA' group by SiteCode) as  FXDASet  on (SiteSet.Code=FXDASet.SiteCode) " +
                 "left join \n" +
-                "(Select SiteCode,count(HWType) as FXDB from HW where HWType = 'FXDB' group by SiteCode) as  FXDBSet  on (SiteSet.Code=FXDBSet.SiteCode) " +
+                "(Select SiteCode,count(HWType) as FXDB from 3GHW where HWType = 'FXDB' group by SiteCode) as  FXDBSet  on (SiteSet.Code=FXDBSet.SiteCode) " +
                 ") group by Code";
         ResultSet uResultSet = statement.executeQuery(uQuery);
         ResultSet hwResultSet = statement.executeQuery(hwQuery);
@@ -358,21 +358,21 @@ public class DatabaseConnector {
             lHardwareQuery="Select mrbtsId,first(FBBA),first(FBBC),first(FRGT),first(FSMF),first(FSPD),first(FTIF),first(FXEB),first(FXED) from ("+
                     "(Select mrbtsId from A_LTE_MRBTS_LNBTS_LNCEL group by mrbtsId) as SiteSet " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FBBA from HW where unitTypeActual = 'FBBA' group by mrbtsId) as FBBASet on (SiteSet.mrbtsId=FBBASet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FBBA from 4GHW where unitTypeActual = 'FBBA' group by mrbtsId) as FBBASet on (SiteSet.mrbtsId=FBBASet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FBBC from HW where unitTypeActual = 'FBBC' group by mrbtsId) as FBBCSet on (SiteSet.mrbtsId=FBBCSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FBBC from 4GHW where unitTypeActual = 'FBBC' group by mrbtsId) as FBBCSet on (SiteSet.mrbtsId=FBBCSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FRGT from HW where unitTypeActual = 'FRGT' group by mrbtsId) as FRGTSet on (SiteSet.mrbtsId=FRGTSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FRGT from 4GHW where unitTypeActual = 'FRGT' group by mrbtsId) as FRGTSet on (SiteSet.mrbtsId=FRGTSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FSMF from HW where unitTypeActual = 'FSMF' group by mrbtsId) as FSMFSet on (SiteSet.mrbtsId=FSMFSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FSMF from 4GHW where unitTypeActual = 'FSMF' group by mrbtsId) as FSMFSet on (SiteSet.mrbtsId=FSMFSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FSPD from HW where unitTypeActual = 'FSPD' group by mrbtsId) as FSPDSet on (SiteSet.mrbtsId=FSPDSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FSPD from 4GHW where unitTypeActual = 'FSPD' group by mrbtsId) as FSPDSet on (SiteSet.mrbtsId=FSPDSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FTIF from HW where unitTypeActual = 'FTIF' group by mrbtsId) as FTIFSet on (SiteSet.mrbtsId=FTIFSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FTIF from 4GHW where unitTypeActual = 'FTIF' group by mrbtsId) as FTIFSet on (SiteSet.mrbtsId=FTIFSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FXEB from HW where unitTypeActual = 'FXEB' group by mrbtsId) as FXEBSet on (SiteSet.mrbtsId=FXEBSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FXEB from 4GHW where unitTypeActual = 'FXEB' group by mrbtsId) as FXEBSet on (SiteSet.mrbtsId=FXEBSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FXED from HW where unitTypeActual = 'FXED' group by mrbtsId) as FXEDSet on (SiteSet.mrbtsId=FXEDSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FXED from 4GHW where unitTypeActual = 'FXED' group by mrbtsId) as FXEDSet on (SiteSet.mrbtsId=FXEDSet.mrbtsID) " +
                     ") group by mrbtsId ";
         } else {
             lQuery = "Select mrbtsId,sum(C),sum(O),first(V),first(N),first(BW),first(M),sum(S),sum(SO) from " +
@@ -391,21 +391,21 @@ public class DatabaseConnector {
              lHardwareQuery="Select mrbtsId,first(FBBA),first(FBBC),first(FRGT),first(FSMF),first(FSPD),first(FTIF),first(FXEB),first(FXED) from ("+
                     "(Select mrbtsId from A_LTE_LNCEL group by mrbtsId) as SiteSet " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FBBA from HW where unitTypeActual = 'FBBA' group by mrbtsId) as FBBASet on (SiteSet.mrbtsId=FBBASet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FBBA from 4GHW where unitTypeActual = 'FBBA' group by mrbtsId) as FBBASet on (SiteSet.mrbtsId=FBBASet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FBBC from HW where unitTypeActual = 'FBBC' group by mrbtsId) as FBBCSet on (SiteSet.mrbtsId=FBBCSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FBBC from 4GHW where unitTypeActual = 'FBBC' group by mrbtsId) as FBBCSet on (SiteSet.mrbtsId=FBBCSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FRGT from HW where unitTypeActual = 'FRGT' group by mrbtsId) as FRGTSet on (SiteSet.mrbtsId=FRGTSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FRGT from 4GHW where unitTypeActual = 'FRGT' group by mrbtsId) as FRGTSet on (SiteSet.mrbtsId=FRGTSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FSMF from HW where unitTypeActual = 'FSMF' group by mrbtsId) as FSMFSet on (SiteSet.mrbtsId=FSMFSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FSMF from 4GHW where unitTypeActual = 'FSMF' group by mrbtsId) as FSMFSet on (SiteSet.mrbtsId=FSMFSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FSPD from HW where unitTypeActual = 'FSPD' group by mrbtsId) as FSPDSet on (SiteSet.mrbtsId=FSPDSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FSPD from 4GHW where unitTypeActual = 'FSPD' group by mrbtsId) as FSPDSet on (SiteSet.mrbtsId=FSPDSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FTIF from HW where unitTypeActual = 'FTIF' group by mrbtsId) as FTIFSet on (SiteSet.mrbtsId=FTIFSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FTIF from 4GHW where unitTypeActual = 'FTIF' group by mrbtsId) as FTIFSet on (SiteSet.mrbtsId=FTIFSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FXEB from HW where unitTypeActual = 'FXEB' group by mrbtsId) as FXEBSet on (SiteSet.mrbtsId=FXEBSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FXEB from 4GHW where unitTypeActual = 'FXEB' group by mrbtsId) as FXEBSet on (SiteSet.mrbtsId=FXEBSet.mrbtsID) " +
                     "left join " +
-                    "(Select mrbtsId,count(unitTypeActual) as FXED from HW where unitTypeActual = 'FXED' group by mrbtsId) as FXEDSet on (SiteSet.mrbtsId=FXEDSet.mrbtsID) " +
+                    "(Select mrbtsId,count(unitTypeActual) as FXED from 4GHW where unitTypeActual = 'FXED' group by mrbtsId) as FXEDSet on (SiteSet.mrbtsId=FXEDSet.mrbtsID) " +
                     ") group by mrbtsId ";
         }
 
