@@ -15,6 +15,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -38,7 +42,17 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
         initializeButtonsAndArrays(scene);
-        calendar=Calendar.getInstance();
+        calendar = Calendar.getInstance();
+
+//        Class.forName("com.mysql.jdbc.Driver").newInstance();
+        Connection Conn = DriverManager.getConnection
+                ("jdbc:sqlite:D:/RAN Tool/test.db", "r", "s");
+        System.out.println("A new database has been created.");
+        Statement s = Conn.createStatement();
+        String sql = "create table if not exists Sites (id integer PRIMARY KEY,siteName text ,Code text)";
+        s.execute(sql);
+
+
         // load 2G RAN1 Dump from path from the machine
         load2R1DumpBu.setOnAction(event -> {
             String dump2R1Path = Utils.loadDumpFromMachine(primaryStage);
@@ -102,10 +116,10 @@ public class Main extends Application {
     }
 
     private void export2G() throws IOException {
-        System.out.println("Exporting 2G..."+calendar.getTime());
+        System.out.println("Exporting 2G..." + calendar.getTime());
         Exporter.export2GSitesList(gSitesList, "2G Sites");
         Exporter.export2GHardWare(gSitesList, "new 2G HW");
-        System.out.println("2G Dashboard is ready.."+calendar.getTime());
+        System.out.println("2G Dashboard is ready.." + calendar.getTime());
     }
 
     private void export3G() throws IOException {
@@ -115,14 +129,14 @@ public class Main extends Application {
         Exporter.exportCarrierList(thirdCarrierList, "3rd Carrier");
         Exporter.exportCarrierList(u900List, "U900");
         Exporter.export3GHardWare(uSitesList, "new 3G HW");
-        System.out.println("3G Dashboard is ready.."+calendar.getTime());
+        System.out.println("3G Dashboard is ready.." + calendar.getTime());
     }
 
     private void export4G() throws IOException {
-        System.out.println("Exporting 4G..."+calendar.getTime());
+        System.out.println("Exporting 4G..." + calendar.getTime());
         Exporter.export4GSitesList(lSitesList, "LTE");
         Exporter.export4GHardWare(lSitesList, "new 4G HW");
-        System.out.println("4G Dashboard is ready.."+calendar.getTime());
+        System.out.println("4G Dashboard is ready.." + calendar.getTime());
     }
 
     private void process2GDump(DatabaseConnector databaseConnector, int ran) {
