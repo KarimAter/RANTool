@@ -1,14 +1,16 @@
 package sample;
 
 import Helpers.Constants;
+import Helpers.Utils;
 
 public class GSite {
-    private String siteName, siteCode, region, siteBSCName, siteBCFId, siteVersion;
+    private String siteName, siteCode, region, siteBSCName, siteBSCId, siteBCFId, siteVersion, lac, rac, uniqueName;
     private int siteNumberOfBCFs, siteNumberOfTRXs, siteNumberOfSectors, siteNumberOfCells, siteNumberOfDcsCells, siteNumberOfGsmCells,
             siteNumberOfE1s, siteNumberOfOnAirCells, siteNumberOfGTRXs;
     private Constants.gTxMode gSiteTxMode;
     private GHardware gHardware;
     double trxIdentifier, gTrxIdentifier;
+    private int uniqueId;
 
     public String getSiteName() {
         return siteName;
@@ -32,6 +34,14 @@ public class GSite {
                 siteCode = siteName.substring(siteNameLength - 6);
             this.siteCode = siteCode;
         }
+    }
+
+    public String getSiteBSCId() {
+        return siteBSCId;
+    }
+
+    public void setSiteBSCId(String siteBSCId) {
+        this.siteBSCId = siteBSCId;
     }
 
     public String getSiteBSCName() {
@@ -106,6 +116,22 @@ public class GSite {
         this.siteNumberOfOnAirCells = siteNumberOfCells - (siteNumberOfOnAirCells - siteNumberOfCells) / 2;
     }
 
+    public String getLac() {
+        return lac;
+    }
+
+    public void setLac(String lac) {
+        this.lac = lac;
+    }
+
+    public String getRac() {
+        return rac;
+    }
+
+    public void setRac(String rac) {
+        this.rac = rac;
+    }
+
     public String getSiteTxMode() {
         return gSiteTxMode.toString();
     }
@@ -157,12 +183,34 @@ public class GSite {
         this.setSiteCode();
         this.setRegion();
         this.setSiteNumberOfGsmCells();
+        this.setUniqueName();
         setIdentifiers();
+    }
+
+    public double getTrxIdentifier() {
+        return trxIdentifier;
+    }
+
+    public double getgTrxIdentifier() {
+        return gTrxIdentifier;
     }
 
     private void setIdentifiers() {
         trxIdentifier = siteNumberOfTRXs;
         gTrxIdentifier = siteNumberOfGTRXs;
+    }
+
+
+    public String getUniqueName() {
+        return uniqueName;
+    }
+
+    public void setUniqueName() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("2G");
+        builder.append(siteName);
+        builder.append(siteCode);
+        this.uniqueName = builder.toString();
     }
 
     public void setGHardware(GHardware gHardware) {
@@ -176,7 +224,7 @@ public class GSite {
     public static class GHardware {
         int ESMB, ESMC, FIQA, FIQB, FSMF, FTIF, FXDA, FXDB, FXEA, FXEB, FXX;
         double rFModuleIdentifier, systemModuleIdentifier, transmissionModuleIdentifier;
-        String rfString, smString;
+        public String rfString, smString, txString;
 
 
         public GHardware(int ESMB, int ESMC, int FIQA, int FIQB, int FSMF, int FTIF,
@@ -199,6 +247,7 @@ public class GSite {
         private void buildHWText() {
             getRfModuleString();
             getSModuleString();
+            getTxModString();
         }
 
         private void getSModuleString() {
@@ -223,6 +272,28 @@ public class GSite {
                 rfString = rfString + " " + FXEB + "FXEB ";
             if (FXX > 0)
                 rfString = rfString + " " + FXX + "FXX ";
+        }
+
+        private void getTxModString() {
+            txString = "";
+            if (FIQA > 0)
+                txString = FIQA + "FIQA";
+            if (FIQB > 0)
+                txString = txString + " " + FIQB + "FIQB";
+            if (FTIF > 0)
+                txString = txString + " " + FTIF + "FTIF";
+        }
+
+        public double getrFModuleIdentifier() {
+            return rFModuleIdentifier;
+        }
+
+        public double getSystemModuleIdentifier() {
+            return systemModuleIdentifier;
+        }
+
+        public double getTransmissionModuleIdentifier() {
+            return transmissionModuleIdentifier;
         }
 
         private void setIdentifiers() {

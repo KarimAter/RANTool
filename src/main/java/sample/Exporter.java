@@ -1,8 +1,12 @@
 package sample;
 
+import Helpers.Utils;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.xssf.usermodel.*;
+
 import java.io.*;
+import java.sql.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 class Exporter {
@@ -17,11 +21,16 @@ class Exporter {
     static String[] lSiteHeader = {"Region", "Name", "Code", "Id", "Cells", "OnAir", "Version", "BW", "Mimo"};
     static String[] carrierHeader = {"Code", "Name", "Rnc"};
     static String excelFileName = "C:\\Users\\Ater\\Desktop\\Dashboard.xlsx";
+    static String TRX1FileName = "C:\\Users\\Ater\\Desktop\\Dashboard_TRX1.xlsx";
+    static String TRX2FileName = "C:\\Users\\Ater\\Desktop\\Dashboard_TRX2.xlsx";
+    static String changesFileName = "C:\\Users\\Ater\\Desktop\\NetworkChanges.xlsx";
     static XSSFWorkbook wb;
+    static XSSFWorkbook changesWrb;
+    static DecimalFormat df = new DecimalFormat("##.#");
 
     static void export2GSitesList(ArrayList<GSite> sitesList, String sites) throws IOException {
         ZipSecureFile.setMinInflateRatio(0);
-        int numOfColumns = gSiteHeader.length;
+        int numOfColumns = 15;
         XSSFSheet sheet = wb.getSheet(sites);
         int r = 1;
         for (GSite site : sitesList) {
@@ -45,6 +54,8 @@ class Exporter {
             cells.get(10).setCellValue(site.getSiteTxMode());
             cells.get(11).setCellValue(site.getSiteNumberOfE1s());
             cells.get(12).setCellValue(site.getSiteNumberOfGTRXs());
+            cells.get(13).setCellValue(site.getLac());
+            cells.get(14).setCellValue(site.getRac());
             r++;
         }
         FileOutputStream fileOut = new FileOutputStream(excelFileName);
@@ -56,7 +67,7 @@ class Exporter {
 
     static void export3GSitesList(ArrayList<USite> sitesList, String sites) throws IOException {
 
-        int numOfColumns = 30;
+        int numOfColumns = 32;
         XSSFSheet sheet = wb.getSheet(sites);
         int r = 1;
         for (USite site : sitesList) {
@@ -102,6 +113,8 @@ class Exporter {
             cells.get(27).setCellValue(site.isRfSharing());
             cells.get(28).setCellValue(site.getSitePower());
             cells.get(29).setCellValue(site.getSiteU900Power());
+            cells.get(30).setCellValue(site.getLac());
+            cells.get(31).setCellValue(site.getRac());
             r++;
         }
         FileOutputStream fileOut = new FileOutputStream(excelFileName);
@@ -114,7 +127,7 @@ class Exporter {
 
     static void export4GSitesList(ArrayList<LSite> lSitesList, String sheetName) throws IOException {
 
-        int numOfColumns = lSiteHeader.length;
+        int numOfColumns = 10;
         XSSFSheet sheet = wb.getSheet(sheetName);
         int r = 1;
         for (LSite site : lSitesList) {
@@ -134,6 +147,7 @@ class Exporter {
             cells.get(6).setCellValue(site.getENodeBVersion());
             cells.get(7).setCellValue(site.getENodeBBW());
             cells.get(8).setCellValue(site.getENodeBMimo());
+            cells.get(9).setCellValue(site.getTac());
             r++;
         }
         FileOutputStream fileOut = new FileOutputStream(excelFileName);
@@ -143,6 +157,7 @@ class Exporter {
         fileOut.close();
         System.out.println("4G Site list done..");
     }
+
 
     static void export2GHardWare(ArrayList<GSite> sitesList, String sheetName) throws IOException {
         int numOfColumns = 16;
@@ -373,7 +388,7 @@ class Exporter {
         fileOut.close();
     }
 
-    static void getWorkbook() throws IOException {
+    static void getWorkbook(String excelFileName) throws IOException {
         File file = new File(excelFileName);
         InputStream ExcelFileToRead;
         XSSFWorkbook workbook;
@@ -386,6 +401,367 @@ class Exporter {
         }
         wb = workbook;
     }
+
+    private static XSSFWorkbook getTRXWorkbook(String trxFileName, int ran) throws IOException {
+        File file = new File(trxFileName);
+        InputStream ExcelFileToRead;
+        XSSFWorkbook workbook;
+        if (file.exists()) {
+            ZipSecureFile.setMinInflateRatio(0);
+            ExcelFileToRead = new FileInputStream(file);
+            workbook = new XSSFWorkbook(ExcelFileToRead);
+        } else {
+            workbook = new XSSFWorkbook();
+        }
+//        if (ran == 1)
+        return workbook;
+//        else
+//            trxWb2 = workbook;
+    }
+
+
+    static void exportTRXSheet(ResultSet resultSet, int ran) throws SQLException, IOException {
+        XSSFSheet sheet1;
+        XSSFWorkbook trxWb;
+        if (ran == 1) {
+            trxWb = getTRXWorkbook(TRX1FileName, 1);
+            sheet1 = trxWb.getSheet("TRX");
+        } else {
+            trxWb = getTRXWorkbook(TRX2FileName, 2);
+            sheet1 = trxWb.getSheet("TRX");
+        }
+        int numOfColumns = 11;
+//        XSSFSheet sheet1 = trxWb.getSheet("RAN1");
+        int r = 1;
+        while (resultSet.next()) {
+            ArrayList<XSSFCell> cells = new ArrayList<>();
+            XSSFRow row = sheet1.createRow(r);
+            //iterating c number of columns
+            for (int i = 0; i < numOfColumns; i++) {
+                XSSFCell cell = row.createCell(i);
+                cells.add(i, cell);
+            }
+            String siteName = resultSet.getString(10);
+            cells.get(0).setCellValue(siteName);
+            cells.get(1).setCellValue(Utils.extractSiteCode(siteName));
+            cells.get(2).setCellValue(Integer.valueOf(resultSet.getString(1)));
+            cells.get(3).setCellValue(Integer.valueOf(resultSet.getString(2)));
+            cells.get(4).setCellValue(Integer.valueOf(resultSet.getString(3)));
+            cells.get(5).setCellValue(Integer.valueOf(resultSet.getString(4)));
+            cells.get(6).setCellValue(Integer.valueOf(resultSet.getString(5)));
+            cells.get(7).setCellValue(Integer.valueOf(resultSet.getString(6)));
+            cells.get(8).setCellValue(resultSet.getString(7));
+            cells.get(9).setCellValue(Integer.valueOf(resultSet.getString(8)));
+            cells.get(10).setCellValue(Integer.valueOf(resultSet.getString(9)));
+            r++;
+        }
+        FileOutputStream fileOut;
+        if (ran == 1) {
+            fileOut = new FileOutputStream(TRX1FileName);
+            trxWb.write(fileOut);
+        } else {
+            fileOut = new FileOutputStream(TRX2FileName);
+            trxWb.write(fileOut);
+        }
+        fileOut.flush();
+        fileOut.close();
+
+    }
+
+    private static XSSFWorkbook getChangesWorkbook(String trxFileName) throws IOException {
+        File file = new File(trxFileName);
+        InputStream ExcelFileToRead;
+        XSSFWorkbook workbook;
+        if (file.exists()) {
+            ZipSecureFile.setMinInflateRatio(0);
+            ExcelFileToRead = new FileInputStream(file);
+            workbook = new XSSFWorkbook(ExcelFileToRead);
+        } else {
+            workbook = new XSSFWorkbook();
+        }
+        return workbook;
+
+    }
+
+    static void exportChangesSheet(ResultSet resultSet) throws SQLException, IOException {
+        XSSFSheet trxSheet, gTrxSheet, psSheet, ceSheet, paSheet, bwSheet;
+        changesWrb = getChangesWorkbook(changesFileName);
+        int trxColumns = 8;
+        int gtrxColumns = 5;
+        int powerColumns = 11;
+        int tokenColumns = 15;
+        int ceColumns = 8;
+        int bwColumns = 5;
+        int trxCursor = 1, gTrxCursor = 1, psCursor = 1, ceCursor = 1, paCursor = 1, bwCursor = 1;
+        while (resultSet.next()) {
+            String siteName = resultSet.getString(2);
+            String siteCode = resultSet.getString(3);
+
+            switch (resultSet.getInt(4)) {
+                case 2: {
+                    String trxComment = ChangesDetector.getTrxComment(resultSet);
+                    String gTrxComment = ChangesDetector.getGtrxComment(resultSet);
+                    int oldTrx = resultSet.getInt(24);
+                    if (trxComment.contains("grade") && oldTrx != 0) {
+                        trxSheet = changesWrb.getSheet("TRX");
+                        ArrayList<XSSFCell> cells = new ArrayList<>();
+                        XSSFRow row = trxSheet.createRow(trxCursor);
+                        //iterating c number of columns
+                        for (int i = 0; i < trxColumns; i++) {
+                            XSSFCell cell = row.createCell(i);
+                            cells.add(i, cell);
+                        }
+                        cells.get(0).setCellValue(siteName);
+                        cells.get(1).setCellValue(siteCode);
+                        cells.get(2).setCellValue(trxComment);
+                        cells.get(3).setCellValue(oldTrx);
+                        cells.get(4).setCellValue(resultSet.getInt(5));
+                        String currentSm = resultSet.getString(13);
+                        String oldSm = resultSet.getString(32);
+                        cells.get(5).setCellValue(oldSm);
+                        cells.get(6).setCellValue(currentSm);
+                        if (oldSm.equals("") || currentSm.equals(""))
+                            cells.get(7).setCellValue("");
+                        else if (oldSm.equals(currentSm))
+                            cells.get(7).setCellValue("Soft");
+                        else
+                            cells.get(7).setCellValue("Hard");
+                        trxCursor++;
+                    }
+
+                    int oldGtrx = resultSet.getInt(25);
+                    if (gTrxComment.contains("grade") && oldGtrx != 0) {
+                        gTrxSheet = changesWrb.getSheet("GTRX");
+                        ArrayList<XSSFCell> cells = new ArrayList<>();
+                        XSSFRow row = gTrxSheet.createRow(gTrxCursor);
+                        //iterating c number of columns
+                        for (int i = 0; i < gtrxColumns; i++) {
+                            XSSFCell cell = row.createCell(i);
+                            cells.add(i, cell);
+                        }
+                        cells.get(0).setCellValue(siteName);
+                        cells.get(1).setCellValue(siteCode);
+                        cells.get(2).setCellValue(gTrxComment);
+                        cells.get(3).setCellValue(oldGtrx);
+                        cells.get(4).setCellValue(resultSet.getInt(6));
+                        gTrxCursor++;
+                    }
+                }
+                break;
+                case 3: {
+                    String psComment = ChangesDetector.getTokenChanges(resultSet).getComment();
+                    String ceComment = ChangesDetector.getChannelElementsComment(resultSet);
+                    String paComment = ChangesDetector.getPowerChanges(resultSet).getComment();
+                    if (psComment.contains("grade")) {
+                        psSheet = changesWrb.getSheet("Processing Sets");
+                        ArrayList<XSSFCell> cells = new ArrayList<>();
+                        XSSFRow row = psSheet.createRow(psCursor);
+                        //iterating c number of columns
+                        for (int i = 0; i < tokenColumns; i++) {
+                            XSSFCell cell = row.createCell(i);
+                            cells.add(i, cell);
+                        }
+                        cells.get(0).setCellValue(siteName);
+                        cells.get(1).setCellValue(siteCode);
+                        cells.get(2).setCellValue(psComment);
+                        ChangesDetector.ChangeValues tokenChanges = ChangesDetector.getTokenChanges(resultSet);
+                        cells.get(3).setCellValue(tokenChanges.getActionType());
+                        cells.get(4).setCellValue((int) tokenChanges.getOld()[0]);
+                        cells.get(5).setCellValue((int) tokenChanges.getCurrent()[0]);
+                        cells.get(6).setCellValue((int) tokenChanges.getOld()[1]);
+                        cells.get(7).setCellValue((int) tokenChanges.getCurrent()[1]);
+                        cells.get(8).setCellValue((int) tokenChanges.getOld()[2]);
+                        cells.get(9).setCellValue((int) tokenChanges.getCurrent()[2]);
+                        cells.get(10).setCellValue((int) tokenChanges.getOld()[3]);
+                        cells.get(11).setCellValue((int) tokenChanges.getCurrent()[3]);
+                        String currentSm = resultSet.getString(16);
+                        String oldSm = resultSet.getString(35);
+                        cells.get(12).setCellValue(oldSm);
+                        cells.get(13).setCellValue(currentSm);
+                        if (oldSm.equals("") || currentSm.equals(""))
+                            cells.get(14).setCellValue("");
+                        else if (oldSm.equals(currentSm))
+                            cells.get(14).setCellValue("Soft");
+                        else
+                            cells.get(14).setCellValue("Hard");
+                        psCursor++;
+                    }
+                    int oldCEs = resultSet.getInt(29);
+                    if (ceComment.contains("grade") && oldCEs != 0) {
+                        ceSheet = changesWrb.getSheet("CEs");
+                        ArrayList<XSSFCell> cells = new ArrayList<>();
+                        XSSFRow row = ceSheet.createRow(ceCursor);
+
+                        //iterating c number of columns
+                        for (int i = 0; i < ceColumns; i++) {
+                            XSSFCell cell = row.createCell(i);
+                            cells.add(i, cell);
+                        }
+                        cells.get(0).setCellValue(siteName);
+                        cells.get(1).setCellValue(siteCode);
+                        cells.get(2).setCellValue(ceComment);
+                        cells.get(3).setCellValue(oldCEs);
+                        cells.get(4).setCellValue(resultSet.getInt(8));
+                        String currentSm = resultSet.getString(16);
+                        String oldSm = resultSet.getString(35);
+                        cells.get(5).setCellValue(oldSm);
+                        cells.get(6).setCellValue(currentSm);
+                        if (oldSm.equals("") || currentSm.equals(""))
+                            cells.get(7).setCellValue("");
+                        else if (oldSm.equals(currentSm))
+                            cells.get(7).setCellValue("Soft");
+                        else
+                            cells.get(7).setCellValue("Hard");
+                        ceCursor++;
+                    }
+                    if (paComment.contains("grade")) {
+                        paSheet = changesWrb.getSheet("PA");
+                        ArrayList<XSSFCell> cells = new ArrayList<>();
+                        XSSFRow row = paSheet.createRow(paCursor);
+                        //iterating c number of columns
+                        for (int i = 0; i < powerColumns; i++) {
+                            XSSFCell cell = row.createCell(i);
+                            cells.add(i, cell);
+                        }
+                        cells.get(0).setCellValue(siteName);
+                        cells.get(1).setCellValue(siteCode);
+                        cells.get(2).setCellValue(paComment);
+                        ChangesDetector.ChangeValues powerChanges = ChangesDetector.getPowerChanges(resultSet);
+                        cells.get(3).setCellValue(powerChanges.getActionType());
+                        cells.get(4).setCellValue(Math.round(powerChanges.getOld()[0]));
+                        cells.get(5).setCellValue(Math.round(powerChanges.getCurrent()[0]));
+                        cells.get(6).setCellValue(Math.round(powerChanges.getOld()[1] * 10) / 10.0);
+                        cells.get(7).setCellValue(Math.round(powerChanges.getCurrent()[1] * 10) / 10.0);
+                        String currentRF = resultSet.getString(15);
+                        String oldRF = resultSet.getString(34);
+                        cells.get(8).setCellValue(oldRF);
+                        cells.get(9).setCellValue(currentRF);
+                        if (oldRF.equals(currentRF))
+                            cells.get(10).setCellValue("Soft");
+                        else
+                            cells.get(10).setCellValue("Hard");
+                        paCursor++;
+                    }
+                }
+                break;
+                case 4: {
+                    String bwComment = ChangesDetector.getBWComment(resultSet);
+                    if (bwComment.contains("grade")) {
+                        bwSheet = changesWrb.getSheet("BW");
+                        ArrayList<XSSFCell> cells = new ArrayList<>();
+                        XSSFRow row = bwSheet.createRow(bwCursor);
+                        //iterating c number of columns
+                        for (int i = 0; i < bwColumns; i++) {
+                            XSSFCell cell = row.createCell(i);
+                            cells.add(i, cell);
+                        }
+                        cells.get(0).setCellValue(siteName);
+                        cells.get(1).setCellValue(siteCode);
+                        cells.get(2).setCellValue(bwComment);
+                        cells.get(3).setCellValue(resultSet.getInt(30));
+                        cells.get(4).setCellValue(resultSet.getInt(11));
+                        bwCursor++;
+                    }
+                }
+                break;
+
+            }
+
+        }
+
+        FileOutputStream fileOut;
+        fileOut = new FileOutputStream(changesFileName);
+        changesWrb.write(fileOut);
+        fileOut.flush();
+        fileOut.close();
+        System.out.println("Changes sheet is done..");
+    }
+
+    private static void getTrxUpgrades(ResultSet resultSet) throws SQLException {
+        XSSFSheet trxSheet = changesWrb.getSheet("TRX");
+        int numOfColumns = 5;
+        int r = 1;
+        while (resultSet.next()) {
+            ArrayList<XSSFCell> cells = new ArrayList<>();
+            XSSFRow row = trxSheet.createRow(r);
+            //iterating c number of columns
+            for (int i = 0; i < numOfColumns; i++) {
+                XSSFCell cell = row.createCell(i);
+                cells.add(i, cell);
+            }
+            String trxComment = ChangesDetector.getTrxComment(resultSet);
+            if (trxComment.contains("grade")) {
+                cells.get(0).setCellValue(resultSet.getString(2));
+                cells.get(1).setCellValue(resultSet.getString(3));
+                cells.get(2).setCellValue(trxComment);
+                cells.get(3).setCellValue(resultSet.getInt(26));
+                cells.get(4).setCellValue(resultSet.getInt(5));
+                r++;
+            }
+
+        }
+    }
+
+    private static void getGtrxUpgrades(ResultSet resultSet) throws SQLException {
+        XSSFSheet gTrxSheet = changesWrb.getSheet("GTRX");
+        int numOfColumns = 5;
+        int r = 1;
+        while (resultSet.next()) {
+            ArrayList<XSSFCell> cells = new ArrayList<>();
+            XSSFRow row = gTrxSheet.createRow(r);
+            //iterating c number of columns
+            for (int i = 0; i < numOfColumns; i++) {
+                XSSFCell cell = row.createCell(i);
+                cells.add(i, cell);
+            }
+            String gtrxComment = ChangesDetector.getGtrxComment(resultSet);
+            if (gtrxComment.contains("grade")) {
+                cells.get(0).setCellValue(resultSet.getString(2));
+                cells.get(1).setCellValue(resultSet.getString(3));
+                cells.get(2).setCellValue(gtrxComment);
+                cells.get(3).setCellValue(resultSet.getInt(27));
+                cells.get(4).setCellValue(resultSet.getInt(6));
+                r++;
+            }
+
+        }
+    }
+
+
+//        XSSFSheet sheet1;
+//        XSSFWorkbook changesWrb;
+//        changesWrb = getChangesWorkbook(changesFileName);
+//        sheet1 = changesWrb.getSheet("Changes");
+//        int numOfColumns = 10;
+////        XSSFSheet sheet1 = trxWb.getSheet("RAN1");
+//        int r = 1;
+//        while (resultSet.next()) {
+//            ArrayList<XSSFCell> cells = new ArrayList<>();
+//            XSSFRow row = sheet1.createRow(r);
+//            //iterating c number of columns
+//            for (int i = 0; i < numOfColumns; i++) {
+//                XSSFCell cell = row.createCell(i);
+//                cells.add(i, cell);
+//            }
+//            cells.get(0).setCellValue(resultSet.getString(2));
+//            cells.get(1).setCellValue(resultSet.getString(3));
+//            cells.get(2).setCellValue(resultSet.getInt(4));
+//            cells.get(3).setCellValue(ChangesDetector.getTrxComment(resultSet));
+//            cells.get(4).setCellValue(ChangesDetector.getGtrxComment(resultSet));
+//            cells.get(5).setCellValue(ChangesDetector.getProcessingSetsComment(resultSet));
+//            cells.get(6).setCellValue(ChangesDetector.getChannelElementsComment(resultSet));
+//            cells.get(7).setCellValue(ChangesDetector.getNewCarriersComment(resultSet));
+//            cells.get(8).setCellValue(ChangesDetector.getPowerChanges(resultSet));
+//            cells.get(9).setCellValue(ChangesDetector.getBWComment(resultSet));
+//            r++;
+//        }
+//        FileOutputStream fileOut;
+//        fileOut = new FileOutputStream(changesFileName);
+//        changesWrb.write(fileOut);
+//        fileOut.flush();
+//        fileOut.close();
+//        System.out.println("Changes sheet is done..");
+
 }
 
 

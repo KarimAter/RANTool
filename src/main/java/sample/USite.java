@@ -1,27 +1,29 @@
 package sample;
 
 import Helpers.Constants;
+import Helpers.Utils;
 
 import java.util.ArrayList;
 
 public class USite {
 
-    private String siteName, siteCode, siteRegion, siteRncId, siteWbtsId, siteVersion;
+    private String siteName, siteRegion, siteRncId, siteWbtsId, siteVersion, lac, rac, uniqueName;
+    private String siteCode = "";
     private int siteNumberOfNodeBs, siteNumberOfSectors, siteNumberOfCells,
             siteNumberOfCarriers, siteNumberOfE1s, siteNumberOfOnAirCells, siteNumberOfFirstCarriersCells, siteNumberOfOnAirFirstCarriersCells,
             siteNumberOfSecondCarriersCells, siteNumberOfOnAirSecondCarriersCells, siteNumberOfThirdCarriersCells, siteNumberOfOnAirThirdCarriersCells,
             siteNumberOfU900CarriersCells, siteNumberOfOnAirU900CarriersCells, siteNumberOfOffAirCells,
             siteNumberOfHSDPASet1, siteNumberOfHSDPASet2, siteNumberOfHSDPASet3, siteNumberOfHSUPASet1,
-            siteNumberOfChannelElements;
+            siteNumberOfChannelElements, uniqueId;
     double sitePower, siteU900Power;
-    double processingSetsIdentifier, channelElementsIdentifier, carriersIdentifier, powerIdentifier;
+    double channelElementsIdentifier, carriersIdentifier, powerIdentifier;
+    String processingSetsIdentifier;
     private ArrayList<NodeB> nodeBsList;
     private boolean firstCarrier;
     private boolean u900;
     private boolean rfSharing;
     private boolean standAloneU900;
     private UHardware uHardware;
-
 
 
     private enum onOff {ON_AIR, OFF_AIR}
@@ -214,6 +216,22 @@ public class USite {
         }
     }
 
+    public String getLac() {
+        return lac;
+    }
+
+    public void setLac(String lac) {
+        this.lac = lac;
+    }
+
+    public String getRac() {
+        return rac;
+    }
+
+    public void setRac(String rac) {
+        this.rac = rac;
+    }
+
     public String getSiteName() {
         return siteName;
     }
@@ -256,6 +274,22 @@ public class USite {
 
     public int getSiteNumberOfSectors() {
         return siteNumberOfSectors;
+    }
+
+    public String getProcessingSetsIdentifier() {
+        return processingSetsIdentifier;
+    }
+
+    public double getChannelElementsIdentifier() {
+        return channelElementsIdentifier;
+    }
+
+    public double getCarriersIdentifier() {
+        return carriersIdentifier;
+    }
+
+    public double getPowerIdentifier() {
+        return powerIdentifier;
     }
 
     public void setSiteNumberOfSectors() {
@@ -402,16 +436,64 @@ public class USite {
         this.uHardware = uHardware;
     }
 
+    public String getUniqueName() {
+        return uniqueName;
+    }
+
+    public void setUniqueName() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("3G");
+        builder.append(siteName);
+        builder.append(siteCode);
+        this.uniqueName = builder.toString();
+    }
+
+    public int getUniqueId() {
+        return uniqueId;
+    }
+
+    private void setUniqueId() {
+        int codeValue = 0;
+        StringBuilder builder = new StringBuilder();
+        builder.append(33);
+        try {
+            codeValue = Integer.valueOf(siteCode.substring(0, siteCode.length() - 2));
+        } catch (NumberFormatException ex) {
+            char[] letters = siteCode.toCharArray();
+            for (char ch : letters) {
+                codeValue += (int) ch;
+                codeValue += Integer.valueOf(siteRncId);
+            }
+
+            System.out.println(codeValue);
+        } catch (NullPointerException e) {
+            codeValue = Integer.valueOf(siteRncId);
+            ;
+        } finally {
+            builder.append(codeValue);
+        }
+        builder.append(Utils.extractRegionId(siteRegion));
+        this.uniqueId = Integer.valueOf(builder.toString());
+    }
+
     public void finalizeProperties() {
         this.setSiteNumberOfSectors();
         this.setStandAloneU900();
         this.setRegion();
+        this.setUniqueName();
         setIdentifiers();
     }
 
     private void setIdentifiers() {
-        processingSetsIdentifier = 0.01 * siteNumberOfHSDPASet1 + 0.1 * siteNumberOfHSDPASet2 + siteNumberOfHSDPASet3
-                + 10 * siteNumberOfHSUPASet1;
+        StringBuilder builder = new StringBuilder();
+        builder.append(siteNumberOfHSUPASet1);
+        builder.append(".");
+        builder.append(siteNumberOfHSDPASet3);
+        builder.append(".");
+        builder.append(siteNumberOfHSDPASet2);
+        builder.append(".");
+        builder.append(siteNumberOfHSDPASet1);
+        processingSetsIdentifier = builder.toString();
         channelElementsIdentifier = siteNumberOfChannelElements;
         carriersIdentifier = 0.01 * siteNumberOfOnAirFirstCarriersCells + 0.1 * siteNumberOfOnAirSecondCarriersCells
                 + siteNumberOfOnAirThirdCarriersCells + 10 * siteNumberOfOnAirU900CarriersCells;
@@ -422,7 +504,7 @@ public class USite {
         int FBBA, FRGC, FRGD, FRGF, FRGL, FRGM, FRGP, FRGT, FRGU, FRGX,
                 FSMB, FSMD, FSME, FSMF, FTIA, FTIB, FTIF, FTPB, FXDA, FXDB;
         double rFModuleIdentifier, systemModuleIdentifier, systemModuleExtentionIdentifier, transmissionModuleIdentifier;
-        String rfString, smString;
+      public   String rfString, smString, txString, smExtString;
 
         public UHardware(int FBBA, int FRGC, int FRGD, int FRGF, int FRGL, int FRGM, int FRGP, int FRGT, int FRGU, int FRGX,
                          int FSMB, int FSMD, int FSME, int FSMF, int FTIA, int FTIB, int FTIF, int FTPB, int FXDA, int FXDB) {
@@ -449,9 +531,24 @@ public class USite {
             setIdentifiers();
             buildHWText();
         }
+
         private void buildHWText() {
             getRfModuleString();
             getSModuleString();
+            getTxModString();
+        }
+
+        private void getTxModString() {
+            txString = "";
+            if (FTIA > 0)
+                txString = FTIA + "FTIA";
+            if (FTIB > 0)
+                txString = txString + " " + FTIB + "FTIB";
+            if (FTIF > 0)
+                txString = txString + " " + FTIF + "FTIF";
+            if (FTPB > 0)
+                txString = txString + " " + FTPB + "FTPB";
+
         }
 
         private void getSModuleString() {
@@ -492,6 +589,22 @@ public class USite {
                 rfString = rfString + " " + FXDA + "FXDA ";
             if (FXDB > 0)
                 rfString = rfString + " " + FXDB + "FXDB ";
+        }
+
+        public double getrFModuleIdentifier() {
+            return rFModuleIdentifier;
+        }
+
+        public double getSystemModuleIdentifier() {
+            return systemModuleIdentifier;
+        }
+
+        public double getSystemModuleExtentionIdentifier() {
+            return systemModuleExtentionIdentifier;
+        }
+
+        public double getTransmissionModuleIdentifier() {
+            return transmissionModuleIdentifier;
         }
 
         private void setIdentifiers() {

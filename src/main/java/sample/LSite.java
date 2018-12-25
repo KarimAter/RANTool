@@ -1,8 +1,12 @@
 package sample;
 
+import Helpers.Utils;
+
 public class LSite {
-    String eNodeBName, eNodeBCode, eNodeBRegion, eNodeBId, eNodeBVersion;
-    private int eNodeBNumberOfSectors, eNodeBNumberOfCells, eNodeBNumberOfOnAirCells, eNodeBBW, eNodeBMimo;
+    String eNodeBRegion, eNodeBId, eNodeBVersion, tac, uniqueName;
+    private String eNodeBCode = "";
+    private String eNodeBName = "";
+    private int eNodeBNumberOfSectors, eNodeBNumberOfCells, eNodeBNumberOfOnAirCells, eNodeBBW, eNodeBMimo, uniqueId;
     private LHardware lHardware;
     double bwIdentifier;
 
@@ -36,7 +40,7 @@ public class LSite {
     }
 
     public void setENodeBRegion() {
-        if (eNodeBCode != null) {
+        if (!eNodeBCode.equals("")) {
             String region = eNodeBCode.substring(4);
             if (region.equalsIgnoreCase("UP") || region.equalsIgnoreCase("SI") || region.equalsIgnoreCase("RE")
                     || region.equalsIgnoreCase("DE") || region.equalsIgnoreCase("AL"))
@@ -100,11 +104,62 @@ public class LSite {
         this.eNodeBMimo = eNodeBMimo;
     }
 
+    public String getTac() {
+        return tac;
+    }
+
+    public void setTac(String tac) {
+        this.tac = tac;
+    }
+
+    public int getUniqueId() {
+        return uniqueId;
+    }
+
+    private void setUniqueId() {
+        int codeValue = 0;
+        StringBuilder builder = new StringBuilder();
+        builder.append(44);
+        try {
+            codeValue = Integer.valueOf(eNodeBCode.substring(0, eNodeBCode.length() - 2));
+        } catch (NumberFormatException ex) {
+            char[] letters = eNodeBCode.toCharArray();
+            for (char ch : letters) {
+                codeValue += (int) ch;
+            }
+            codeValue += Integer.valueOf(eNodeBId);
+            System.out.println(codeValue);
+        } catch (NullPointerException e) {
+            codeValue = Integer.valueOf(eNodeBId);
+        } finally {
+            builder.append(codeValue);
+        }
+        builder.append(Utils.extractRegionId(eNodeBRegion));
+        this.uniqueId = Integer.valueOf(builder.toString());
+    }
+
+    public String getUniqueName() {
+        return uniqueName;
+    }
+
+    public void setUniqueName() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("4G");
+        builder.append(eNodeBId);
+        builder.append(eNodeBCode);
+        this.uniqueName = builder.toString();
+    }
+
     public void finalizeProperties() {
         this.setENodeBNumberOfSectors();
         this.setENodeBCode();
         this.setENodeBRegion();
+        this.setUniqueName();
         setIdentifiers();
+    }
+
+    public double getBwIdentifier() {
+        return bwIdentifier;
     }
 
     private void setIdentifiers() {
@@ -122,7 +177,7 @@ public class LSite {
     public static class LHardware {
         int FBBA, FBBC, FRGT, FSMF, FSPD, FTIF, FXEB, FXED;
         double rFModuleIdentifier, systemModuleIdentifier, systemModuleExtentionIdentifier, transmissionModuleIdentifier;
-        String rfString, smString;
+     public    String rfString, smString;
 
         public LHardware(int FBBA, int FBBC, int FRGT, int FSMF, int FSPD, int FTIF, int FXEB, int FXED) {
             this.FBBA = FBBA;
@@ -136,6 +191,7 @@ public class LSite {
             setIdentifiers();
             buildHWText();
         }
+
         private void buildHWText() {
             getRfModuleString();
             getSModuleString();
@@ -160,6 +216,23 @@ public class LSite {
             if (FXED > 0)
                 rfString = rfString + " " + FXED + "FXED ";
         }
+
+        public double getrFModuleIdentifier() {
+            return rFModuleIdentifier;
+        }
+
+        public double getSystemModuleIdentifier() {
+            return systemModuleIdentifier;
+        }
+
+        public double getSystemModuleExtentionIdentifier() {
+            return systemModuleExtentionIdentifier;
+        }
+
+        public double getTransmissionModuleIdentifier() {
+            return transmissionModuleIdentifier;
+        }
+
         private void setIdentifiers() {
             rFModuleIdentifier = 0.1 * FRGT + FXEB + 10 * FXED;
             systemModuleIdentifier = FSMF;

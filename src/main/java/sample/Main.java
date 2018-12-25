@@ -1,12 +1,16 @@
 package sample;
 
 import Helpers.DatabaseConnector;
+import Helpers.DatabaseHelper;
+import Helpers.DbSaver;
 import Helpers.Utils;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.ss.usermodel.*;
@@ -15,42 +19,47 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
 
 public class Main extends Application {
 
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     ArrayList<NodeB> nodeBList;
     ArrayList<LSite> lSitesList;
     ArrayList<USite> uSitesList;
     ArrayList<GSite> gSitesList;
     ArrayList<USite> thirdCarrierList;
     ArrayList<USite> u900List;
-    Button exportBu, load2R1DumpBu, load2R2DumpBu, load3R1DumpBu, load3R2DumpBu, load4R1DumpBu, load4R2DumpBu;
+    Button exportBu, load2R1DumpBu, load2R2DumpBu, load3R1DumpBu, load3R2DumpBu, load4R1DumpBu, load4R2DumpBu, saveDatabase, exportChanges;
     Calendar calendar;
+    ResultSet resultSet1, resultSet2;
+    static String excelFileName = "C:\\Users\\Ater\\Desktop\\Dashboard.xlsx";
+    static String TRXFileName = "C:\\Users\\Ater\\Desktop\\Dashboard_TRX.xlsx";
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("/sample.fxml"));
         primaryStage.setTitle("RAN Tool");
-        Scene scene = new Scene(root, 300, 275);
+        Scene scene = new Scene(root, 300, 400);
         primaryStage.setScene(scene);
         primaryStage.show();
         initializeButtonsAndArrays(scene);
         calendar = Calendar.getInstance();
 
+        String path = "D:/RAN Tool/NokiaDumpToolHistory.db";
+        DbSaver dbSaver = new DbSaver(path);
+
 //        Class.forName("com.mysql.jdbc.Driver").newInstance();
-        Connection Conn = DriverManager.getConnection
-                ("jdbc:sqlite:D:/RAN Tool/test.db", "r", "s");
-        System.out.println("A new database has been created.");
-        Statement s = Conn.createStatement();
-        String sql = "create table if not exists Sites (id integer PRIMARY KEY,siteName text ,Code text)";
-        s.execute(sql);
+//        Connection Conn = DriverManager.getConnection
+//                ("jdbc:sqlite:D:/RAN Tool/test.db", "r", "s");
+//        System.out.println("A new database has been created.");
+//        Statement s = Conn.createStatement();
+//        String sql = "create table if not exists Sites (id integer PRIMARY KEY,siteName text ,Code text)";
+//        s.execute(sql);
 
 
         // load 2G RAN1 Dump from path from the machine
@@ -101,11 +110,50 @@ public class Main extends Application {
             }
         });
 
+        saveDatabase.setOnAction(event -> {
+//            dbSaver.insertUMTS(uSitesList);
+//            dbSaver.insertGSM(gSitesList);
+//            dbSaver.insertLTE(lSitesList);
+//
+            TextField textField = new TextField();
+            Button button = new Button();
+            button.setOnAction(event1 -> {
+                String tableName = textField.getText();
+                DatabaseHelper databaseHelper = new DatabaseHelper(path, tableName);
+                databaseHelper.insertIdentifiers(gSitesList, uSitesList, lSitesList);
+                gSitesList = new ArrayList<>();
+                uSitesList = new ArrayList<>();
+                lSitesList = new ArrayList<>();
+                u900List = new ArrayList<>();
+                thirdCarrierList = new ArrayList<>();
+            });
+            VBox vBox = new VBox();
+            vBox.getChildren().add(textField);
+            vBox.getChildren().add(button);
+            vBox.setSpacing(10);
+            Scene scene2 = new Scene(vBox, 300, 200);
+            Stage stage2 = new Stage();
+            stage2.setScene(scene2);
+            stage2.show();
+
+
+        });
+
+        exportChanges.setOnAction(event -> {
+            DatabaseHelper databaseHelper = new DatabaseHelper(path);
+            ResultSet resultSet = databaseHelper.compareDumps();
+            try {
+                Exporter.exportChangesSheet(resultSet);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
         // export dahboard button
         exportBu.setOnAction(event -> {
             try {
                 // prepare the excel file that will have the output
-                Exporter.getWorkbook();
+                Exporter.getWorkbook(excelFileName);
                 export2G();
                 export3G();
                 export4G();
@@ -115,11 +163,20 @@ public class Main extends Application {
         });
     }
 
-    private void export2G() throws IOException {
-        System.out.println("Exporting 2G..." + calendar.getTime());
+    private String getTime() {
+        return dateFormat.format(Calendar.getInstance().getTime());
+    }
+
+    private void export2G() throws IOException, SQLException {
+        System.out.println("Exporting 2G..." + getTime());
         Exporter.export2GSitesList(gSitesList, "2G Sites");
+        System.out.println("Exporting 2G HW..." + getTime());
         Exporter.export2GHardWare(gSitesList, "new 2G HW");
-        System.out.println("2G Dashboard is ready.." + calendar.getTime());
+        System.out.println("Exporting TRX Sheet1..." + getTime());
+        Exporter.exportTRXSheet(resultSet1, 1);
+        System.out.println("Exporting TRX Sheet2..." + getTime());
+        Exporter.exportTRXSheet(resultSet2, 2);
+        System.out.println("2G Dashboard is ready.." + getTime());
     }
 
     private void export3G() throws IOException {
@@ -129,20 +186,24 @@ public class Main extends Application {
         Exporter.exportCarrierList(thirdCarrierList, "3rd Carrier");
         Exporter.exportCarrierList(u900List, "U900");
         Exporter.export3GHardWare(uSitesList, "new 3G HW");
-        System.out.println("3G Dashboard is ready.." + calendar.getTime());
+        System.out.println("3G Dashboard is ready.." + getTime());
     }
 
     private void export4G() throws IOException {
-        System.out.println("Exporting 4G..." + calendar.getTime());
+        System.out.println("Exporting 4G..." + getTime());
         Exporter.export4GSitesList(lSitesList, "LTE");
         Exporter.export4GHardWare(lSitesList, "new 4G HW");
-        System.out.println("4G Dashboard is ready.." + calendar.getTime());
+        System.out.println("4G Dashboard is ready.." + getTime());
     }
 
     private void process2GDump(DatabaseConnector databaseConnector, int ran) {
         try {
             // get a list of 2G sites and their parameters
             gSitesList = databaseConnector.get2GSites(gSitesList);
+            if (ran == 1)
+                resultSet1 = databaseConnector.getTRXSheet();
+            else
+                resultSet2 = databaseConnector.getTRXSheet();
             System.out.println(gSitesList.size());
         } catch (Exception e) {
             e.printStackTrace();
@@ -177,6 +238,8 @@ public class Main extends Application {
         load3R2DumpBu = (Button) scene.lookup("#load3R2DumpBu");
         load4R1DumpBu = (Button) scene.lookup("#load4R1DumpBu");
         load4R2DumpBu = (Button) scene.lookup("#load4R2DumpBu");
+        saveDatabase = (Button) scene.lookup("#saveDatabase");
+        exportChanges = (Button) scene.lookup("#exportChanges");
         gSitesList = new ArrayList<>();
         uSitesList = new ArrayList<>();
         thirdCarrierList = new ArrayList<>();

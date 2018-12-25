@@ -40,7 +40,7 @@ public class DatabaseConnector {
 
         Statement statement = connection.createStatement();
 
-        String gQuery = "Select name,count(name),sum(T),first(BSCName),sum(C),sum(O),max(TX),sum(E),sum(G),sum(F)from" +
+        String gQuery = "Select name,count(name),sum(T),first(BSCName),sum(C),sum(O),max(TX),sum(E),sum(G),sum(F),first(LAC),first(RAC),first(BSCId) from" +
                 "(Select BSCId,BCFId,count(TRXId) as T,sum(gprsEnabledTrx) as G from A_TRX group by BSCId,BCFId) as firstSet " +
                 "left join " +
                 "(Select BSCId,BCFId,name from A_BCF group by BSCId,BCFId) as secondSet " +
@@ -49,7 +49,8 @@ public class DatabaseConnector {
                 "(Select BSCId,name as BSCName from A_BSC) as thirdSet " +
                 "on (firstSet.BSCId=thirdSet.BSCId)" +
                 "left join " +
-                "(Select BSCId,BCFId,count(BTSId) as C,sum(adminState) as O,sum(frequencyBandInUse) as F from A_BTS group by BSCId,BCFId) as fourthSet " +
+                "(Select BSCId,BCFId,count(BTSId) as C,sum(adminState) as O,sum(frequencyBandInUse) as F ,first(locationAreaIdLAC) as LAC," +
+                " first(rac) as RAC from A_BTS group by BSCId,BCFId) as fourthSet " +
                 "on (firstSet.BSCId=fourthSet.BSCId and firstSet.BCFId=fourthSet.BCFId) " +
                 "left join " +
                 "(Select  BSCId,BCFId,max(channel0Pcm) as TX from A_TRX " +
@@ -103,12 +104,16 @@ public class DatabaseConnector {
             site.setSiteNumberOfE1s(gResultSet.getInt(8));
             site.setSiteNumberOfGTRXs(gResultSet.getInt(9));
             site.setSiteNumberOfDcsCells(gResultSet.getInt(10));
+            site.setLac(gResultSet.getString(11));
+            site.setRac(gResultSet.getString(12));
+            site.setSiteBSCId(gResultSet.getString(13));
             GSite.GHardware gHardware = new GSite.GHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
                     hwResultSet.getInt(5), hwResultSet.getInt(6), hwResultSet.getInt(7), hwResultSet.getInt(8),
                     hwResultSet.getInt(9), hwResultSet.getInt(10), hwResultSet.getInt(11), hwResultSet.getInt(12));
             site.setGHardware(gHardware);
             site.finalizeProperties();
-            gSitesList.add(site);
+            if (site.getSiteName() != null)
+                gSitesList.add(site);
         }
         return gSitesList;
     }
@@ -119,10 +124,10 @@ public class DatabaseConnector {
         if (ran == 1) {
             uQuery = "Select  BTSAdditionalInfo,max(RncId),max(WBTSId),sum(C),sum(O),count(BTSAdditionalInfo),sum(fC),sum(onFC),sum(sC),sum(onSC),sum(tC),sum(onTC)\n" +
                     ",sum(uC),sum(onUC),max(I),first(V),sum(HD1),sum(HD2),sum(HD3),sum(HU1),sum(R99),count(HD1Count),count(HD2Count),count(HD3Count)," +
-                    "count(HU1Count),sum(P),sum(S),first(Name),max(maxFPower),max(maxUPower),sum(vamF),sum(vamU) from \n" +
+                    "count(HU1Count),sum(P),sum(S),first(Name),max(maxFPower),max(maxUPower),sum(vamF),sum(vamU),first(LAC),first(RAC) from \n" +
                     "(Select RncId,WBTSId,COCOId,BTSAdditionalInfo ,IubTransportMedia as I,NESWVersion as V,WBTSName as Name from A_WBTS ) as firstSet \n" +
                     "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as C,sum(AdminCellState) as O from A_WCEL group by RncId,WBTSId) as secondSet \n" +
+                    "(Select RncId,WBTSId,count(WBTSId) as C,sum(AdminCellState) as O, first(LAC) as LAC ,first(RAC) as RAC from A_WCEL group by RncId,WBTSId) as secondSet \n" +
                     "on (firstSet.RncId=secondSet.RncId and firstSet.WBTSId=secondSet.WBTSId) \n" +
                     "left join\n" +
                     "(Select RncId,WBTSId,count(WBTSId) as fC,sum(AdminCellState) onFC from A_WCEL where UARFCN ='10612' group by RncId,WBTSId ) as thirdSet \n" +
@@ -181,10 +186,10 @@ public class DatabaseConnector {
         } else {
             uQuery = "Select  BTSAdditionalInfo,max(RncId),max(WBTSId),sum(C),sum(O),count(BTSAdditionalInfo),sum(fC),sum(onFC),sum(sC),sum(onSC),sum(tC),sum(onTC)\n" +
                     ",sum(uC),sum(onUC),max(I),first(V),sum(HD1),sum(HD2),sum(HD3),sum(HU1),sum(R99),count(HD1Count),count(HD2Count),count(HD3Count)," +
-                    "count(HU1Count),sum(P),sum(S),first(Name),max(maxFPower),max(maxUPower),sum(vamF),sum(vamU) from \n" +
+                    "count(HU1Count),sum(P),sum(S),first(Name),max(maxFPower),max(maxUPower),sum(vamF),sum(vamU),first(LAC),first(RAC) from \n" +
                     "(Select RncId,WBTSId,COCOId,BTSAdditionalInfo ,IubTransportMedia as I,NESWVersion as V,WBTSName as Name from A_WBTS ) as firstSet \n" +
                     "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as C,sum(AdminCellState) as O from A_WCEL group by RncId,WBTSId) as secondSet \n" +
+                    "(Select RncId,WBTSId,count(WBTSId) as C,sum(AdminCellState) as O, first(LAC) as LAC ,first(RAC) as RAC from A_WCEL group by RncId,WBTSId) as secondSet \n" +
                     "on (firstSet.RncId=secondSet.RncId and firstSet.WBTSId=secondSet.WBTSId) \n" +
                     "left join\n" +
                     "(Select RncId,WBTSId,count(WBTSId) as fC,sum(AdminCellState) onFC from A_WCEL where UARFCN ='10612' group by RncId,WBTSId ) as thirdSet \n" +
@@ -315,9 +320,11 @@ public class DatabaseConnector {
             site.setSiteNumberOfE1s((int) Math.ceil(uResultSet.getInt(26) / 4490.0));
             site.setRfSharing(uResultSet.getInt(27));
             site.setSiteName(uResultSet.getString(28));
-            site.setSitePower(uResultSet.getInt(29),uResultSet.getInt(31));
-            site.setSiteU900Power(uResultSet.getInt(30),uResultSet.getInt(32));
-             USite.UHardware uHardware = new USite.UHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
+            site.setSitePower(uResultSet.getInt(29), uResultSet.getInt(31));
+            site.setSiteU900Power(uResultSet.getInt(30), uResultSet.getInt(32));
+            site.setLac(uResultSet.getString(33));
+            site.setRac(uResultSet.getString(34));
+            USite.UHardware uHardware = new USite.UHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
                     hwResultSet.getInt(5), hwResultSet.getInt(6), hwResultSet.getInt(7), hwResultSet.getInt(8),
                     hwResultSet.getInt(9), hwResultSet.getInt(10), hwResultSet.getInt(11),
                     hwResultSet.getInt(12), hwResultSet.getInt(13), hwResultSet.getInt(14),
@@ -337,8 +344,8 @@ public class DatabaseConnector {
         String lHardwareQuery;
         Statement statement = connection.createStatement();
         if (ran == 2) {
-            lQuery = "Select mrbtsId,sum(C),sum(O),first(V),first(N),first(BW),first(M),sum(S),sum(SO) from (" +
-                    "(Select mrbtsId,count(mrbtsId) as C,sum(administrativeState) as O from A_LTE_MRBTS_LNBTS_LNCEL group by mrbtsId) as firstSet " +
+            lQuery = "Select mrbtsId,sum(C),sum(O),first(V),first(N),first(BW),first(M),sum(S),sum(SO),first(TAC) from (" +
+                    "(Select mrbtsId,count(mrbtsId) as C,sum(administrativeState) as O, first(tac) as TAC from A_LTE_MRBTS_LNBTS_LNCEL group by mrbtsId) as firstSet " +
                     "left join " +
                     "(Select mrbtsId,first(softwareReleaseVersion) as V,first(name) as N from A_LTE_MRBTS_LNBTS_FTM group by mrbtsId) as secondSet " +
                     "on (firstSet.mrbtsId=secondSet.mrbtsId) " +
@@ -349,13 +356,12 @@ public class DatabaseConnector {
                     "(Select mrbtsId,lnCelId,actSuperCell from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD ) as B " +
                     "on(A.mrbtsId=B.mrbtsId and A.lnCelId=B.lnCelId) ) where administrativeState = '1' group by mrbtsId) as thirdSet " +
                     "on (firstSet.mrbtsId=thirdSet.mrbtsId) " +
-
                     "left join " +
                     "(Select mrbtsId,max(dlChBw) as BW,max(dlMimoMode) as M,sum(actSuperCell) as S from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD group by mrbtsId) as fourthSet " +
                     "on (firstSet.mrbtsId=fourthSet.mrbtsId) ) " +
                     "group by " +
                     "mrbtsId";
-            lHardwareQuery="Select mrbtsId,first(FBBA),first(FBBC),first(FRGT),first(FSMF),first(FSPD),first(FTIF),first(FXEB),first(FXED) from ("+
+            lHardwareQuery = "Select mrbtsId,first(FBBA),first(FBBC),first(FRGT),first(FSMF),first(FSPD),first(FTIF),first(FXEB),first(FXED) from (" +
                     "(Select mrbtsId from A_LTE_MRBTS_LNBTS_LNCEL group by mrbtsId) as SiteSet " +
                     "left join " +
                     "(Select mrbtsId,count(unitTypeActual) as FBBA from 4GHW where unitTypeActual = 'FBBA' group by mrbtsId) as FBBASet on (SiteSet.mrbtsId=FBBASet.mrbtsID) " +
@@ -375,10 +381,10 @@ public class DatabaseConnector {
                     "(Select mrbtsId,count(unitTypeActual) as FXED from 4GHW where unitTypeActual = 'FXED' group by mrbtsId) as FXEDSet on (SiteSet.mrbtsId=FXEDSet.mrbtsID) " +
                     ") group by mrbtsId ";
         } else {
-            lQuery = "Select mrbtsId,sum(C),sum(O),first(V),first(N),first(BW),first(M),sum(S),sum(SO) from " +
+            lQuery = "Select mrbtsId,sum(C),sum(O),first(V),first(N),first(BW),first(M),sum(S),sum(SO),first(TAC) from " +
                     "(Select mrbtsId,count(mrbtsId) as C,sum(administrativeState) as O,sum(actSuperCell) as S from A_LTE_LNCEL group by mrbtsId ) as firstSet " +
                     "left join " +
-                    "(Select mrbtsId,first(activeSWReleaseVersion) as V,first(btsName) as N from A_LTE_BTSSCL group by mrbtsId) as secondSet " +
+                    "(Select mrbtsId,first(name) as N from A_LTE_LNBTS group by mrbtsId) as secondSet " +
                     "on (firstSet.mrbtsId=secondSet.mrbtsId) " +
                     "left join " +
                     "(Select mrbtsId, sum(actSuperCell) as SO from A_LTE_LNCEL where administrativeState = '1'  group by mrbtsId) as thirdSet " +
@@ -386,9 +392,15 @@ public class DatabaseConnector {
                     "left join " +
                     "(Select mrbtsId,max(dlChBw) as BW,max(dlMimoMode) as M from A_LTE_LNCEL_PS group by mrbtsId) as fourthSet " +
                     "on (firstSet.mrbtsId=fourthSet.mrbtsId) " +
+                    "left join " +
+                    "(Select mrbtsId,first(tac) as TAC from A_LTE_LNCEL_SIB group by mrbtsId) as fifthSet " +
+                    "on (firstSet.mrbtsId=fifthSet.mrbtsId) " +
+                    "left join " +
+                    "(Select mrbtsId,first(version) as V from A_LTE_MRBTS group by mrbtsId) as sixthSet " +
+                    "on (firstSet.mrbtsId=sixthSet.mrbtsId) " +
                     "group by " +
                     "mrbtsId";
-             lHardwareQuery="Select mrbtsId,first(FBBA),first(FBBC),first(FRGT),first(FSMF),first(FSPD),first(FTIF),first(FXEB),first(FXED) from ("+
+            lHardwareQuery = "Select mrbtsId,first(FBBA),first(FBBC),first(FRGT),first(FSMF),first(FSPD),first(FTIF),first(FXEB),first(FXED) from (" +
                     "(Select mrbtsId from A_LTE_LNCEL group by mrbtsId) as SiteSet " +
                     "left join " +
                     "(Select mrbtsId,count(unitTypeActual) as FBBA from 4GHW where unitTypeActual = 'FBBA' group by mrbtsId) as FBBASet on (SiteSet.mrbtsId=FBBASet.mrbtsID) " +
@@ -410,8 +422,8 @@ public class DatabaseConnector {
         }
 
 
-                ResultSet lResultSet = statement.executeQuery(lQuery);
-                ResultSet hwResultSet = statement.executeQuery(lHardwareQuery);
+        ResultSet lResultSet = statement.executeQuery(lQuery);
+        ResultSet hwResultSet = statement.executeQuery(lHardwareQuery);
         while (lResultSet.next() && hwResultSet.next()) {
             LSite site = new LSite();
             site.setENodeBId(lResultSet.getString(1));
@@ -421,6 +433,7 @@ public class DatabaseConnector {
             site.setENodeBName(lResultSet.getString(5));
             site.setENodeBBW(lResultSet.getInt(6));
             site.setENodeBMimo(lResultSet.getInt(7));
+            site.setTac(lResultSet.getString(10));
             LSite.LHardware lHardware = new LSite.LHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
                     hwResultSet.getInt(5), hwResultSet.getInt(6), hwResultSet.getInt(7), hwResultSet.getInt(8),
                     hwResultSet.getInt(9));
@@ -1053,6 +1066,16 @@ public class DatabaseConnector {
     }
 
 
+    public ResultSet getTRXSheet() throws SQLException {
+        Statement statement = connection.createStatement();
+        String query = "Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower,name from " +
+                "(Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower from A_TRX ) as firstSet "
+                + "left join "
+                + "(Select BSCId,BCFId,name from A_BCF group by BSCId,BCFId )as secondSet "
+                + "on (firstSet.BSCId=secondSet.BSCId and firstSet.BCFId=secondSet.BCFId)";
+        ResultSet resultSet = statement.executeQuery(query);
+        return resultSet;
+    }
 }
 
 

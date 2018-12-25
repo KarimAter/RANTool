@@ -49,16 +49,44 @@ public class Utils {
 
 
     public static String extractRegion(String siteCode) {
-        if (siteCode != null ) {
-            if (siteCode.length()<4)
+        if (siteCode != null) {
+            if (siteCode.length() < 4)
                 return "";
             else {
-            String region = siteCode.substring(4);
-            if (region.equalsIgnoreCase("UP") || region.equalsIgnoreCase("SI") || region.equalsIgnoreCase("RE")
-                    || region.equalsIgnoreCase("DE") || region.equalsIgnoreCase("AL"))
-                return region;
-            else return "";
-        }}
+                String region = siteCode.substring(4);
+                if (region.equalsIgnoreCase("UP") || region.equalsIgnoreCase("SI") || region.equalsIgnoreCase("RE")
+                        || region.equalsIgnoreCase("DE") || region.equalsIgnoreCase("AL"))
+                    return region;
+                else return "";
+            }
+        }
         return "";
+    }
+
+    public static int extractRegionId(String region) {
+        int regionId;
+        if (region != null) {
+
+            switch (region) {
+                case "AL":
+                    regionId = 11;
+                    break;
+                case "DE":
+                    regionId = 22;
+                    break;
+                case "SI":
+                    regionId = 33;
+                    break;
+                case "RE":
+                    regionId = 44;
+                    break;
+                case "UP":
+                    regionId = 55;
+                    break;
+                default:
+                    regionId = 99;
+            }
+        } else regionId = 99;
+        return regionId;
     }
 }
