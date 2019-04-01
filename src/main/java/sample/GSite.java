@@ -1,16 +1,16 @@
 package sample;
 
 import Helpers.Constants;
-import Helpers.Utils;
+
+import java.util.ArrayList;
 
 public class GSite {
-    private String siteName, siteCode, region, siteBSCName, siteBSCId, siteBCFId, siteVersion, lac, rac, uniqueName;
-    private int siteNumberOfBCFs, siteNumberOfTRXs, siteNumberOfSectors, siteNumberOfCells, siteNumberOfDcsCells, siteNumberOfGsmCells,
-            siteNumberOfE1s, siteNumberOfOnAirCells, siteNumberOfGTRXs;
+    private String siteName, siteCode, siteBSCId, region, siteBSCName, siteBCFId, siteVersion, uniqueName;
+    private int siteNumberOfBCFs, siteNumberOfTRXs, siteNumberOfSectors, siteNumberOfCells, siteNumberOfDcsCells,
+            siteNumberOfGsmCells, siteNumberOfE1s, siteNumberOfOnAirCells, siteNumberOfGTRXs, lac, rac;
     private Constants.gTxMode gSiteTxMode;
     private GHardware gHardware;
-    double trxIdentifier, gTrxIdentifier;
-    private int uniqueId;
+    int trxIdentifier, gTrxIdentifier, txModeIdentifier;
 
     public String getSiteName() {
         return siteName;
@@ -116,19 +116,19 @@ public class GSite {
         this.siteNumberOfOnAirCells = siteNumberOfCells - (siteNumberOfOnAirCells - siteNumberOfCells) / 2;
     }
 
-    public String getLac() {
+    public int getLac() {
         return lac;
     }
 
-    public void setLac(String lac) {
+    public void setLac(int lac) {
         this.lac = lac;
     }
 
-    public String getRac() {
+    public int getRac() {
         return rac;
     }
 
-    public void setRac(String rac) {
+    public void setRac(int rac) {
         this.rac = rac;
     }
 
@@ -187,17 +187,28 @@ public class GSite {
         setIdentifiers();
     }
 
-    public double getTrxIdentifier() {
+    public int getTrxIdentifier() {
         return trxIdentifier;
     }
 
-    public double getgTrxIdentifier() {
+    public int getgTrxIdentifier() {
         return gTrxIdentifier;
+    }
+
+    public int getTxModeIdentifier() {
+        return txModeIdentifier;
     }
 
     private void setIdentifiers() {
         trxIdentifier = siteNumberOfTRXs;
         gTrxIdentifier = siteNumberOfGTRXs;
+        txModeIdentifier = setTxModeIdentifier();
+    }
+
+    private int setTxModeIdentifier() {
+        if (gSiteTxMode.toString().equals("ATM"))
+            return 0;
+        else return 1;
     }
 
 
@@ -213,35 +224,88 @@ public class GSite {
         this.uniqueName = builder.toString();
     }
 
-    public void setGHardware(GHardware gHardware) {
-        this.gHardware = gHardware;
-    }
 
     public GHardware getGHardware() {
         return gHardware;
     }
 
+    void setGHardware(ArrayList<BCF> bcfs) {
+        GHardware gHardware = new GHardware();
+        for (BCF bcf : bcfs) {
+            ArrayList<HwItem> hwItems = bcf.getHwItems();
+            for (HwItem hwItem : hwItems) {
+                switch (hwItem.getUserLabel()) {
+                    case "ESMB":
+                        gHardware.ESMB++;
+                        break;
+                    case "ESMC":
+                        gHardware.ESMC++;
+                        break;
+                    case "FIQA":
+                        gHardware.FIQA++;
+                        break;
+                    case "FIQB":
+                        gHardware.FIQB++;
+                        break;
+                    case "FSMF":
+                        gHardware.FSMF++;
+                        break;
+                    case "FTIF":
+                        gHardware.FTIF++;
+                        break;
+                    case "FXDA":
+                        gHardware.FXDA++;
+                        break;
+                    case "FXDB":
+                        gHardware.FXDB++;
+                        break;
+                    case "FXEA":
+                        gHardware.FXEA++;
+                        break;
+                    case "FXEB":
+                        gHardware.FXEB++;
+                        break;
+                    case "FXX":
+                        gHardware.FXX++;
+                        break;
+                    case "FXED":
+                        gHardware.FXED++;
+                        break;
+                    case "FXEF":
+                        gHardware.FXEF++;
+                        break;
+                }
+            }
+        }
+        this.gHardware = gHardware;
+        gHardware.setIdentifiers();
+        gHardware.buildHWText();
+    }
+
     public static class GHardware {
-        int ESMB, ESMC, FIQA, FIQB, FSMF, FTIF, FXDA, FXDB, FXEA, FXEB, FXX;
-        double rFModuleIdentifier, systemModuleIdentifier, transmissionModuleIdentifier;
+        int ESMB, ESMC, FIQA, FIQB, FSMF, FTIF, FXDA, FXDB, FXEA, FXEB, FXX, FXED, FXEF;
+        String rFModuleIdentifier, systemModuleIdentifier, txModuleIdentifier;
         public String rfString, smString, txString;
 
+        GHardware() {
+        }
 
         public GHardware(int ESMB, int ESMC, int FIQA, int FIQB, int FSMF, int FTIF,
-                         int FXDA, int FXDB, int FXEA, int FXEB, int FXX) {
-            this.ESMB = ESMB;
-            this.ESMC = ESMC;
-            this.FIQA = FIQA;
-            this.FIQB = FIQB;
-            this.FSMF = FSMF;
-            this.FTIF = FTIF;
-            this.FXDA = FXDA;
-            this.FXDB = FXDB;
-            this.FXEA = FXEA;
-            this.FXEB = FXEB;
-            this.FXX = FXX;
-            setIdentifiers();
-            buildHWText();
+                         int FXDA, int FXDB, int FXEA, int FXEB, int FXX, int FXED) {
+//            this.ESMB = ESMB;
+//            this.ESMC = ESMC;
+//            this.FIQA = FIQA;
+//            this.FIQB = FIQB;
+//            this.FSMF = FSMF;
+//            this.FTIF = FTIF;
+//            this.FXDA = FXDA;
+//            this.FXDB = FXDB;
+//            this.FXEA = FXEA;
+//            this.FXEB = FXEB;
+//            this.FXX = FXX;
+//            this.FXED = FXED;
+//            setIdentifiers();
+//            buildHWText();
         }
 
         private void buildHWText() {
@@ -272,6 +336,8 @@ public class GSite {
                 rfString = rfString + " " + FXEB + "FXEB ";
             if (FXX > 0)
                 rfString = rfString + " " + FXX + "FXX ";
+            if (FXED > 0)
+                rfString = rfString + " " + FXED + "FXED ";
         }
 
         private void getTxModString() {
@@ -284,25 +350,59 @@ public class GSite {
                 txString = txString + " " + FTIF + "FTIF";
         }
 
-        public double getrFModuleIdentifier() {
+        public String getRfModuleIdentifier() {
             return rFModuleIdentifier;
         }
 
-        public double getSystemModuleIdentifier() {
+        public String getSystemModuleIdentifier() {
             return systemModuleIdentifier;
         }
 
-        public double getTransmissionModuleIdentifier() {
-            return transmissionModuleIdentifier;
+        public String getTxModuleIdentifier() {
+            return txModuleIdentifier;
         }
 
         private void setIdentifiers() {
-            rFModuleIdentifier = 0.01 * FXDA + 0.1 * FXDB + FXEA + 10 * FXEB + 100 * FXX;
-            systemModuleIdentifier = 0.1 * ESMB + ESMC + 10 * FSMF;
-            transmissionModuleIdentifier = 0.1 * FIQA + FIQB + 10 * FTIF;
+            setRfModuleIdentifier();
+            setSmoduleIdentifier();
+            setTxModuleIdentifier();
         }
 
+        private void setRfModuleIdentifier() {
+            StringBuilder builder = new StringBuilder();
+            builder.append(FXDA);
+            builder.append(".");
+            builder.append(FXDB);
+            builder.append(".");
+            builder.append(FXEA);
+            builder.append(".");
+            builder.append(FXEB);
+            builder.append(".");
+            builder.append(FXX);
+            builder.append(".");
+            builder.append(FXED);
+            rFModuleIdentifier = builder.toString();
+        }
 
+        private void setSmoduleIdentifier() {
+            StringBuilder builder = new StringBuilder();
+            builder.append(ESMB);
+            builder.append(".");
+            builder.append(ESMC);
+            builder.append(".");
+            builder.append(FSMF);
+            systemModuleIdentifier = builder.toString();
+        }
+
+        private void setTxModuleIdentifier() {
+            StringBuilder builder = new StringBuilder();
+            builder.append(FIQA);
+            builder.append(".");
+            builder.append(FIQB);
+            builder.append(".");
+            builder.append(FTIF);
+            txModuleIdentifier = builder.toString();
+        }
     }
 
 }

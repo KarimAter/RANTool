@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.RowConstraints?>
-
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <GridPane alignment="center" hgap="10" prefHeight="449.0" prefWidth="428.0" vgap="10" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
     <children>
         <!--<Button fx:id="sitesBu" mnemonicParsing="false" text="Sites" textAlignment="CENTER" GridPane.rowIndex="2" />-->
@@ -20,9 +17,28 @@
         <Button fx:id="load3R2DumpBu" mnemonicParsing="false" text="Load 3G RAN2 Dump" GridPane.rowIndex="3" />
         <Button fx:id="load4R1DumpBu" mnemonicParsing="false" text="Load 4G RAN1 Dump" GridPane.rowIndex="4" />
         <Button fx:id="load4R2DumpBu" mnemonicParsing="false" text="Load 4G RAN2 Dump" GridPane.rowIndex="5" />
-        <Button fx:id="exportBu" mnemonicParsing="false" prefHeight="25.0" prefWidth="131.0" text="Export Dashboard" GridPane.rowIndex="6" />
-        <Button fx:id="saveDatabase" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="Save Database" GridPane.rowIndex="7" />
-        <Button fx:id="exportChanges" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="Export Changes" GridPane.rowIndex="8" />
+        <Button fx:id="exportDashboardBu" mnemonicParsing="false" prefHeight="25.0" prefWidth="131.0"
+                text="Export Dashboard" GridPane.rowIndex="6"/>
+        <Button fx:id="exportDumpsheetsBu" mnemonicParsing="false" prefHeight="25.0" prefWidth="131.0"
+                text="Export Dump Sheets" GridPane.rowIndex="7"/>
+        <Button fx:id="saveDatabase" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="Save Database"
+                GridPane.rowIndex="8"/>
+        <Button fx:id="saveSummary" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0"
+                text="Save Summary from Database" GridPane.rowIndex="9"/>
+        <Button fx:id="exportChangesBu" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0"
+                text="Export Changes" GridPane.rowIndex="10"/>
+        <Button fx:id="load2GXMLs" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="load 2G XMLs"
+                GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+        <Button fx:id="export2GHardware" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0"
+                text="Export 2G Hardware" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+        <Button fx:id="load3GXMLs" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="load 3G XMLs"
+                GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        <Button fx:id="export3GHardware" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0"
+                text="Export 3G Hardware" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+        <Button fx:id="load4GXMLs" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="load 4G XMLs"
+                GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+        <Button fx:id="export4GHardware" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0"
+                text="Export 4G Hardware" GridPane.rowIndex="5" GridPane.columnIndex="2"/>
 
     </children>
    <columnConstraints>

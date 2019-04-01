@@ -7,20 +7,19 @@ import java.util.ArrayList;
 
 public class USite {
 
-    private String siteName, siteRegion, siteRncId, siteWbtsId, siteVersion, lac, rac, uniqueName;
+    private String siteName, siteRegion, siteRncId, siteWbtsId, siteVersion, uniqueName;
     private String siteCode = "";
     private int siteNumberOfNodeBs, siteNumberOfSectors, siteNumberOfCells,
             siteNumberOfCarriers, siteNumberOfE1s, siteNumberOfOnAirCells, siteNumberOfFirstCarriersCells, siteNumberOfOnAirFirstCarriersCells,
             siteNumberOfSecondCarriersCells, siteNumberOfOnAirSecondCarriersCells, siteNumberOfThirdCarriersCells, siteNumberOfOnAirThirdCarriersCells,
             siteNumberOfU900CarriersCells, siteNumberOfOnAirU900CarriersCells, siteNumberOfOffAirCells,
-            siteNumberOfHSDPASet1, siteNumberOfHSDPASet2, siteNumberOfHSDPASet3, siteNumberOfHSUPASet1,
+            siteNumberOfHSDPASet1, siteNumberOfHSDPASet2, siteNumberOfHSDPASet3, siteNumberOfHSUPASet1, lac, rac,
             siteNumberOfChannelElements, uniqueId;
     double sitePower, siteU900Power;
-    double channelElementsIdentifier, carriersIdentifier, powerIdentifier;
-    String processingSetsIdentifier;
+    int channelElementsIdentifier;
+    String processingSetsIdentifier, carriersIdentifier, powerIdentifier;
     private ArrayList<NodeB> nodeBsList;
-    private boolean firstCarrier;
-    private boolean u900;
+    private boolean firstCarrier, secondCarrier, thirdCarrier, u900;
     private boolean rfSharing;
     private boolean standAloneU900;
     private UHardware uHardware;
@@ -89,7 +88,7 @@ public class USite {
 
     public void setSiteNumberOfOnAirSecondCarriersCells(int siteNumberOfOnAirSecondCarriersCells) {
         if (siteNumberOfOnAirSecondCarriersCells > 0) {
-            boolean secondCarrier = true;
+            this.secondCarrier = true;
             this.siteNumberOfCarriers++;
         }
         this.siteNumberOfOnAirSecondCarriersCells = siteNumberOfOnAirSecondCarriersCells;
@@ -109,7 +108,7 @@ public class USite {
 
     public void setSiteNumberOfOnAirThirdCarriersCells(int siteNumberOfOnAirThirdCarriersCells) {
         if (siteNumberOfOnAirThirdCarriersCells > 0) {
-            boolean thirdCarrier = true;
+            this.thirdCarrier = true;
             this.siteNumberOfCarriers++;
         }
         this.siteNumberOfOnAirThirdCarriersCells = siteNumberOfOnAirThirdCarriersCells;
@@ -206,6 +205,7 @@ public class USite {
                     siteTxMode = Constants.uTxMode.ATM;
                     break;
                 case "38":
+                case "70":
                     siteTxMode = Constants.uTxMode.DUAL_STACK;
                     break;
                 default:
@@ -216,19 +216,19 @@ public class USite {
         }
     }
 
-    public String getLac() {
+    public int getLac() {
         return lac;
     }
 
-    public void setLac(String lac) {
+    public void setLac(int lac) {
         this.lac = lac;
     }
 
-    public String getRac() {
+    public int getRac() {
         return rac;
     }
 
-    public void setRac(String rac) {
+    public void setRac(int rac) {
         this.rac = rac;
     }
 
@@ -280,17 +280,18 @@ public class USite {
         return processingSetsIdentifier;
     }
 
-    public double getChannelElementsIdentifier() {
+    public String getPowerIdentifier() {
+        return powerIdentifier;
+    }
+
+    public int getChannelElementsIdentifier() {
         return channelElementsIdentifier;
     }
 
-    public double getCarriersIdentifier() {
+    public String getCarriersIdentifier() {
         return carriersIdentifier;
     }
 
-    public double getPowerIdentifier() {
-        return powerIdentifier;
-    }
 
     public void setSiteNumberOfSectors() {
         if (firstCarrier)
@@ -485,6 +486,35 @@ public class USite {
     }
 
     private void setIdentifiers() {
+        processingSetsIdentifier = getPsIdentifier();
+        carriersIdentifier = getCarrIdentifier();
+        powerIdentifier = getPowerIdentifiers();
+        channelElementsIdentifier = siteNumberOfChannelElements;
+    }
+
+    private String getPowerIdentifiers() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(sitePower);
+        builder.append(" ");
+        builder.append(siteU900Power);
+        return builder.toString();
+    }
+
+    private String getCarrIdentifier() {
+        StringBuilder builder = new StringBuilder();
+        String sC = "0", tC = "0", uC = "0";
+
+        if (secondCarrier)
+            sC = "1";
+        if (thirdCarrier)
+            tC = "1";
+        if (u900)
+            uC = "1";
+        builder.append(sC).append(".").append(tC).append(".").append(uC);
+        return builder.toString();
+    }
+
+    private String getPsIdentifier() {
         StringBuilder builder = new StringBuilder();
         builder.append(siteNumberOfHSUPASet1);
         builder.append(".");
@@ -493,18 +523,17 @@ public class USite {
         builder.append(siteNumberOfHSDPASet2);
         builder.append(".");
         builder.append(siteNumberOfHSDPASet1);
-        processingSetsIdentifier = builder.toString();
-        channelElementsIdentifier = siteNumberOfChannelElements;
-        carriersIdentifier = 0.01 * siteNumberOfOnAirFirstCarriersCells + 0.1 * siteNumberOfOnAirSecondCarriersCells
-                + siteNumberOfOnAirThirdCarriersCells + 10 * siteNumberOfOnAirU900CarriersCells;
-        powerIdentifier = 0.1 * sitePower + siteU900Power;
+        return builder.toString();
     }
 
     public static class UHardware {
         int FBBA, FRGC, FRGD, FRGF, FRGL, FRGM, FRGP, FRGT, FRGU, FRGX,
                 FSMB, FSMD, FSME, FSMF, FTIA, FTIB, FTIF, FTPB, FXDA, FXDB;
-        double rFModuleIdentifier, systemModuleIdentifier, systemModuleExtentionIdentifier, transmissionModuleIdentifier;
-      public   String rfString, smString, txString, smExtString;
+        String rFModuleIdentifier, sModuleIdentifier, systemModuleExtentionIdentifier, txModuleIdentifier;
+        public String rfString, smString, txString, smExtString;
+
+        public UHardware() {
+        }
 
         public UHardware(int FBBA, int FRGC, int FRGD, int FRGF, int FRGL, int FRGM, int FRGP, int FRGT, int FRGU, int FRGX,
                          int FSMB, int FSMD, int FSME, int FSMF, int FTIA, int FTIB, int FTIF, int FTPB, int FXDA, int FXDB) {
@@ -532,7 +561,7 @@ public class USite {
             buildHWText();
         }
 
-        private void buildHWText() {
+        void buildHWText() {
             getRfModuleString();
             getSModuleString();
             getTxModString();
@@ -591,28 +620,82 @@ public class USite {
                 rfString = rfString + " " + FXDB + "FXDB ";
         }
 
-        public double getrFModuleIdentifier() {
+        public String getrFModuleIdentifier() {
             return rFModuleIdentifier;
         }
 
-        public double getSystemModuleIdentifier() {
-            return systemModuleIdentifier;
+        public String getsModuleIdentifier() {
+            return sModuleIdentifier;
         }
 
-        public double getSystemModuleExtentionIdentifier() {
-            return systemModuleExtentionIdentifier;
+//        public double getsModExtIdentifier() {
+//            return sModExtIdentifier;
+//        }
+
+        public String getTransmissionModuleIdentifier() {
+            return txModuleIdentifier;
         }
 
-        public double getTransmissionModuleIdentifier() {
-            return transmissionModuleIdentifier;
+        void setIdentifiers() {
+//            rFModuleIdentifier = 0.00001 * FRGC + 0.0001 * FRGD + 0.001 * FRGF + 0.01 * FRGL + 0.1 * FRGM +
+//                    FRGP + 10 * FRGT + 100 * FRGU + 1000 * FRGX + 10000 * FXDA + 100000 * FXDB;
+//            sModuleIdentifier = 0.01 * FSMB + 0.1 * FSMD + FSME + 10 * FSMF;
+//            sModExtIdentifier = FBBA;
+            setRfModuleIdentifier();
+            setSmoduleIdentifier();
+            setTxModuleIdentifier();
         }
 
-        private void setIdentifiers() {
-            rFModuleIdentifier = 0.00001 * FRGC + 0.0001 * FRGD + 0.001 * FRGF + 0.01 * FRGL + 0.1 * FRGM +
-                    FRGP + 10 * FRGT + 100 * FRGU + 1000 * FRGX + 10000 * FXDA + 100000 * FXDB;
-            systemModuleIdentifier = 0.01 * FSMB + 0.1 * FSMD + FSME + 10 * FSMF;
-            systemModuleExtentionIdentifier = FBBA;
-            transmissionModuleIdentifier = 0.01 * FTIA + 0.1 * FTIB + FTIF + 10 * FTPB;
+        private void setRfModuleIdentifier() {
+            StringBuilder builder = new StringBuilder();
+            builder.append(FRGC);
+            builder.append(".");
+            builder.append(FRGD);
+            builder.append(".");
+            builder.append(FRGF);
+            builder.append(".");
+            builder.append(FRGL);
+            builder.append(".");
+            builder.append(FRGM);
+            builder.append(".");
+            builder.append(FRGP);
+            builder.append(".");
+            builder.append(FRGT);
+            builder.append(".");
+            builder.append(FRGU);
+            builder.append(".");
+            builder.append(FRGX);
+            builder.append(".");
+            builder.append(FXDA);
+            builder.append(".");
+            builder.append(FXDB);
+            rFModuleIdentifier = builder.toString();
+        }
+
+        private void setSmoduleIdentifier() {
+            StringBuilder builder = new StringBuilder();
+            builder.append(FSMB);
+            builder.append(".");
+            builder.append(FSMD);
+            builder.append(".");
+            builder.append(FSME);
+            builder.append(".");
+            builder.append(FSMF);
+            builder.append(".");
+            builder.append(FBBA);
+            sModuleIdentifier = builder.toString();
+        }
+
+        private void setTxModuleIdentifier() {
+            StringBuilder builder = new StringBuilder();
+            builder.append(FTPB);
+            builder.append(".");
+            builder.append(FTIA);
+            builder.append(".");
+            builder.append(FTIB);
+            builder.append(".");
+            builder.append(FTIF);
+            txModuleIdentifier = builder.toString();
         }
     }
 }

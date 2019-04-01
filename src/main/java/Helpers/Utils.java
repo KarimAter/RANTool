@@ -4,16 +4,55 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Utils {
+
+    static File defaultPath = new File(System.getProperty("user.home"));
+
+    public static ArrayList<File> loadXMLsFromMachine(Stage stage) {
+        ArrayList<File> fileList = new ArrayList<>();
+        FileChooser fileChooser = new FileChooser();
+        List<File> list = fileChooser.showOpenMultipleDialog(stage);
+        if (list != null) {
+            for (File file : list) {
+                if (file.isFile() && file.getName().endsWith(".xml"))
+                    fileList.add(file);
+            }
+        }
+        return fileList;
+    }
+
+    public static File loadXMLFromMachine(Stage stage) {
+        FileChooser fileChooser = getFileChooser("*.xml");
+        configureFileChooser(fileChooser);
+        File file = fileChooser.showOpenDialog(stage);
+        if (file != null) {
+            defaultPath = new File(file.getParentFile().getPath());
+            return file;
+        }
+        return null;
+    }
 
     public static String loadDumpFromMachine(Stage stage) {
         FileChooser fileChooser = getFileChooser("*.mdb");
         configureFileChooser(fileChooser);
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
+            defaultPath = new File(file.getParentFile().getPath());
             return file.getPath();
+        }
+        return null;
+    }
+
+    public static String loadDatabaseFromMachine(Stage stage) {
+        FileChooser fileChooser = getFileChooser("*.db");
+        configureFileChooser(fileChooser);
+        File file = fileChooser.showOpenDialog(stage);
+        if (file != null) {
+            defaultPath = new File(file.getParentFile().getPath());
+            return file.getName();
         }
         return null;
     }
@@ -28,21 +67,23 @@ public class Utils {
 
     private static void configureFileChooser(final FileChooser fileChooser) {
         fileChooser.setTitle("Load Dump");
-        fileChooser.setInitialDirectory(
-                new File(System.getProperty("user.home"))
-        );
+        fileChooser.setInitialDirectory(defaultPath);
 
     }
 
     public static String extractSiteCode(String siteName) {
         String siteCode = "";
-        if (siteName != null) {
-            int siteNameLength = siteName.length();
+        try {
+            if (siteName != null) {
+                int siteNameLength = siteName.length();
 
-            if (siteName.contains("_X")) {
-                siteCode = siteName.substring(siteNameLength - 8, siteNameLength - 2);
-            } else
-                siteCode = siteName.substring(siteNameLength - 6);
+                if (siteName.contains("_X")) {
+                    siteCode = siteName.substring(siteNameLength - 8, siteNameLength - 2);
+                } else
+                    siteCode = siteName.substring(siteNameLength - 6);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return siteCode;
     }

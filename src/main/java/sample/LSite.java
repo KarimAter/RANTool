@@ -2,11 +2,13 @@ package sample;
 
 import Helpers.Utils;
 
+import java.util.ArrayList;
+
 public class LSite {
-    String eNodeBRegion, eNodeBId, eNodeBVersion, tac, uniqueName;
+    String eNodeBRegion, eNodeBId, eNodeBVersion, uniqueName;
     private String eNodeBCode = "";
     private String eNodeBName = "";
-    private int eNodeBNumberOfSectors, eNodeBNumberOfCells, eNodeBNumberOfOnAirCells, eNodeBBW, eNodeBMimo, uniqueId;
+    private int eNodeBNumberOfSectors, eNodeBNumberOfCells, eNodeBNumberOfOnAirCells, eNodeBBW, eNodeBMimo, tac, uniqueId;
     private LHardware lHardware;
     double bwIdentifier;
 
@@ -104,11 +106,11 @@ public class LSite {
         this.eNodeBMimo = eNodeBMimo;
     }
 
-    public String getTac() {
+    public int getTac() {
         return tac;
     }
 
-    public void setTac(String tac) {
+    public void setTac(int tac) {
         this.tac = tac;
     }
 
@@ -170,14 +172,48 @@ public class LSite {
         return lHardware;
     }
 
-    public void setLHardware(LHardware lHardware) {
+    public void setLHardware(ENodeBHW enodeBHW) {
+        LSite.LHardware lHardware = new LSite.LHardware();
+        if (enodeBHW != null) {
+            ArrayList<HwItem> hwItems = enodeBHW.getHwItems();
+            for (HwItem hwItem : hwItems) {
+                switch (hwItem.getUserLabel()) {
+                    case "FBBA":
+                        lHardware.FBBA++;
+                        break;
+                    case "FBBC":
+                        lHardware.FBBC++;
+                        break;
+                    case "FRGT":
+                        lHardware.FRGT++;
+                        break;
+                    case "FSMF":
+                        lHardware.FSMF++;
+                        break;
+                    case "FSPD":
+                        lHardware.FSPD++;
+                        break;
+                    case "FTIF":
+                        lHardware.FTIF++;
+                        break;
+                    case "FXEB":
+                        lHardware.FXEB++;
+                        break;
+                    case "FXED":
+                        lHardware.FXED++;
+                        break;
+                }
+            }
+        }
         this.lHardware = lHardware;
+        this.lHardware.setIdentifiers();
+        this.lHardware.buildHWText();
     }
 
     public static class LHardware {
         int FBBA, FBBC, FRGT, FSMF, FSPD, FTIF, FXEB, FXED;
-        double rFModuleIdentifier, systemModuleIdentifier, systemModuleExtentionIdentifier, transmissionModuleIdentifier;
-     public    String rfString, smString;
+        String rFModuleIdentifier, sModuleIdentifier, sModExtIdentifier;
+        public String rfString, smString;
 
         public LHardware(int FBBA, int FBBC, int FRGT, int FSMF, int FSPD, int FTIF, int FXEB, int FXED) {
             this.FBBA = FBBA;
@@ -190,6 +226,10 @@ public class LSite {
             this.FXED = FXED;
             setIdentifiers();
             buildHWText();
+        }
+
+        LHardware() {
+
         }
 
         private void buildHWText() {
@@ -217,26 +257,40 @@ public class LSite {
                 rfString = rfString + " " + FXED + "FXED ";
         }
 
-        public double getrFModuleIdentifier() {
+        public String getrFModuleIdentifier() {
             return rFModuleIdentifier;
         }
 
-        public double getSystemModuleIdentifier() {
-            return systemModuleIdentifier;
-        }
-
-        public double getSystemModuleExtentionIdentifier() {
-            return systemModuleExtentionIdentifier;
-        }
-
-        public double getTransmissionModuleIdentifier() {
-            return transmissionModuleIdentifier;
+        public String getsModuleIdentifier() {
+            return sModuleIdentifier;
         }
 
         private void setIdentifiers() {
-            rFModuleIdentifier = 0.1 * FRGT + FXEB + 10 * FXED;
-            systemModuleIdentifier = FSMF;
-            systemModuleExtentionIdentifier = 0.1 * FBBA + FBBC;
+//            rFModuleIdentifier = 0.1 * FRGT + FXEB + 10 * FXED;
+//            sModuleIdentifier = FSMF;
+//            sModExtIdentifier = 0.1 * FBBA + FBBC;
+            setRfModuleIdentifier();
+            setSmoduleIdentifier();
+        }
+
+        private void setRfModuleIdentifier() {
+            StringBuilder builder = new StringBuilder();
+            builder.append(FRGT);
+            builder.append(".");
+            builder.append(FXEB);
+            builder.append(".");
+            builder.append(FXED);
+            rFModuleIdentifier = builder.toString();
+        }
+
+        private void setSmoduleIdentifier() {
+            StringBuilder builder = new StringBuilder();
+            builder.append(FSMF);
+            builder.append(".");
+            builder.append(FBBA);
+            builder.append(".");
+            builder.append(FBBC);
+            sModuleIdentifier = builder.toString();
         }
     }
 }

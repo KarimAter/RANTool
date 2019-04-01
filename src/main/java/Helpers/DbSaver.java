@@ -1,93 +1,130 @@
 package Helpers;
 
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static javax.management.remote.JMXConnectorFactory.connect;
-
 import sample.GSite;
 import sample.LSite;
 import sample.USite;
 
-/**
- * @author user
- */
-public class DbSaver extends Thread {
+import java.sql.*;
+import java.util.ArrayList;
+
+public class DbSaver {
 
 
-    Connection connection;
+    private Connection connection;
 
-    public Connection getConnection(String path) {
+    public DbSaver(String path) {
+        this.connection = getConnection(path);
 
-        Connection conn = null;
+        Statement st;
         try {
-            conn = DriverManager.getConnection
-                    ("jdbc:sqlite:" + path, "r", "s");
-            System.out.println("A new database has been created.");
-
-            Statement st = conn.createStatement();
-//        Statement L = conn.createStatement();
-//        Statement U = conn.createStatement();
-
-            String GSites = "create table if not exists GSMSites (id integer PRIMARY KEY,siteName text ,siteCode text,"
-                    + "region text, siteBSCName text,siteBCFId text,siteVersion text,siteNumberOfBCFs integer,"
+            st = connection.createStatement();
+            String GSites = "create table if not exists GSMSites (id text,siteName text ,siteCode text,"
+                    + " region text, siteBSCName text,siteBCFId int,siteBSCId int,siteNumberOfBCFs integer,"
                     + " siteNumberOfTRXs integer, siteNumberOfSectors integer, siteNumberOfCells integer, "
-                    + "siteNumberOfDcsCells integer, siteNumberOfGsmCells integer,siteNumberOfE1s integer,"
-                    + " siteNumberOfOnAirCells integer, siteNumberOfGTRXs integer)";
-
-            String LSites = "create table if not exists LTESites (id integer PRIMARY KEY, eNodeBName text, eNodeBCode text,"
-                    + " eNodeBRegion text, eNodeBId text, eNodeBVersion text, eNodeBNumberOfSectors integer,"
-                    + " eNodeBNumberOfCells integer, eNodeBNumberOfOnAirCells integer, eNodeBBW integer,"
-                    + " eNodeBMimo integer)";
-
-            String USites = "create table if not exists UMTSSites (id integer PRIMARY KEY,siteName text, siteCode text, "
-                    + "siteRegion text, siteRncId text, siteWbtsId text, siteVersion text, siteNumberOfNodeBs integer,"
+                    + " siteNumberOfDcsCells integer, siteNumberOfGsmCells integer,siteNumberOfE1s integer,"
+                    + " siteNumberOfOnAirCells integer, siteNumberOfGTRXs integer, lac integer, rac integer,gSiteTxMode text,"
+                    + " rFModuleIdentifier text, systemModuleIdentifier text,txModuleIdentifier text,"
+                    + " trxIdentifier integer,gTrxIdentifier integer,txModeIdentifier integer)";
+//38
+            String USites = "create table if not exists UMTSSites (id text,siteName text, siteCode text, "
+                    + "siteRegion text, siteRncId text, siteVersion text, siteNumberOfNodeBs integer,"
                     + " siteNumberOfSectors integer, siteNumberOfCells integer,siteNumberOfCarriers integer,"
                     + " siteNumberOfE1s integer, siteNumberOfOnAirCells integer, siteNumberOfFirstCarriersCells integer, "
                     + "siteNumberOfOnAirFirstCarriersCells integer,siteNumberOfSecondCarriersCells integer, "
                     + "siteNumberOfOnAirSecondCarriersCells integer, siteNumberOfThirdCarriersCells integer,"
                     + " siteNumberOfOnAirThirdCarriersCells integer,siteNumberOfU900CarriersCells integer, "
-                    + "siteNumberOfOnAirU900CarriersCells integer, siteNumberOfOffAirCells integer,"
+                    + "siteNumberOfOnAirU900CarriersCells integer, "
                     + "siteNumberOfHSDPASet1 integer, siteNumberOfHSDPASet2 integer, siteNumberOfHSDPASet3 integer,"
                     + " siteNumberOfHSUPASet1 integer, siteNumberOfChannelElements integer, sitePower double,"
-                    + " siteU900Power double,processingSetsIdentifier double, channelElementsIdentifier double, "
-                    + "carriersIdentifier double, powerIdentifier double,firstCarrier integer,u900 integer,"
-                    + "rfSharing integer,standAloneU900 integer)";
+                    + " siteU900Power double, lac integer, rac integer,processingSetsIdentifier text,"
+                    + " channelElementsIdentifier int, carriersIdentifier text, powerIdentifier text, rfSharing boolean,"
+                    + "standAloneU900 boolean, rFModuleIdentifier text,sModuleIdentifier text,txModuleIdentifier text)";
 
-
-
-
+            String LSites = "create table if not exists LTESites (id text, eNodeBName text, eNodeBCode text,"
+                    + " eNodeBRegion text, eNodeBId text, eNodeBVersion text, eNodeBNumberOfSectors integer,"
+                    + " eNodeBNumberOfCells integer, eNodeBNumberOfOnAirCells integer, eNodeBBW integer,"
+                    + " eNodeBMimo integer, tac integer,rFModuleIdentifier text,sModuleIdentifier text)";
 
             st.execute(GSites);
             st.execute(LSites);
             st.execute(USites);
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Connection getConnection(String path) {
+        Connection conn = null;
+        try {
+            conn = DriverManager.getConnection
+                    ("jdbc:sqlite:" + path, "r", "s");
 
         } catch (SQLException ex) {
-            Logger.getLogger(DbSaver.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
 
         return conn;
     }
 
-    public DbSaver(String path) {
-        this.connection = getConnection(path);
+
+    private void insertGSM(ArrayList<GSite> gSitesList) {
+        try {
+            String sq = "INSERT INTO GSMSites (id,siteName  ,siteCode ,"
+                    + "region , siteBSCName ,siteBCFId ,siteBSCId ,siteNumberOfBCFs ,"
+                    + " siteNumberOfTRXs , siteNumberOfSectors , siteNumberOfCells , "
+                    + "siteNumberOfDcsCells , siteNumberOfGsmCells ,siteNumberOfE1s ,"
+                    + " siteNumberOfOnAirCells , siteNumberOfGTRXs, lac , rac ,gSiteTxMode , "
+                    + "rFModuleIdentifier , systemModuleIdentifier ,txModuleIdentifier ,"
+                    + " trxIdentifier , gTrxIdentifier , txModeIdentifier )" +
+                    "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            try (PreparedStatement pr = connection.prepareStatement(sq)) {
+                for (int i = 0; i < gSitesList.size(); i++) {
+
+                    GSite gSite = gSitesList.get(i);
+                    pr.setString(1, gSite.getUniqueName());
+                    pr.setString(2, gSite.getSiteName());
+                    pr.setString(3, gSite.getSiteCode());
+                    pr.setString(4, gSite.getRegion());
+                    pr.setString(5, gSite.getSiteBSCName());
+                    pr.setString(6, gSite.getSiteBCFId());
+                    pr.setString(7, gSite.getSiteBSCId());
+                    pr.setInt(8, gSite.getSiteNumberOfBCFs());
+                    pr.setInt(9, gSite.getSiteNumberOfTRXs());
+                    pr.setInt(10, gSite.getSiteNumberOfSectors());
+                    pr.setInt(11, gSite.getSiteNumberOfCells());
+                    pr.setInt(12, gSite.getSiteNumberOfDcsCells());
+                    pr.setInt(13, gSite.getSiteNumberOfGsmCells());
+                    pr.setInt(14, gSite.getSiteNumberOfE1s());
+                    pr.setInt(15, gSite.getSiteNumberOfOnAirCells());
+                    pr.setInt(16, gSite.getSiteNumberOfGTRXs());
+                    pr.setInt(17, gSite.getLac());
+                    pr.setInt(18, gSite.getRac());
+                    pr.setString(19, gSite.getSiteTxMode());
+                    pr.setString(20, gSite.getGHardware().getRfModuleIdentifier());
+                    pr.setString(21, gSite.getGHardware().getSystemModuleIdentifier());
+                    pr.setString(22, gSite.getGHardware().getTxModuleIdentifier());
+                    pr.setInt(23, gSite.getTrxIdentifier());
+                    pr.setInt(24, gSite.getgTrxIdentifier());
+                    pr.setInt(25, gSite.getTxModeIdentifier());
+                    pr.executeUpdate();
+                }
+                pr.executeBatch();
+                System.out.println("GSM Table is done..");
+                //connection.close();
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
 
-
-    public void insertUMTS(ArrayList<USite> uSitesList) {
+    private void insertUMTS(ArrayList<USite> uSitesList) {
         try {
 
             String sq = "INSERT INTO UMTSSites (id ,siteName , siteCode , "
-                    + "siteRegion , siteRncId , siteWbtsId , siteVersion , siteNumberOfNodeBs ,"
+                    + "siteRegion , siteRncId , siteVersion , siteNumberOfNodeBs ,"
                     + " siteNumberOfSectors , siteNumberOfCells ,siteNumberOfCarriers ,"
                     + " siteNumberOfE1s , siteNumberOfOnAirCells , siteNumberOfFirstCarriersCells , "
                     + "siteNumberOfOnAirFirstCarriersCells,siteNumberOfSecondCarriersCells , "
@@ -96,38 +133,51 @@ public class DbSaver extends Thread {
                     + "siteNumberOfOnAirU900CarriersCells ,"
                     + "siteNumberOfHSDPASet1 , siteNumberOfHSDPASet2 , siteNumberOfHSDPASet3 ,"
                     + " siteNumberOfHSUPASet1 , siteNumberOfChannelElements , sitePower ,"
-                    + " siteU900Power )VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,"
-                    + "?,?,?,?)";
+                    + " siteU900Power,lac,rac,processingSetsIdentifier , channelElementsIdentifier , carriersIdentifier ," +
+                    " powerIdentifier , rfSharing ,standAloneU900 , rFModuleIdentifier ,sModuleIdentifier ,txModuleIdentifier )" +
+                    "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             try (PreparedStatement pr = connection.prepareStatement(sq)) {
                 for (int i = 0; i < uSitesList.size(); i++) {
-                    pr.setInt(1, i + 1);
-                    pr.setString(2, uSitesList.get(i).getSiteName());
-                    pr.setString(3, uSitesList.get(i).getSiteCode());
-                    pr.setString(4, uSitesList.get(i).getSiteRegion());
-                    pr.setString(5, uSitesList.get(i).getSiteRncId());
-                    pr.setString(6, uSitesList.get(i).getSiteWbtsId());
-                    pr.setString(7, uSitesList.get(i).getSiteVersion());
-                    pr.setInt(8, uSitesList.get(i).getSiteNumberOfNodeBs());
-                    pr.setInt(9, uSitesList.get(i).getSiteNumberOfSectors());
-                    pr.setInt(10, uSitesList.get(i).getSiteNumberOfCells());
-                    pr.setInt(11, uSitesList.get(i).getSiteNumberOfCarriers());
-                    pr.setInt(12, uSitesList.get(i).getSiteNumberOfE1s());
-                    pr.setInt(13, uSitesList.get(i).getSiteNumberOfOnAirCells());
-                    pr.setInt(14, uSitesList.get(i).getSiteNumberOfFirstCarriersCells());
-                    pr.setInt(15, uSitesList.get(i).getSiteNumberOfOnAirFirstCarriersCells());
-                    pr.setInt(16, uSitesList.get(i).getSiteNumberOfSecondCarriersCells());
-                    pr.setInt(17, uSitesList.get(i).getSiteNumberOfOnAirSecondCarriersCells());
-                    pr.setInt(18, uSitesList.get(i).getSiteNumberOfThirdCarriersCells());
-                    pr.setInt(19, uSitesList.get(i).getSiteNumberOfOnAirThirdCarriersCells());
-                    pr.setInt(20, uSitesList.get(i).getSiteNumberOfU900CarriersCells());
-                    pr.setInt(21, uSitesList.get(i).getSiteNumberOfOnAirU900CarriersCells());
-                    pr.setInt(22, uSitesList.get(i).getSiteNumberOfHSDPASet1());
-                    pr.setInt(23, uSitesList.get(i).getSiteNumberOfHSDPASet2());
-                    pr.setInt(24, uSitesList.get(i).getSiteNumberOfHSDPASet3());
-                    pr.setInt(25, uSitesList.get(i).getSiteNumberOfHSUPASet1());
-                    pr.setInt(26, uSitesList.get(i).getSiteNumberOfChannelElements());
-                    pr.setDouble(27, uSitesList.get(i).getSitePower());
-                    pr.setDouble(28, uSitesList.get(i).getSiteU900Power());
+                    USite uSite = uSitesList.get(i);
+                    pr.setString(1, uSite.getUniqueName());
+                    pr.setString(2, uSite.getSiteName());
+                    pr.setString(3, uSite.getSiteCode());
+                    pr.setString(4, uSite.getSiteRegion());
+                    pr.setString(5, uSite.getSiteRncId());
+                    pr.setString(6, uSite.getSiteVersion());
+                    pr.setInt(7, uSite.getSiteNumberOfNodeBs());
+                    pr.setInt(8, uSite.getSiteNumberOfSectors());
+                    pr.setInt(9, uSite.getSiteNumberOfCells());
+                    pr.setInt(10, uSite.getSiteNumberOfCarriers());
+                    pr.setInt(11, uSite.getSiteNumberOfE1s());
+                    pr.setInt(12, uSite.getSiteNumberOfOnAirCells());
+                    pr.setInt(13, uSite.getSiteNumberOfFirstCarriersCells());
+                    pr.setInt(14, uSite.getSiteNumberOfOnAirFirstCarriersCells());
+                    pr.setInt(15, uSite.getSiteNumberOfSecondCarriersCells());
+                    pr.setInt(16, uSite.getSiteNumberOfOnAirSecondCarriersCells());
+                    pr.setInt(17, uSite.getSiteNumberOfThirdCarriersCells());
+                    pr.setInt(18, uSite.getSiteNumberOfOnAirThirdCarriersCells());
+                    pr.setInt(19, uSite.getSiteNumberOfU900CarriersCells());
+                    pr.setInt(20, uSite.getSiteNumberOfOnAirU900CarriersCells());
+                    pr.setInt(21, uSite.getSiteNumberOfHSDPASet1());
+                    pr.setInt(22, uSite.getSiteNumberOfHSDPASet2());
+                    pr.setInt(23, uSite.getSiteNumberOfHSDPASet3());
+                    pr.setInt(24, uSite.getSiteNumberOfHSUPASet1());
+                    pr.setInt(25, uSite.getSiteNumberOfChannelElements());
+                    pr.setDouble(26, uSite.getSitePower());
+                    pr.setDouble(27, uSite.getSiteU900Power());
+                    pr.setInt(28, uSite.getLac());
+                    pr.setInt(29, uSite.getRac());
+                    pr.setString(30, uSite.getProcessingSetsIdentifier());
+                    pr.setInt(31, uSite.getChannelElementsIdentifier());
+                    pr.setString(32, uSite.getCarriersIdentifier());
+                    pr.setString(33, uSite.getPowerIdentifier());
+                    pr.setBoolean(34, uSite.isRfSharing());
+                    pr.setBoolean(35, uSite.isStandAloneU900());
+                    USite.UHardware uHardware = uSite.getUHardware();
+                    pr.setString(36, uHardware.getrFModuleIdentifier());
+                    pr.setString(37, uHardware.getsModuleIdentifier());
+                    pr.setString(38, uHardware.getTransmissionModuleIdentifier());
                     pr.executeUpdate();
                 }
                 pr.executeBatch();
@@ -140,63 +190,30 @@ public class DbSaver extends Thread {
         }
     }
 
-    public void insertGSM(ArrayList<GSite> gSitesList) {
-        try {
-
-            String sq = "INSERT INTO GSMSites (id,siteName  ,siteCode ,"
-                    + "region , siteBSCName ,siteBCFId ,siteVersion ,siteNumberOfBCFs ,"
-                    + " siteNumberOfTRXs , siteNumberOfSectors , siteNumberOfCells , "
-                    + "siteNumberOfDcsCells , siteNumberOfGsmCells ,siteNumberOfE1s ,"
-                    + " siteNumberOfOnAirCells , siteNumberOfGTRXs )VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-            try (PreparedStatement pr = connection.prepareStatement(sq)) {
-                for (int i = 0; i < gSitesList.size(); i++) {
-                    pr.setInt(1, i + 1);
-                    pr.setString(2, gSitesList.get(i).getSiteName());
-                    pr.setString(3, gSitesList.get(i).getSiteCode());
-                    pr.setString(4, gSitesList.get(i).getRegion());
-                    pr.setString(5, gSitesList.get(i).getSiteBSCName());
-                    pr.setString(6, gSitesList.get(i).getSiteBCFId());
-                    pr.setString(7, gSitesList.get(i).getSiteVersion());
-                    pr.setInt(8, gSitesList.get(i).getSiteNumberOfBCFs());
-                    pr.setInt(9, gSitesList.get(i).getSiteNumberOfTRXs());
-                    pr.setInt(10, gSitesList.get(i).getSiteNumberOfSectors());
-                    pr.setInt(11, gSitesList.get(i).getSiteNumberOfCells());
-                    pr.setInt(12, gSitesList.get(i).getSiteNumberOfDcsCells());
-                    pr.setInt(13, gSitesList.get(i).getSiteNumberOfGsmCells());
-                    pr.setInt(14, gSitesList.get(i).getSiteNumberOfE1s());
-                    pr.setInt(15, gSitesList.get(i).getSiteNumberOfOnAirCells());
-                    pr.setInt(16, gSitesList.get(i).getSiteNumberOfGTRXs());
-                    pr.executeUpdate();
-                }
-                pr.executeBatch();
-                System.out.println("UMTS Table is done..");
-                //connection.close();
-            }
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public void insertLTE(ArrayList<LSite> lSitesList) {
+    private void insertLTE(ArrayList<LSite> lSitesList) {
         try {
 
             String sq = "INSERT INTO LTESites (id, eNodeBName , eNodeBCode , eNodeBRegion , eNodeBId , "
                     + "eNodeBVersion , eNodeBNumberOfSectors , eNodeBNumberOfCells , eNodeBNumberOfOnAirCells ,"
-                    + " eNodeBBW , eNodeBMimo )VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+                    + " eNodeBBW , eNodeBMimo,tac,rFModuleIdentifier,sModuleIdentifier )VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             try (PreparedStatement pr = connection.prepareStatement(sq)) {
                 for (int i = 0; i < lSitesList.size(); i++) {
-                    pr.setInt(1, i + 1);
-                    pr.setString(2, lSitesList.get(i).getENodeBName());
-                    pr.setString(3, lSitesList.get(i).getENodeBCode());
-                    pr.setString(4, lSitesList.get(i).getENodeBRegion());
-                    pr.setString(5, lSitesList.get(i).getENodeBId());
-                    pr.setString(6, lSitesList.get(i).getENodeBVersion());
-                    pr.setInt(7, lSitesList.get(i).getENodeBNumberOfSectors());
-                    pr.setInt(8, lSitesList.get(i).getENodeBNumberOfCells());
-                    pr.setInt(9, lSitesList.get(i).getENodeBNumberOfOnAirCells());
-                    pr.setInt(10, lSitesList.get(i).getENodeBBW());
-                    pr.setInt(11, lSitesList.get(i).getENodeBMimo());
+                    LSite lSite = lSitesList.get(i);
+                    pr.setString(1, lSite.getUniqueName());
+                    pr.setString(2, lSite.getENodeBName());
+                    pr.setString(3, lSite.getENodeBCode());
+                    pr.setString(4, lSite.getENodeBRegion());
+                    pr.setString(5, lSite.getENodeBId());
+                    pr.setString(6, lSite.getENodeBVersion());
+                    pr.setInt(7, lSite.getENodeBNumberOfSectors());
+                    pr.setInt(8, lSite.getENodeBNumberOfCells());
+                    pr.setInt(9, lSite.getENodeBNumberOfOnAirCells());
+                    pr.setInt(10, lSite.getENodeBBW());
+                    pr.setInt(11, lSite.getENodeBMimo());
+                    pr.setInt(12, lSite.getTac());
+                    LSite.LHardware lHardware = lSite.getLHardware();
+                    pr.setString(13, lHardware.getrFModuleIdentifier());
+                    pr.setString(14, lHardware.getsModuleIdentifier());
                     pr.executeUpdate();
                 }
                 pr.executeBatch();
@@ -209,5 +226,54 @@ public class DbSaver extends Thread {
         }
     }
 
+    public void store(ArrayList<GSite> gSitesList, ArrayList<USite> uSitesList, ArrayList<LSite> lSitesList) {
+        insertGSM(gSitesList);
+        insertUMTS(uSitesList);
+        insertLTE(lSitesList);
+    }
+
+    public ResultSet loadGIdentifiers() {
+        ResultSet resultSet = null;
+        try {
+
+            Statement statement = connection.createStatement();
+            String query = " Select id,siteName,siteCode,siteNumberOfOnAirCells,trxIdentifier,txModeIdentifier" +
+                    ",rFModuleIdentifier , systemModuleIdentifier ,txModuleIdentifier from GSMSites";
+            resultSet = statement.executeQuery(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return resultSet;
+    }
+
+    public ResultSet loadUIdentifiers() {
+
+        ResultSet resultSet = null;
+        try {
+
+            Statement statement = connection.createStatement();
+            String query = " Select id,siteName,siteCode,siteNumberOfOnAirCells,processingSetsIdentifier,channelElementsIdentifier," +
+                    "carriersIdentifier,powerIdentifier,rFModuleIdentifier , sModuleIdentifier ,txModuleIdentifier from UMTSSites";
+            resultSet = statement.executeQuery(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return resultSet;
+    }
+
+    public ResultSet loadLIdentifiers() {
+
+        ResultSet resultSet = null;
+        try {
+
+            Statement statement = connection.createStatement();
+            String query = " Select id,eNodeBName,eNodeBCode,eNodeBNumberOfOnAirCells,eNodeBBW" +
+                    ",rFModuleIdentifier , sModuleIdentifier  from LTESites";
+            resultSet = statement.executeQuery(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return resultSet;
+    }
 
 }
