@@ -544,6 +544,7 @@ class Exporter {
         return workbook;
     }
 
+    // Todo: process the dump into database and then export from it to avoid the GC overhead problem
     static void exportTRXSheet(ResultSet resultSet, int ran) throws SQLException, IOException {
         XSSFSheet sheet1;
         XSSFWorkbook trxWb;

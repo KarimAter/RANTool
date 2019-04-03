@@ -145,6 +145,7 @@ public class NodeB implements PropertiesExtractor {
                         case "22":
                         case "38":
                         case "48":
+                        case "64":
                             this.region = "AL";
                         case "36":
                         case "54":

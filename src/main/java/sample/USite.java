@@ -388,6 +388,7 @@ public class USite {
                         case "22":
                         case "38":
                         case "48":
+                        case "64":
                             this.siteRegion = "AL";
                         case "36":
                         case "54":
