@@ -72,7 +72,7 @@ public class Utils {
     }
 
     public static String extractSiteCode(String siteName) {
-        String siteCode = "";
+        String siteCode = null;
         try {
             if (siteName != null) {
                 int siteNameLength = siteName.length();

@@ -4,11 +4,9 @@ import sample.*;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
 
 public class DatabaseConnector {
-    Connection connection;
+    private Connection connection;
     private static final String driver = "net.ucanaccess.jdbc.UcanaccessDriver";
 
     public DatabaseConnector(String dumpPath) {
@@ -19,104 +17,99 @@ public class DatabaseConnector {
 //        connection = null;
         try {
             Class.forName(driver);
-            Calendar calendar = Calendar.getInstance();
-            System.out.println(calendar.getTime().toString());
             connection = DriverManager.getConnection
                     ("jdbc:ucanaccess://" + dumpPath +
                             ";keepMirror=true");
-            calendar = Calendar.getInstance();
-            System.out.println(calendar.getTime().toString());
-
+//            calendar = Calendar.getInstance();
+//            System.out.println(calendar.getTime().toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
         return connection;
     }
-
-    public ArrayList<GSite> get2GSites(ArrayList<GSite> gSitesList) throws SQLException {
-
-        Statement statement = connection.createStatement();
-
-        String gQuery = "Select name,count(name),sum(T),first(BSCName),sum(C),sum(O),max(TX),sum(E),sum(G),sum(F),first(LAC),first(RAC),first(BSCId) from" +
-                "(Select BSCId,BCFId,count(TRXId) as T,sum(gprsEnabledTrx) as G from A_TRX group by BSCId,BCFId) as firstSet " +
-                "left join " +
-                "(Select BSCId,BCFId,name from A_BCF group by BSCId,BCFId) as secondSet " +
-                "on (firstSet.BSCId=secondSet.BSCId and firstSet.BCFId=secondSet.BCFId)" +
-                "left join " +
-                "(Select BSCId,name as BSCName from A_BSC) as thirdSet " +
-                "on (firstSet.BSCId=thirdSet.BSCId)" +
-                "left join " +
-                "(Select BSCId,BCFId,count(BTSId) as C,sum(adminState) as O,sum(frequencyBandInUse) as F ,first(locationAreaIdLAC) as LAC," +
-                " first(rac) as RAC from A_BTS group by BSCId,BCFId) as fourthSet " +
-                "on (firstSet.BSCId=fourthSet.BSCId and firstSet.BCFId=fourthSet.BCFId) " +
-                "left join " +
-                "(Select  BSCId,BCFId,max(channel0Pcm) as TX from A_TRX " +
-                "group by BSCId,BCFId) as fifthSet " +
-                "on (firstSet.BSCId=fifthSet.BSCId and firstSet.BCFId=fifthSet.BCFId)" +
-                "left join " +
-                "(Select BSCId,BCFId,count(channel0Pcm) as E from ( Select BSCId,BCFId,channel0Pcm from A_TRX " +
-                "where channel0Pcm not like '65535' group by BSCId,BCFId,channel0Pcm ) group by BSCId,BCFId ) as sixthSet " +
-                "on (firstSet.BSCId=sixthSet.BSCId and firstSet.BCFId=sixthSet.BCFId) " +
-                " group by name";
-        String gHardwareQuery = "Select name,first(ESMB),first(ESMC),first(FIQA),first(FIQB),first(FSMF),first(FTIF),first(FXDA),first(FXDB),first(FXEA),first(FXEB),first(FXX),first(FXED) " +
-                "from (" +
-                "(Select name from (Select BSCId,BCFId from A_TRX group by BSCId,BCFId) as A left join (Select BSCId,BCFId,name from A_BCF group by BSCId,BCFId) as B  " +
-                "on (A.BSCId=B.BSCId and A.BCFId=B.BCFId) group by name) as SiteSet  " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as ESMB from 2GHW where unitTypeActual = 'ESMB' group by siteName) as  ESMBSet on (SiteSet.name=ESMBSet.siteName) " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as ESMC from 2GHW where unitTypeActual = 'ESMC' group by siteName) as  ESMCSet on (SiteSet.name=ESMCSet.siteName) " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as FIQA from 2GHW where unitTypeActual = 'FIQA' group by siteName) as  FIQASet on (SiteSet.name=FIQASet.siteName) " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as FIQB from 2GHW where unitTypeActual = 'FIQB' group by siteName) as  FIQBSet on (SiteSet.name=FIQBSet.siteName) " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as FSMF from 2GHW where unitTypeActual = 'FSMF' group by siteName) as  FSMFSet on (SiteSet.name=FSMFSet.siteName) " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as FTIF from 2GHW where unitTypeActual = 'FTIF' group by siteName) as  FTIFSet on (SiteSet.name=FTIFSet.siteName) " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as FXDA from 2GHW where unitTypeActual = 'FXDA' group by siteName) as  FXDASet on (SiteSet.name=FXDASet.siteName) " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as FXDB from 2GHW where unitTypeActual = 'FXDB' group by siteName) as  FXDBSet on (SiteSet.name=FXDBSet.siteName) " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as FXEA from 2GHW where unitTypeActual = 'FXEA' group by siteName) as  FXEASet on (SiteSet.name=FXEASet.siteName) " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as FXEB from 2GHW where unitTypeActual = 'FXEB' group by siteName) as  FXEBSet on (SiteSet.name=FXEBSet.siteName) " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as FXX from 2GHW where unitTypeActual = 'FXX' group by siteName) as  FXXSet on (SiteSet.name=FXXSet.siteName) " +
-                "left join " +
-                "(Select siteName,count(unitTypeActual) as FXED from 2GHW where unitTypeActual = 'FXED' group by siteName) as  FXEDSet on (SiteSet.name=FXEDSet.siteName) " +
-                ") group by name";
-        ResultSet gResultSet = statement.executeQuery(gQuery);
-//        ResultSet hwResultSet = statement.executeQuery(gHardwareQuery);
-
-
-        while (gResultSet.next()) {
-            GSite site = new GSite();
-            site.setSiteName(gResultSet.getString(1));
-            site.setSiteNumberOfBCFs(gResultSet.getInt(2));
-            site.setSiteNumberOfTRXs(gResultSet.getInt(3));
-            site.setSiteBSCName(gResultSet.getString(4));
-            site.setSiteNumberOfCells(gResultSet.getInt(5));
-            site.setSiteNumberOfOnAirCells(gResultSet.getInt(6));
-            site.setSiteTxMode(gResultSet.getString(7));
-            site.setSiteNumberOfE1s(gResultSet.getInt(8));
-            site.setSiteNumberOfGTRXs(gResultSet.getInt(9));
-            site.setSiteNumberOfDcsCells(gResultSet.getInt(10));
-            site.setLac(gResultSet.getInt(11));
-            site.setRac(gResultSet.getInt(12));
-            site.setSiteBSCId(gResultSet.getString(13));
-//            GSite.GHardware gHardware = new GSite.GHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
-//                    hwResultSet.getInt(5), hwResultSet.getInt(6), hwResultSet.getInt(7), hwResultSet.getInt(8),
-//                    hwResultSet.getInt(9), hwResultSet.getInt(10), hwResultSet.getInt(11), hwResultSet.getInt(12),
-//                    hwResultSet.getInt(13));
-//            site.setGHardware(gHardware);
-            site.finalizeProperties();
-            if (site.getSiteName() != null)
-                gSitesList.add(site);
-        }
-        return gSitesList;
-    }
+//
+//    public ArrayList<GSite> get2GSites(ArrayList<GSite> gSitesList) throws SQLException {
+//
+//        Statement statement = connection.createStatement();
+//
+//
+//        String gQuery = "Select name,count(name),sum(T),first(BSCName),sum(C),sum(O),max(TX),sum(E),sum(G),sum(F),first(LAC),first(RAC),first(BSCId),first(status) from" +
+//                "(Select BSCId,BCFId,count(TRXId) as T,sum(gprsEnabledTrx) as G from A_TRX group by BSCId,BCFId) as firstSet " +
+//                "left join " +
+//                "(Select BSCId,BCFId,name,adminState as status from A_BCF group by BSCId,BCFId) as secondSet " +
+//                "on (firstSet.BSCId=secondSet.BSCId and firstSet.BCFId=secondSet.BCFId)" +
+//                "left join " +
+//                "left join " +
+//                "(Select BSCId,name as BSCName from A_BSC) as thirdSet " +
+//                "on (firstSet.BSCId=thirdSet.BSCId)" +
+//                "left join " +
+//                "(Select BSCId,BCFId,count(BTSId) as C,sum(adminState) as O,sum(frequencyBandInUse) as F ,first(locationAreaIdLAC) as LAC," +
+//                " first(rac) as RAC from A_BTS group by BSCId,BCFId) as fourthSet " +
+//                "on (firstSet.BSCId=fourthSet.BSCId and firstSet.BCFId=fourthSet.BCFId) " +
+//                "left join " +
+//                "(Select  BSCId,BCFId,max(channel0Pcm) as TX from A_TRX " +
+//                "group by BSCId,BCFId) as fifthSet " +
+//                "on (firstSet.BSCId=fifthSet.BSCId and firstSet.BCFId=fifthSet.BCFId)" +
+//                "left join " +
+//                "(Select BSCId,BCFId,count(channel0Pcm) as E from ( Select BSCId,BCFId,channel0Pcm from A_TRX " +
+//                "where channel0Pcm not like '65535' group by BSCId,BCFId,channel0Pcm ) group by BSCId,BCFId ) as sixthSet " +
+//                "on (firstSet.BSCId=sixthSet.BSCId and firstSet.BCFId=sixthSet.BCFId) " +
+//                " group by name";
+//        String gHardwareQuery = "Select name,first(ESMB),first(ESMC),first(FIQA),first(FIQB),first(FSMF),first(FTIF),first(FXDA),first(FXDB),first(FXEA),first(FXEB),first(FXX),first(FXED) " +
+//                "from (" +
+//                "(Select name from (Select BSCId,BCFId from A_TRX group by BSCId,BCFId) as A left join (Select BSCId,BCFId,name from A_BCF group by BSCId,BCFId) as B  " +
+//                "on (A.BSCId=B.BSCId and A.BCFId=B.BCFId) group by name) as SiteSet  " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as ESMB from 2GHW where unitTypeActual = 'ESMB' group by siteName) as  ESMBSet on (SiteSet.name=ESMBSet.siteName) " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as ESMC from 2GHW where unitTypeActual = 'ESMC' group by siteName) as  ESMCSet on (SiteSet.name=ESMCSet.siteName) " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as FIQA from 2GHW where unitTypeActual = 'FIQA' group by siteName) as  FIQASet on (SiteSet.name=FIQASet.siteName) " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as FIQB from 2GHW where unitTypeActual = 'FIQB' group by siteName) as  FIQBSet on (SiteSet.name=FIQBSet.siteName) " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as FSMF from 2GHW where unitTypeActual = 'FSMF' group by siteName) as  FSMFSet on (SiteSet.name=FSMFSet.siteName) " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as FTIF from 2GHW where unitTypeActual = 'FTIF' group by siteName) as  FTIFSet on (SiteSet.name=FTIFSet.siteName) " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as FXDA from 2GHW where unitTypeActual = 'FXDA' group by siteName) as  FXDASet on (SiteSet.name=FXDASet.siteName) " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as FXDB from 2GHW where unitTypeActual = 'FXDB' group by siteName) as  FXDBSet on (SiteSet.name=FXDBSet.siteName) " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as FXEA from 2GHW where unitTypeActual = 'FXEA' group by siteName) as  FXEASet on (SiteSet.name=FXEASet.siteName) " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as FXEB from 2GHW where unitTypeActual = 'FXEB' group by siteName) as  FXEBSet on (SiteSet.name=FXEBSet.siteName) " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as FXX from 2GHW where unitTypeActual = 'FXX' group by siteName) as  FXXSet on (SiteSet.name=FXXSet.siteName) " +
+//                "left join " +
+//                "(Select siteName,count(unitTypeActual) as FXED from 2GHW where unitTypeActual = 'FXED' group by siteName) as  FXEDSet on (SiteSet.name=FXEDSet.siteName) " +
+//                ") group by name";
+//        ResultSet gResultSet = statement.executeQuery(gQuery);
+////        ResultSet hwResultSet = statement.executeQuery(gHardwareQuery);
+//
+//
+//        while (gResultSet.next()) {
+//            GSite site = new GSite();
+//            site.setSiteName(gResultSet.getString(1));
+//            site.setSiteNumberOfBCFs(gResultSet.getInt(2));
+//            site.setSiteNumberOfTRXs(gResultSet.getInt(3));
+//            site.setSiteBSCName(gResultSet.getString(4));
+//            site.setSiteNumberOfCells(gResultSet.getInt(5));
+//            site.setSiteNumberOfOnAirCells(gResultSet.getInt(6));
+//            site.setSiteTxMode(gResultSet.getString(7));
+//            site.setSiteNumberOfE1s(gResultSet.getInt(8));
+//            site.setSiteNumberOfGTRXs(gResultSet.getInt(9));
+//            site.setSiteNumberOfDcsCells(gResultSet.getInt(10));
+//            site.setLac(gResultSet.getInt(11));
+//            site.setRac(gResultSet.getInt(12));
+//            site.setSiteBSCId(gResultSet.getString(13));
+//            site.setOnAir(gResultSet.getInt(14));
+//            site.finalizeProperties();
+//            if (site.getSiteName() != null)
+//                gSitesList.add(site);
+//        }
+//        return gSitesList;
+//    }
 
     public ArrayList<USite> get3GSites(int ran, ArrayList<USite> uSitesList) throws SQLException {
         Statement statement = connection.createStatement();
@@ -143,23 +136,23 @@ public class DatabaseConnector {
                     "on (firstSet.RncId=sixthSet.RncId and firstSet.WBTSId=sixthSet.WBTSId)\n" +
                     "left join\n" +
                     "(Select RncId,WBTSId,numberOfHSDPASet1 as HD1,numberOfHSDPASet2 as HD2,numberOfHSDPASet3 as HD3,numberOfHSUPASet1 as HU1,numberOfR99ChannelElements \n" +
-                    "as R99,rfSharingEnabled as S  from A_WBTSF_BTSSCW ) as seventhSet \n" +
+                    "as R99,rfSharingEnabled as S  from A_WBTSF_RNC_WBTS_MRBTS_BTSSCW ) as seventhSet \n" +
                     "on (firstSet.RncId=seventhSet.RncId and firstSet.WBTSId=seventhSet.WBTSId)\n" +
                     "left  join \n" +
                     "(Select RncId,WBTSId,numberOfHSDPASet1 as HD1Count \n" +
-                    "from A_WBTSF_BTSSCW where numberOfHSDPASet1 ='-1') as eighthSet\n" +
+                    "from A_WBTSF_RNC_WBTS_MRBTS_BTSSCW where numberOfHSDPASet1 ='-1') as eighthSet\n" +
                     "on (firstSet.RncId=eighthSet.RncId and firstSet.WBTSId=eighthSet.WBTSId)\n" +
                     "left  join \n" +
                     "(Select RncId,WBTSId,numberOfHSDPASet2 as HD2Count \n" +
-                    "from A_WBTSF_BTSSCW where numberOfHSDPASet2 ='-1') as ninthSet\n" +
+                    "from A_WBTSF_RNC_WBTS_MRBTS_BTSSCW where numberOfHSDPASet2 ='-1') as ninthSet\n" +
                     "on (firstSet.RncId=ninthSet.RncId and firstSet.WBTSId=ninthSet.WBTSId)\n" +
                     "left  join \n" +
                     "(Select RncId,WBTSId,numberOfHSDPASet3 as HD3Count \n" +
-                    "from A_WBTSF_BTSSCW where numberOfHSDPASet3 ='-1') as tenthSet\n" +
+                    "from A_WBTSF_RNC_WBTS_MRBTS_BTSSCW where numberOfHSDPASet3 ='-1') as tenthSet\n" +
                     "on (firstSet.RncId=tenthSet.RncId and firstSet.WBTSId=tenthSet.WBTSId)\n" +
                     "left  join \n" +
                     "(Select RncId,WBTSId,numberOfHSUPASet1 as HU1Count \n" +
-                    "from A_WBTSF_BTSSCW where numberOfHSUPASet1 ='-1') as eleventhSet\n" +
+                    "from A_WBTSF_RNC_WBTS_MRBTS_BTSSCW where numberOfHSUPASet1 ='-1') as eleventhSet\n" +
                     "on (firstSet.RncId=eleventhSet.RncId and firstSet.WBTSId=eleventhSet.WBTSId)\n" +
                     "left join\n" +
                     "(Select RncId ,WBTSId,COCOId from A_WBTS ) as twelvthSet\n" +
@@ -177,10 +170,10 @@ public class DatabaseConnector {
                     "and ( MaxDLPowerCapability not like '65535')  group by RncId,WBTSId ) as fifteenthSet \n" +
                     "on (firstSet.RncId=fifteenthSet.RncId and firstSet.WBTSId=fifteenthSet.WBTSId)\n" +
                     "left join\n" +
-                    "(Select RncId,WBTSId,sum(vamEnabled) as vamF from A_WBTSF_LCELW where defaultCarrier ='10612' group by RncId,WBTSId ) as sixteenthSet \n" +
+                    "(Select RncId,WBTSId,sum(vamEnabled) as vamF from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW where defaultCarrier ='10612' group by RncId,WBTSId ) as sixteenthSet \n" +
                     "on (firstSet.RncId=sixteenthSet.RncId and firstSet.WBTSId=sixteenthSet.WBTSId)\n" +
                     "left join\n" +
-                    "(Select RncId,WBTSId,sum(vamEnabled) as vamU from A_WBTSF_LCELW  where defaultCarrier ='2988' or defaultCarrier= '3009' group by RncId,WBTSId ) as seventeenthSet \n" +
+                    "(Select RncId,WBTSId,sum(vamEnabled) as vamU from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW  where defaultCarrier ='2988' or defaultCarrier= '3009' group by RncId,WBTSId ) as seventeenthSet \n" +
                     "on (firstSet.RncId=seventeenthSet.RncId and firstSet.WBTSId=seventeenthSet.WBTSId)\n" +
                     " group by BTSAdditionalInfo";
         } else {
@@ -338,117 +331,6 @@ public class DatabaseConnector {
         return uSitesList;
     }
 
-    public ArrayList<LSite> get4GSites(int ran, ArrayList<LSite> lSites) throws SQLException {
-
-        String lQuery;
-        String lHardwareQuery;
-        Statement statement = connection.createStatement();
-//        if (ran == 2) {
-
-        lQuery = "Select mrbtsId,sum(C),sum(O),first(V),first(N),first(BW),first(M),sum(S),sum(SO),first(TAC) from " +
-                "(Select mrbtsId,count(mrbtsId) as C,sum(administrativeState) as O, first(tac) as TAC from A_LTE_MRBTS_LNBTS_LNCEL group by mrbtsId) as firstSet " +
-                "left join " +
-                "(Select mrbtsId,first(name) as N from A_LTE_MRBTS_LNBTS group by mrbtsId) as secondSet " +
-                "on (firstSet.mrbtsId=secondSet.mrbtsId) " +
-                "left join " +
-                "(Select mrbtsId,sum(actSuperCell) as SO from ( " +
-                "(Select mrbtsId,lnCelId,administrativeState from A_LTE_MRBTS_LNBTS_LNCEL  ) as A " +
-                "left join \n" +
-                "(Select mrbtsId,lnCelId,actSuperCell from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD ) as B " +
-                "on(A.mrbtsId=B.mrbtsId and A.lnCelId=B.lnCelId) ) where administrativeState = '1' group by mrbtsId) as thirdSet " +
-                "on (firstSet.mrbtsId=thirdSet.mrbtsId) " +
-                "left join " +
-                "(Select mrbtsId,max(dlChBw) as BW,max(dlMimoMode) as M,sum(actSuperCell) as S from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD group by mrbtsId) as fourthSet " +
-                "on (firstSet.mrbtsId=fourthSet.mrbtsId)  " +
-                "left join " +
-                "(Select mrbtsId,first(softwareReleaseVersion) as V from A_LTE_MRBTS_LNBTS_FTM group by mrbtsId) as fifthSet " +
-                "on (firstSet.mrbtsId=fifthSet.mrbtsId) " +
-                "group by " +
-                "mrbtsId";
-        lHardwareQuery = "Select mrbtsId,first(FBBA),first(FBBC),first(FRGT),first(FSMF),first(FSPD),first(FTIF),first(FXEB),first(FXED) from (" +
-                "(Select mrbtsId from A_LTE_MRBTS_LNBTS_LNCEL group by mrbtsId) as SiteSet " +
-                "left join " +
-                "(Select mrbtsId,count(unitTypeActual) as FBBA from 4GHW where unitTypeActual = 'FBBA' group by mrbtsId) as FBBASet on (SiteSet.mrbtsId=FBBASet.mrbtsID) " +
-                "left join " +
-                "(Select mrbtsId,count(unitTypeActual) as FBBC from 4GHW where unitTypeActual = 'FBBC' group by mrbtsId) as FBBCSet on (SiteSet.mrbtsId=FBBCSet.mrbtsID) " +
-                "left join " +
-                "(Select mrbtsId,count(unitTypeActual) as FRGT from 4GHW where unitTypeActual = 'FRGT' group by mrbtsId) as FRGTSet on (SiteSet.mrbtsId=FRGTSet.mrbtsID) " +
-                "left join " +
-                "(Select mrbtsId,count(unitTypeActual) as FSMF from 4GHW where unitTypeActual = 'FSMF' group by mrbtsId) as FSMFSet on (SiteSet.mrbtsId=FSMFSet.mrbtsID) " +
-                "left join " +
-                "(Select mrbtsId,count(unitTypeActual) as FSPD from 4GHW where unitTypeActual = 'FSPD' group by mrbtsId) as FSPDSet on (SiteSet.mrbtsId=FSPDSet.mrbtsID) " +
-                "left join " +
-                "(Select mrbtsId,count(unitTypeActual) as FTIF from 4GHW where unitTypeActual = 'FTIF' group by mrbtsId) as FTIFSet on (SiteSet.mrbtsId=FTIFSet.mrbtsID) " +
-                "left join " +
-                "(Select mrbtsId,count(unitTypeActual) as FXEB from 4GHW where unitTypeActual = 'FXEB' group by mrbtsId) as FXEBSet on (SiteSet.mrbtsId=FXEBSet.mrbtsID) " +
-                "left join " +
-                "(Select mrbtsId,count(unitTypeActual) as FXED from 4GHW where unitTypeActual = 'FXED' group by mrbtsId) as FXEDSet on (SiteSet.mrbtsId=FXEDSet.mrbtsID) " +
-                ") group by mrbtsId ";
-//        }
-//        else {
-//            lQuery = "Select mrbtsId,sum(C),sum(O),first(V),first(N),first(BW),first(M),sum(S),sum(SO),first(TAC) from " +
-//                    "(Select mrbtsId,count(mrbtsId) as C,sum(administrativeState) as O,sum(actSuperCell) as S from A_LTE_LNCEL group by mrbtsId ) as firstSet " +
-//                    "left join " +
-//                    "(Select mrbtsId,first(name) as N from A_LTE_LNBTS group by mrbtsId) as secondSet " +
-//                    "on (firstSet.mrbtsId=secondSet.mrbtsId) " +
-//                    "left join " +
-//                    "(Select mrbtsId, sum(actSuperCell) as SO from A_LTE_LNCEL where administrativeState = '1'  group by mrbtsId) as thirdSet " +
-//                    "on (firstSet.mrbtsId=thirdSet.mrbtsId) " +
-//                    "left join " +
-//                    "(Select mrbtsId,max(dlChBw) as BW,max(dlMimoMode) as M from A_LTE_LNCEL_PS group by mrbtsId) as fourthSet " +
-//                    "on (firstSet.mrbtsId=fourthSet.mrbtsId) " +
-//                    "left join " +
-//                    "(Select mrbtsId,first(tac) as TAC from A_LTE_LNCEL_SIB group by mrbtsId) as fifthSet " +
-//                    "on (firstSet.mrbtsId=fifthSet.mrbtsId) " +
-//                    "left join " +
-//                    "(Select mrbtsId,first(version) as V from A_LTE_MRBTS group by mrbtsId) as sixthSet " +
-//                    "on (firstSet.mrbtsId=sixthSet.mrbtsId) " +
-//                    "group by " +
-//                    "mrbtsId";
-//            lHardwareQuery = "Select mrbtsId,first(FBBA),first(FBBC),first(FRGT),first(FSMF),first(FSPD),first(FTIF),first(FXEB),first(FXED) from (" +
-//                    "(Select mrbtsId from A_LTE_LNCEL group by mrbtsId) as SiteSet " +
-//                    "left join " +
-//                    "(Select mrbtsId,count(unitTypeActual) as FBBA from 4GHW where unitTypeActual = 'FBBA' group by mrbtsId) as FBBASet on (SiteSet.mrbtsId=FBBASet.mrbtsID) " +
-//                    "left join " +
-//                    "(Select mrbtsId,count(unitTypeActual) as FBBC from 4GHW where unitTypeActual = 'FBBC' group by mrbtsId) as FBBCSet on (SiteSet.mrbtsId=FBBCSet.mrbtsID) " +
-//                    "left join " +
-//                    "(Select mrbtsId,count(unitTypeActual) as FRGT from 4GHW where unitTypeActual = 'FRGT' group by mrbtsId) as FRGTSet on (SiteSet.mrbtsId=FRGTSet.mrbtsID) " +
-//                    "left join " +
-//                    "(Select mrbtsId,count(unitTypeActual) as FSMF from 4GHW where unitTypeActual = 'FSMF' group by mrbtsId) as FSMFSet on (SiteSet.mrbtsId=FSMFSet.mrbtsID) " +
-//                    "left join " +
-//                    "(Select mrbtsId,count(unitTypeActual) as FSPD from 4GHW where unitTypeActual = 'FSPD' group by mrbtsId) as FSPDSet on (SiteSet.mrbtsId=FSPDSet.mrbtsID) " +
-//                    "left join " +
-//                    "(Select mrbtsId,count(unitTypeActual) as FTIF from 4GHW where unitTypeActual = 'FTIF' group by mrbtsId) as FTIFSet on (SiteSet.mrbtsId=FTIFSet.mrbtsID) " +
-//                    "left join " +
-//                    "(Select mrbtsId,count(unitTypeActual) as FXEB from 4GHW where unitTypeActual = 'FXEB' group by mrbtsId) as FXEBSet on (SiteSet.mrbtsId=FXEBSet.mrbtsID) " +
-//                    "left join " +
-//                    "(Select mrbtsId,count(unitTypeActual) as FXED from 4GHW where unitTypeActual = 'FXED' group by mrbtsId) as FXEDSet on (SiteSet.mrbtsId=FXEDSet.mrbtsID) " +
-//                    ") group by mrbtsId ";
-//        }
-
-
-        ResultSet lResultSet = statement.executeQuery(lQuery);
-//        ResultSet hwResultSet = statement.executeQuery(lHardwareQuery);
-        while (lResultSet.next()) {
-            LSite site = new LSite();
-            site.setENodeBId(lResultSet.getString(1));
-            site.setENodeBNumberOfCells(lResultSet.getInt(2) + lResultSet.getInt(8));
-            site.setENodeBNumberOfOnAirCells(lResultSet.getInt(3), lResultSet.getInt(9));
-            site.setENodeBVersion(lResultSet.getString(4));
-            site.setENodeBName(lResultSet.getString(5));
-            site.setENodeBBW(lResultSet.getInt(6));
-            site.setENodeBMimo(lResultSet.getInt(7));
-            site.setTac(lResultSet.getInt(10));
-//            LSite.LHardware lHardware = new LSite.LHardware(hwResultSet.getInt(2), hwResultSet.getInt(3), hwResultSet.getInt(4),
-//                    hwResultSet.getInt(5), hwResultSet.getInt(6), hwResultSet.getInt(7), hwResultSet.getInt(8),
-//                    hwResultSet.getInt(9));
-//            site.setLHardware(lHardware);
-            site.finalizeProperties();
-            lSites.add(site);
-        }
-
-        return lSites;
-    }
 
     public ArrayList<USite> getThirdCarrierSites(ArrayList<USite> thirdCarrierList) throws SQLException {
 
@@ -486,204 +368,316 @@ public class DatabaseConnector {
         return u900List;
     }
 
-    public ArrayList<NodeB> getNodeBs(int ran, ArrayList<NodeB> nodeBList) throws Exception {
+    public ArrayList<Cabinet> get2GBCFs() {
+        ArrayList<Cabinet> bcfs = new ArrayList<>();
+        try {
+            Statement statement = connection.createStatement();
+            String query = "Select BSCId,BCFId,first(name),first(T),first(BSCName),first(C),first(O),first(TX),first(E),first(G),first(F),first(LAC),first(RAC)," +
+                    "first(status), first(version) , first(ctrlIP) , first(manIp) , first(etp) , first(gConf) , first(dConf) from" +
+                    "(Select BSCId,BCFId,count(TRXId) as T,sum(gprsEnabledTrx) as G from A_TRX group by BSCId,BCFId) as firstSet " +
+                    "left join " +
+                    "(Select BSCId,BCFId,name,adminState as status,bcfPackVers as version,btsCuPlaneIpAddress as ctrlIP,btsMPlaneIpAddress as manIp, usedEtpId as etp " +
+                    "from A_BCF group by BSCId,BCFId) as secondSet " +
+                    "on (firstSet.BSCId=secondSet.BSCId and firstSet.BCFId=secondSet.BCFId)" +
+                    "left join " +
+                    "(Select BSCId,name as BSCName from A_BSC) as thirdSet " +
+                    "on (firstSet.BSCId=thirdSet.BSCId)" +
+                    "left join " +
+                    "(Select BSCId,BCFId,count(BTSId) as C,sum(adminState) as O,sum(frequencyBandInUse) as F ,first(locationAreaIdLAC) as LAC," +
+                    " first(rac) as RAC from A_BTS group by BSCId,BCFId) as fourthSet " +
+                    "on (firstSet.BSCId=fourthSet.BSCId and firstSet.BCFId=fourthSet.BCFId) " +
+                    "left join " +
+                    "(Select  BSCId,BCFId,max(channel0Pcm) as TX from A_TRX " +
+                    "group by BSCId,BCFId) as fifthSet " +
+                    "on (firstSet.BSCId=fifthSet.BSCId and firstSet.BCFId=fifthSet.BCFId)" +
+                    "left join " +
+                    "(Select BSCId,BCFId,count(channel0Pcm) as E from ( Select BSCId,BCFId,channel0Pcm from A_TRX " +
+                    "where channel0Pcm not like '65535' group by BSCId,BCFId,channel0Pcm ) group by BSCId,BCFId ) as sixthSet " +
+                    "on (firstSet.BSCId=sixthSet.BSCId and firstSet.BCFId=sixthSet.BCFId) " +
+                    " left join " +
+                    "(SELECT BSCId,BCFId,GROUP_CONCAT(gT SEPARATOR'/ ') as gConf " +
+                    "FROM (Select BSCId,BCFId,BTSId,count(initialFrequency) as gT  from A_TRX where initialFrequency < '600' group by BSCId,BCFId,BTSId) GROUP BY BSCId,BCFId)" +
+                    " as seventhSet " +
+                    "on (firstSet.BSCId=seventhSet.BSCId and firstSet.BCFId=seventhSet.BCFId) " +
+                    " left join " +
+                    "(SELECT BSCId,BCFId,GROUP_CONCAT(dT SEPARATOR'/ ') as dConf " +
+                    "FROM (Select BSCId,BCFId,BTSId,count(initialFrequency) as dT  from A_TRX where initialFrequency > '600' group by BSCId,BCFId,BTSId) GROUP BY BSCId,BCFId)" +
+                    " as eighthSet " +
+                    "on (firstSet.BSCId=eighthSet.BSCId and firstSet.BCFId=eighthSet.BCFId) " +
+                    " group by BSCId,BCFId";
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                BCF bcf = new BCF();
+//                String bscId = resultSet.getString(1);
+//                String bcfId = resultSet.getString(2);
+//                bcf.setBscId(bscId);
+//                bcf.setBcfId(bcfId);
+
+                bcf.setKey(resultSet.getString(1), resultSet.getString(2));
+                bcf.setName(resultSet.getString(3));
+                bcf.setNumberOfTRXs(resultSet.getInt(4));
+                bcf.setBSCName(resultSet.getString(5));
+                bcf.setNumberOfCells(resultSet.getInt(6));
+                bcf.setNumberOfOnAirCells(resultSet.getInt(7));
+                bcf.setTxMode(resultSet.getString(8));
+                bcf.setNumberOfE1s(resultSet.getInt(9));
+                bcf.setNumberOfGTRXs(resultSet.getInt(10));
+                bcf.setNumberOfDcsCells(resultSet.getInt(11));
+                bcf.setLac(resultSet.getString(12));
+                bcf.setRac(resultSet.getString(13));
+                bcf.setOnAir(resultSet.getInt(14));
+                bcf.setVersion(resultSet.getString(15));
+                bcf.setCtrlIp(resultSet.getString(16));
+                bcf.setManIp(resultSet.getString(17));
+                bcf.setUsedETP(resultSet.getString(18));
+                bcf.setgConf(resultSet.getString(19));
+                bcf.setdConf(resultSet.getString(20));
+                bcf.finishProperties();
+                bcfs.add(bcf);
+
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Number of BCFs: " + bcfs.size());
+        return bcfs;
+    }
+
+    public ArrayList<Cabinet> getNodeBs() throws Exception {
 
         Statement statement = connection.createStatement();
         String uQuery, hwQuery;
-        if (ran == 1) {
-            uQuery = "Select  BTSAdditionalInfo,RncId,WBTSId,C,O,BTSAdditionalInfo,fC,onFC,sC,onSC,tC,onTC\n" +
-                    ",uC,onUC,I,V,HD1,HD2,HD3,HU1,R99,P,S,Name,maxFPower,maxUPower," +
-                    "vamF,vamU,LAC,RAC,IP from (\n" +
-                    "(Select RncId,WBTSId,COCOId,BTSAdditionalInfo ,IubTransportMedia as I,NESWVersion as V,WBTSName as Name,BTSIPAddress as IP from A_WBTS ) as firstSet \n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as C,sum(AdminCellState) as O, first(LAC) as LAC ,first(RAC) as RAC from A_WCEL group by RncId,WBTSId) as secondSet \n" +
-                    "on (firstSet.RncId=secondSet.RncId and firstSet.WBTSId=secondSet.WBTSId) \n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as fC,sum(AdminCellState) onFC from A_WCEL where UARFCN ='10612' group by RncId,WBTSId ) as thirdSet \n" +
-                    "on (firstSet.RncId=thirdSet.RncId and firstSet.WBTSId=thirdSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as sC,sum(AdminCellState) onSC from A_WCEL where UARFCN ='10637' group by RncId,WBTSId ) as fourthSet \n" +
-                    "on (firstSet.RncId=fourthSet.RncId and firstSet.WBTSId=fourthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as tC,sum(AdminCellState) onTC from A_WCEL where UARFCN ='10662' group by RncId,WBTSId ) fifthSet \n" +
-                    "on (firstSet.RncId=fifthSet.RncId and firstSet.WBTSId=fifthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as uC,sum(AdminCellState) onUC from A_WCEL where UARFCN ='2988' or UARFCN='3009' group by RncId,WBTSId ) as sixthSet\n" +
-                    "on (firstSet.RncId=sixthSet.RncId and firstSet.WBTSId=sixthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,numberOfHSDPASet1 as HD1,numberOfHSDPASet2 as HD2,numberOfHSDPASet3 as HD3,numberOfHSUPASet1 as HU1,numberOfR99ChannelElements \n" +
-                    "as R99,rfSharingEnabled as S  from A_WBTSF_BTSSCW ) as seventhSet \n" +
-                    "on (firstSet.RncId=seventhSet.RncId and firstSet.WBTSId=seventhSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId ,WBTSId,COCOId from A_WBTS ) as twelvthSet\n" +
-                    "on (firstSet.RncId=twelvthSet.RncId and firstSet.WBTSId=twelvthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId ,COCOId,P from\n" +
-                    "(Select RncId ,COCOId,max(cast (AAL2UPPCR01Egr as int)) as P from A_COCO_AAL2TP  group by RncId,COCOId)) as thirteenthSet\n" +
-                    "on (firstSet.RncId=thirteenthSet.RncId and firstSet.COCOId=thirteenthSet.COCOId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,max(MaxDLPowerCapability) as maxFPower from A_WCEL where ( UARFCN ='10612') and ( MaxDLPowerCapability not like '65535' )" +
-                    "group by RncId,WBTSId ) as fourteenthSet \n" +
-                    "on (firstSet.RncId=fourteenthSet.RncId and firstSet.WBTSId=fourteenthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,max(MaxDLPowerCapability) as maxUPower from A_WCEL where ( UARFCN ='2988' or UARFCN ='3009') " +
-                    "and ( MaxDLPowerCapability not like '65535')  group by RncId,WBTSId ) as fifteenthSet \n" +
-                    "on (firstSet.RncId=fifteenthSet.RncId and firstSet.WBTSId=fifteenthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,sum(vamEnabled) as vamF from A_WBTSF_LCELW where defaultCarrier ='10612' group by RncId,WBTSId ) as sixteenthSet \n" +
-                    "on (firstSet.RncId=sixteenthSet.RncId and firstSet.WBTSId=sixteenthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,sum(vamEnabled) as vamU from A_WBTSF_LCELW  where defaultCarrier ='2988' or defaultCarrier= '3009' group by RncId,WBTSId ) as seventeenthSet \n" +
-                    "on (firstSet.RncId=seventeenthSet.RncId and firstSet.WBTSId=seventeenthSet.WBTSId)\n ) where C  != '0'";
-        } else {
-            uQuery = "Select  BTSAdditionalInfo,RncId,WBTSId,C,O,BTSAdditionalInfo,fC,onFC,sC,onSC,tC,onTC\n" +
-                    ",uC,onUC,I,V,HD1,HD2,HD3,HU1,R99,P,S,Name,maxFPower,maxUPower," +
-                    "vamF,vamU,LAC,RAC,IP from (\n" +
-                    "(Select RncId,WBTSId,COCOId,BTSAdditionalInfo ,IubTransportMedia as I,NESWVersion as V,WBTSName as Name,BTSIPAddress as IP from A_WBTS ) as firstSet \n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as C,sum(AdminCellState) as O, first(LAC) as LAC ,first(RAC) as RAC from A_WCEL group by RncId,WBTSId) as secondSet \n" +
-                    "on (firstSet.RncId=secondSet.RncId and firstSet.WBTSId=secondSet.WBTSId) \n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as fC,sum(AdminCellState) onFC from A_WCEL where UARFCN ='10612' group by RncId,WBTSId ) as thirdSet \n" +
-                    "on (firstSet.RncId=thirdSet.RncId and firstSet.WBTSId=thirdSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as sC,sum(AdminCellState) onSC from A_WCEL where UARFCN ='10637' group by RncId,WBTSId ) as fourthSet \n" +
-                    "on (firstSet.RncId=fourthSet.RncId and firstSet.WBTSId=fourthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as tC,sum(AdminCellState) onTC from A_WCEL where UARFCN ='10662' group by RncId,WBTSId ) fifthSet \n" +
-                    "on (firstSet.RncId=fifthSet.RncId and firstSet.WBTSId=fifthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,count(WBTSId) as uC,sum(AdminCellState) onUC from A_WCEL where UARFCN ='2988' or UARFCN='3009' group by RncId,WBTSId ) as sixthSet\n" +
-                    "on (firstSet.RncId=sixthSet.RncId and firstSet.WBTSId=sixthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,numberOfHSDPASet1 as HD1,numberOfHSDPASet2 as HD2,numberOfHSDPASet3 as HD3,numberOfHSUPASet1 as HU1,numberOfR99ChannelElements \n" +
-                    "as R99,rfSharingEnabled as S  from A_WBTSF_RNC_WBTS_MRBTS_BTSSCW  ) as seventhSet \n" +
-                    "on (firstSet.RncId=seventhSet.RncId and firstSet.WBTSId=seventhSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId ,WBTSId,COCOId from A_WBTS ) as twelvthSet\n" +
-                    "on (firstSet.RncId=twelvthSet.RncId and firstSet.WBTSId=twelvthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId ,COCOId,P from\n" +
-                    "(Select RncId ,COCOId,max(cast (AAL2UPPCR01Egr as int)) as P from A_COCO_AAL2TP  group by RncId,COCOId)) as thirteenthSet\n" +
-                    "on (firstSet.RncId=thirteenthSet.RncId and firstSet.COCOId=thirteenthSet.COCOId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,max(MaxDLPowerCapability) as maxFPower from A_WCEL where ( UARFCN ='10612') and ( MaxDLPowerCapability not like '65535' )" +
-                    "group by RncId,WBTSId ) as fourteenthSet \n" +
-                    "on (firstSet.RncId=fourteenthSet.RncId and firstSet.WBTSId=fourteenthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,max(MaxDLPowerCapability) as maxUPower from A_WCEL where ( UARFCN ='2988' or UARFCN ='3009') " +
-                    "and ( MaxDLPowerCapability not like '65535')  group by RncId,WBTSId ) as fifteenthSet \n" +
-                    "on (firstSet.RncId=fifteenthSet.RncId and firstSet.WBTSId=fifteenthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,sum(vamEnabled) as vamF from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW   where defaultCarrier ='10612' group by RncId,WBTSId ) as sixteenthSet \n" +
-                    "on (firstSet.RncId=sixteenthSet.RncId and firstSet.WBTSId=sixteenthSet.WBTSId)\n" +
-                    "left join\n" +
-                    "(Select RncId,WBTSId,sum(vamEnabled) as vamU from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW    where defaultCarrier ='2988' or defaultCarrier= '3009' group by RncId,WBTSId ) as seventeenthSet \n" +
-                    "on (firstSet.RncId=seventeenthSet.RncId and firstSet.WBTSId=seventeenthSet.WBTSId)\n ) where C  != '0'";
-        }
-        hwQuery = "Select RncId,WBTSId,first(FBBA),first(FRGC),first(FRGD),first(FRGF),first(FRGL),first(FRGM),first(FRGP),first(FRGT),first(FRGU),first(FRGX),first(FSMB),first(FSMD)," +
-                "first(FSME),first(FSMF),first(FTIA),first(FTIB),first(FTIF),first(FTPB),first(FXDA),first(FXDB) " +
-                " from (" +
-                "(Select RncId,WBTSId from A_WCEL left join A_WBTS using (RncId,WBTSId) group by RncId,WBTSId ) as SiteSet " +
+//        if (ran == 1) {
+//            uQuery = "Select  BTSAdditionalInfo,RncId,WBTSId,C,O,BTSAdditionalInfo,fC,onFC,sC,onSC,tC,onTC\n" +
+//                    ",uC,onUC,I,V,HD1,HD2,HD3,HU1,R99,P,S,Name,maxFPower,maxUPower," +
+//                    "vamF,vamU,LAC,RAC,IP from (\n" +
+//                    "(Select RncId,WBTSId,COCOId,BTSAdditionalInfo ,IubTransportMedia as I,NESWVersion as V,WBTSName as Name,BTSIPAddress as IP from A_WBTS ) as firstSet \n" +
+//                    "left join\n" +
+//                    "(Select RncId,WBTSId,count(WBTSId) as C,sum(AdminCellState) as O, first(LAC) as LAC ,first(RAC) as RAC from A_WCEL group by RncId,WBTSId) as secondSet \n" +
+//                    "on (firstSet.RncId=secondSet.RncId and firstSet.WBTSId=secondSet.WBTSId) \n" +
+//                    "left join\n" +
+//                    "(Select RncId,WBTSId,count(WBTSId) as fC,sum(AdminCellState) onFC from A_WCEL where UARFCN ='10612' group by RncId,WBTSId ) as thirdSet \n" +
+//                    "on (firstSet.RncId=thirdSet.RncId and firstSet.WBTSId=thirdSet.WBTSId)\n" +
+//                    "left join\n" +
+//                    "(Select RncId,WBTSId,count(WBTSId) as sC,sum(AdminCellState) onSC from A_WCEL where UARFCN ='10637' group by RncId,WBTSId ) as fourthSet \n" +
+//                    "on (firstSet.RncId=fourthSet.RncId and firstSet.WBTSId=fourthSet.WBTSId)\n" +
+//                    "left join\n" +
+//                    "(Select RncId,WBTSId,count(WBTSId) as tC,sum(AdminCellState) onTC from A_WCEL where UARFCN ='10662' group by RncId,WBTSId ) fifthSet \n" +
+//                    "on (firstSet.RncId=fifthSet.RncId and firstSet.WBTSId=fifthSet.WBTSId)\n" +
+//                    "left join\n" +
+//                    "(Select RncId,WBTSId,count(WBTSId) as uC,sum(AdminCellState) onUC from A_WCEL where UARFCN ='2988' or UARFCN='3009' group by RncId,WBTSId ) as sixthSet\n" +
+//                    "on (firstSet.RncId=sixthSet.RncId and firstSet.WBTSId=sixthSet.WBTSId)\n" +
+//                    "left join\n" +
+//                    "(Select RncId,WBTSId,numberOfHSDPASet1 as HD1,numberOfHSDPASet2 as HD2,numberOfHSDPASet3 as HD3,numberOfHSUPASet1 as HU1,numberOfR99ChannelElements \n" +
+//                    "as R99,rfSharingEnabled as S  from A_WBTSF_BTSSCW ) as seventhSet \n" +
+//                    "on (firstSet.RncId=seventhSet.RncId and firstSet.WBTSId=seventhSet.WBTSId)\n" +
+//                    "left join\n" +
+//                    "(Select RncId ,WBTSId,COCOId from A_WBTS ) as twelvthSet\n" +
+//                    "on (firstSet.RncId=twelvthSet.RncId and firstSet.WBTSId=twelvthSet.WBTSId)\n" +
+//                    "left join\n" +
+//                    "(Select RncId ,COCOId,P from\n" +
+//                    "(Select RncId ,COCOId,max(cast (AAL2UPPCR01Egr as int)) as P from A_COCO_AAL2TP  group by RncId,COCOId)) as thirteenthSet\n" +
+//                    "on (firstSet.RncId=thirteenthSet.RncId and firstSet.COCOId=thirteenthSet.COCOId)\n" +
+//                    "left join\n" +
+//                    "(Select RncId,WBTSId,max(MaxDLPowerCapability) as maxFPower from A_WCEL where ( UARFCN ='10612') and ( MaxDLPowerCapability not like '65535' )" +
+//                    "group by RncId,WBTSId ) as fourteenthSet \n" +
+//                    "on (firstSet.RncId=fourteenthSet.RncId and firstSet.WBTSId=fourteenthSet.WBTSId)\n" +
+//                    "left join\n" +
+//                    "(Select RncId,WBTSId,max(MaxDLPowerCapability) as maxUPower from A_WCEL where ( UARFCN ='2988' or UARFCN ='3009') " +
+//                    "and ( MaxDLPowerCapability not like '65535')  group by RncId,WBTSId ) as fifteenthSet \n" +
+//                    "on (firstSet.RncId=fifteenthSet.RncId and firstSet.WBTSId=fifteenthSet.WBTSId)\n" +
+//                    "left join\n" +
+//                    "(Select RncId,WBTSId,sum(vamEnabled) as vamF from A_WBTSF_LCELW where defaultCarrier ='10612' group by RncId,WBTSId ) as sixteenthSet \n" +
+//                    "on (firstSet.RncId=sixteenthSet.RncId and firstSet.WBTSId=sixteenthSet.WBTSId)\n" +
+//                    "left join\n" +
+//                    "(Select RncId,WBTSId,sum(vamEnabled) as vamU from A_WBTSF_LCELW  where defaultCarrier ='2988' or defaultCarrier= '3009' group by RncId,WBTSId ) as seventeenthSet \n" +
+//                    "on (firstSet.RncId=seventeenthSet.RncId and firstSet.WBTSId=seventeenthSet.WBTSId)\n ) where C  != '0'";
+//        } else {
+        uQuery = "Select  BTSAdditionalInfo,RncId,WBTSId,C,O,BTSAdditionalInfo,fC,onFC,sC,onSC,tC,onTC\n" +
+                ",uC,onUC,I,V,HD1,HD2,HD3,HU1,R99,P,S,Name,maxFPower,maxUPower," +
+                "vamF,vamU,LAC,RAC,IP,u2C,onU2C,sfp from (\n" +
+                "(Select RncId,WBTSId,COCOId,BTSAdditionalInfo ,IubTransportMedia as I,NESWVersion as V,WBTSName as Name,BTSIPAddress as IP from A_WBTS ) as firstSet \n" +
                 "left join\n" +
-                "(Select RNCId,WBTSId,count(HWType) as FBBA from 3GHW where HWType = 'FBBA' group by RNCId,WBTSId) as  FBBASet on (SiteSet.RncId=FBBASet.RNCId and SiteSet.WBTSId=FBBASet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FRGC from 3GHW where HWType = 'FRGC' group by RNCId,WBTSId) as  FRGCSet  on (SiteSet.RncId=FRGCSet.RNCId and SiteSet.WBTSId=FRGCSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FRGD from 3GHW where HWType = 'FRGD' group by RNCId,WBTSId) as  FRGDSet  on (SiteSet.RncId=FRGDSet.RNCId and SiteSet.WBTSId=FRGDSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FRGF from 3GHW where HWType = 'FRGF' group by RNCId,WBTSId) as  FRGFSet  on (SiteSet.RncId=FRGFSet.RNCId and SiteSet.WBTSId=FRGFSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FRGL from 3GHW where HWType = 'FRGL' group by RNCId,WBTSId) as  FRGLSet  on (SiteSet.RncId=FRGLSet.RNCId and SiteSet.WBTSId=FRGLSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FRGM from 3GHW where HWType = 'FRGM' group by RNCId,WBTSId) as  FRGMSet  on (SiteSet.RncId=FRGMSet.RNCId and SiteSet.WBTSId=FRGMSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FRGP from 3GHW where HWType = 'FRGP' group by RNCId,WBTSId) as  FRGPSet  on (SiteSet.RncId=FRGPSet.RNCId and SiteSet.WBTSId=FRGPSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FRGT from 3GHW where HWType = 'FRGT' group by RNCId,WBTSId) as  FRGTSet  on (SiteSet.RncId=FRGTSet.RNCId and SiteSet.WBTSId=FRGTSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FRGU from 3GHW where HWType = 'FRGU' group by RNCId,WBTSId) as  FRGUSet  on (SiteSet.RncId=FRGUSet.RNCId and SiteSet.WBTSId=FRGUSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FRGX from 3GHW where HWType = 'FRGX' group by RNCId,WBTSId) as  FRGXSet  on (SiteSet.RncId=FRGXSet.RNCId and SiteSet.WBTSId=FRGXSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FSMB from 3GHW where HWType = 'FSMB' group by RNCId,WBTSId) as  FSMBSet  on (SiteSet.RncId=FSMBSet.RNCId and SiteSet.WBTSId=FSMBSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FSMD from 3GHW where HWType = 'FSMD' group by RNCId,WBTSId) as  FSMDSet  on (SiteSet.RncId=FSMDSet.RNCId and SiteSet.WBTSId=FSMDSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FSME from 3GHW where HWType = 'FSME' group by RNCId,WBTSId) as  FSMESet  on (SiteSet.RncId=FSMESet.RNCId and SiteSet.WBTSId=FSMESet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FSMF from 3GHW where HWType = 'FSMF' group by RNCId,WBTSId) as  FSMFSet  on (SiteSet.RncId=FSMFSet.RNCId and SiteSet.WBTSId=FSMFSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FTIA from 3GHW where HWType = 'FTIA' group by RNCId,WBTSId) as  FTIASet  on (SiteSet.RncId=FTIASet.RNCId and SiteSet.WBTSId=FTIASet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FTIB from 3GHW where HWType = 'FTIB' group by RNCId,WBTSId) as  FTIBSet  on (SiteSet.RncId=FTIBSet.RNCId and SiteSet.WBTSId=FTIBSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FTIF from 3GHW where HWType = 'FTIF' group by RNCId,WBTSId) as  FTIFSet  on (SiteSet.RncId=FTIFSet.RNCId and SiteSet.WBTSId=FTIFSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FTPB from 3GHW where HWType = 'FTPB' group by RNCId,WBTSId) as  FTPBSet  on (SiteSet.RncId=FTPBSet.RNCId and SiteSet.WBTSId=FTPBSet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FXDA from 3GHW where HWType = 'FXDA' group by RNCId,WBTSId) as  FXDASet  on (SiteSet.RncId=FXDASet.RNCId and SiteSet.WBTSId=FXDASet.WBTSId) " +
-                "left join \n" +
-                "(Select RNCId,WBTSId,count(HWType) as FXDB from 3GHW where HWType = 'FXDB' group by RNCId,WBTSId) as  FXDBSet  on (SiteSet.RncId=FXDBSet.RNCId and SiteSet.WBTSId=FXDBSet.WBTSId) " +
-                ") group by RncId,WBTSId";
-        ResultSet nResultSet = statement.executeQuery(uQuery);
-//        ResultSet hwResultSet = statement.executeQuery(hwQuery);
+                "(Select RncId,WBTSId,count(WBTSId) as C,sum(AdminCellState) as O, first(LAC) as LAC ,first(RAC) as RAC from A_WCEL group by RncId,WBTSId) as secondSet \n" +
+                "on (firstSet.RncId=secondSet.RncId and firstSet.WBTSId=secondSet.WBTSId) \n" +
+                "left join\n" +
+                "(Select RncId,WBTSId,count(WBTSId) as fC,sum(AdminCellState) onFC from A_WCEL where UARFCN ='10612' group by RncId,WBTSId ) as thirdSet \n" +
+                "on (firstSet.RncId=thirdSet.RncId and firstSet.WBTSId=thirdSet.WBTSId)\n" +
+                "left join\n" +
+                "(Select RncId,WBTSId,count(WBTSId) as sC,sum(AdminCellState) onSC from A_WCEL where UARFCN ='10637' group by RncId,WBTSId ) as fourthSet \n" +
+                "on (firstSet.RncId=fourthSet.RncId and firstSet.WBTSId=fourthSet.WBTSId)\n" +
+                "left join\n" +
+                "(Select RncId,WBTSId,count(WBTSId) as tC,sum(AdminCellState) onTC from A_WCEL where UARFCN ='10662' group by RncId,WBTSId ) fifthSet \n" +
+                "on (firstSet.RncId=fifthSet.RncId and firstSet.WBTSId=fifthSet.WBTSId)\n" +
+                "left join\n" +
+                "(Select RncId,WBTSId,count(WBTSId) as uC,sum(AdminCellState) onUC from A_WCEL where UARFCN ='2988' group by RncId,WBTSId ) as sixthSet\n" +
+                "on (firstSet.RncId=sixthSet.RncId and firstSet.WBTSId=sixthSet.WBTSId)\n" +
+                "left join\n" +
+                "(Select RncId,WBTSId,count(WBTSId) as u2C,sum(AdminCellState) onU2C from A_WCEL where UARFCN='3009' group by RncId,WBTSId ) as eighteenthSet\n" +
+                "on (firstSet.RncId=eighteenthSet.RncId and firstSet.WBTSId=eighteenthSet.WBTSId)\n" +
+                "left join\n" +
+                "(Select RncId,WBTSId,GROUP_CONCAT(linkSpeed SEPARATOR'/ ') as sfp from A_WBTSF_BTSSCW_CABLINGLIST group by RncId,WBTSId ) as nineteenthSet \n" +
+                "on (firstSet.RncId=nineteenthSet.RncId and firstSet.WBTSId=nineteenthSet.WBTSId)\n" +
+                "left join\n" +
+                "(Select RncId,WBTSId,numberOfHSDPASet1 as HD1,numberOfHSDPASet2 as HD2,numberOfHSDPASet3 as HD3,numberOfHSUPASet1 as HU1,numberOfR99ChannelElements \n" +
+                "as R99,rfSharingEnabled as S  from A_WBTSF_RNC_WBTS_MRBTS_BTSSCW  ) as seventhSet \n" +
+                "on (firstSet.RncId=seventhSet.RncId and firstSet.WBTSId=seventhSet.WBTSId)\n" +
+                "left join\n" +
+                "(Select RncId ,WBTSId,COCOId from A_WBTS ) as twelvthSet\n" +
+                "on (firstSet.RncId=twelvthSet.RncId and firstSet.WBTSId=twelvthSet.WBTSId)\n" +
+                "left join\n" +
+                "(Select RncId ,COCOId,P from\n" +
+                "(Select RncId ,COCOId,max(cast (AAL2UPPCR01Egr as int)) as P from A_COCO_AAL2TP  group by RncId,COCOId)) as thirteenthSet\n" +
+                "on (firstSet.RncId=thirteenthSet.RncId and firstSet.COCOId=thirteenthSet.COCOId)\n" +
+                "left join\n" +
+                "(Select RncId,WBTSId,max(MaxDLPowerCapability) as maxFPower from A_WCEL where ( UARFCN ='10612') and ( MaxDLPowerCapability not like '65535' )" +
+                "group by RncId,WBTSId ) as fourteenthSet \n" +
+                "on (firstSet.RncId=fourteenthSet.RncId and firstSet.WBTSId=fourteenthSet.WBTSId)\n" +
+                "left join\n" +
+                "(Select RncId,WBTSId,max(MaxDLPowerCapability) as maxUPower from A_WCEL where ( UARFCN ='2988' or UARFCN ='3009') " +
+                "and ( MaxDLPowerCapability not like '65535')  group by RncId,WBTSId ) as fifteenthSet \n" +
+                "on (firstSet.RncId=fifteenthSet.RncId and firstSet.WBTSId=fifteenthSet.WBTSId)\n" +
+                "left join\n" +
+                "(Select RncId,WBTSId,sum(vamEnabled) as vamF from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW   where defaultCarrier ='10612' group by RncId,WBTSId ) as sixteenthSet \n" +
+                "on (firstSet.RncId=sixteenthSet.RncId and firstSet.WBTSId=sixteenthSet.WBTSId)\n" +
+                "left join\n" +
+                "(Select RncId,WBTSId,sum(vamEnabled) as vamU from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW    where defaultCarrier ='2988' or defaultCarrier= '3009' group by RncId,WBTSId ) as seventeenthSet \n" +
+                "on (firstSet.RncId=seventeenthSet.RncId and firstSet.WBTSId=seventeenthSet.WBTSId)\n ) where C  != '0' ";
+//        }
 
+        ResultSet nResultSet = statement.executeQuery(uQuery);
+        ArrayList<Cabinet> nodeBList = new ArrayList<>();
         while (nResultSet.next()) {
             NodeB nodeB = new NodeB();
-            nodeB.setNodeBCode(nResultSet.getString(1));
-            nodeB.setNodeBRncId(nResultSet.getString(2));
-            nodeB.setNodeBWbtsId(nResultSet.getString(3));
-            nodeB.setNodeBNumberOfCells(nResultSet.getInt(4));
-            nodeB.setNodeBNumberOfOnAirCells(nResultSet.getInt(5));
+            nodeB.setName(nResultSet.getString(24));
+            nodeB.setCode(nResultSet.getString(1));
+            nodeB.setRncId(nResultSet.getString(2));
+            nodeB.setWbtsId(nResultSet.getString(3));
+            nodeB.setNumberOfCells(nResultSet.getInt(4));
+            nodeB.setNumberOfOnAirCells(nResultSet.getInt(5));
 //            nodeB.setNodeBNumberOfNodeBs(uResultSet.getInt(6));
-            nodeB.setNodeBNumberOfFirstCarriersCells(nResultSet.getInt(7));
-            nodeB.setNodeBNumberOfOnAirFirstCarriersCells(nResultSet.getInt(8));
-            nodeB.setNodeBNumberOfSecondCarriersCells(nResultSet.getInt(9));
-            nodeB.setNodeBNumberOfOnAirSecondCarriersCells(nResultSet.getInt(10));
-            nodeB.setNodeBNumberOfThirdCarriersCells(nResultSet.getInt(11));
-            nodeB.setNodeBNumberOfOnAirThirdCarriersCells(nResultSet.getInt(12));
-            nodeB.setNodeBNumberOfU900CarriersCells(nResultSet.getInt(13));
-            nodeB.setNodeBNumberOfOnAirU900CarriersCells(nResultSet.getInt(14));
-            nodeB.setNodeBTxMode(nResultSet.getString(15));
-            nodeB.setNodeBVersion(nResultSet.getString(16));
+            nodeB.setNumberOfFirstCarriersCells(nResultSet.getInt(7));
+            nodeB.setNumberOfOnAirFirstCarriersCells(nResultSet.getInt(8));
+            nodeB.setNumberOfSecondCarriersCells(nResultSet.getInt(9));
+            nodeB.setNumberOfOnAirSecondCarriersCells(nResultSet.getInt(10));
+            nodeB.setNumberOfThirdCarriersCells(nResultSet.getInt(11));
+            nodeB.setNumberOfOnAirThirdCarriersCells(nResultSet.getInt(12));
+            nodeB.setNumberOfFirstU900Cells(nResultSet.getInt(13));
+            nodeB.setNumberOfOnAirFirstU900Cells(nResultSet.getInt(14));
+            nodeB.setTxMode(nResultSet.getString(15));
+            nodeB.setVersion(nResultSet.getString(16));
             nodeB.setNumberOfHSDPASet1(nResultSet.getInt(17));
             nodeB.setNumberOfHSDPASet2(nResultSet.getInt(18));
             nodeB.setNumberOfHSDPASet3(nResultSet.getInt(19));
             nodeB.setNumberOfHSUPASet1(nResultSet.getInt(20));
             nodeB.setNumberOfChannelElements(nResultSet.getInt(21));
-            nodeB.setNodeBNumberOfE1s((int) Math.ceil(nResultSet.getInt(22) / 4490.0));
+            nodeB.setNumberOfE1s((int) Math.ceil(nResultSet.getInt(22) / 4490.0));
             nodeB.setRfSharing(nResultSet.getInt(23));
-            nodeB.setNodeBName(nResultSet.getString(24));
             nodeB.setPower(nResultSet.getInt(25), nResultSet.getInt(27));
             nodeB.setU900Power(nResultSet.getInt(26), nResultSet.getInt(28));
-            nodeB.setLac(nResultSet.getInt(29));
-            nodeB.setRac(nResultSet.getInt(30));
+            nodeB.setLac(nResultSet.getString(29));
+            nodeB.setRac(nResultSet.getString(30));
             nodeB.setNodeBIP(nResultSet.getString(31));
-//            USite.UHardware uHardware = new USite.UHardware(hwResultSet.getInt(3), hwResultSet.getInt(4), hwResultSet.getInt(5),
-//                    hwResultSet.getInt(6), hwResultSet.getInt(7), hwResultSet.getInt(8), hwResultSet.getInt(9),
-//                    hwResultSet.getInt(10), hwResultSet.getInt(11), hwResultSet.getInt(12),
-//                    hwResultSet.getInt(13), hwResultSet.getInt(14), hwResultSet.getInt(15),
-//                    hwResultSet.getInt(16), hwResultSet.getInt(17), hwResultSet.getInt(18),
-//                    hwResultSet.getInt(19), hwResultSet.getInt(20), hwResultSet.getInt(21), hwResultSet.getInt(22));
-//            nodeB.setUHardware(uHardware);
-            nodeB.finalizeProperties();
+            nodeB.setNumberOfSecondU900Cells(nResultSet.getInt(32));
+            nodeB.setNumberOfOnAirSecondU900Cells(nResultSet.getInt(33));
+            nodeB.setSfp(nResultSet.getString(34));
+            nodeB.finishProperties();
             nodeBList.add(nodeB);
         }
-        System.out.println(nodeBList.size());
+        System.out.println("Number of NodeBs: " + nodeBList.size());
         return nodeBList;
     }
 
+    public ArrayList<EnodeB> get4GSites(String weekName) throws SQLException {
+
+        String lQuery;
+        Statement statement = connection.createStatement();
+//        if (ran == 2) {
+
+        lQuery = "Select mrbtsId,sum(C),sum(O),first(V),first(N),first(BW),first(M),sum(S),sum(SO),first(TAC),first(manIP),first(s1Ip),first(secIp),first(secGw) from " +
+                "(Select mrbtsId,count(mrbtsId) as C,sum(administrativeState) as O, first(tac) as TAC from A_LTE_MRBTS_LNBTS_LNCEL group by mrbtsId) as firstSet " +
+                "left join " +
+                "(Select mrbtsId,first(name) as N from A_LTE_MRBTS_LNBTS group by mrbtsId) as secondSet " +
+                "on (firstSet.mrbtsId=secondSet.mrbtsId) " +
+                "left join " +
+                "(Select mrbtsId,sum(actSuperCell) as SO from ( " +
+                "(Select mrbtsId,lnCelId,administrativeState from A_LTE_MRBTS_LNBTS_LNCEL  ) as A " +
+                "left join \n" +
+                "(Select mrbtsId,lnCelId,actSuperCell from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD ) as B " +
+                "on(A.mrbtsId=B.mrbtsId and A.lnCelId=B.lnCelId) ) where administrativeState = '1' group by mrbtsId) as thirdSet " +
+                "on (firstSet.mrbtsId=thirdSet.mrbtsId) " +
+                "left join " +
+                "(Select mrbtsId,max(dlChBw) as BW,max(dlMimoMode) as M,sum(actSuperCell) as S from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD group by mrbtsId) as fourthSet " +
+                "on (firstSet.mrbtsId=fourthSet.mrbtsId)  " +
+                "left join " +
+                "(Select mrbtsId,first(softwareReleaseVersion) as V from A_LTE_MRBTS_LNBTS_FTM group by mrbtsId) as fifthSet " +
+                "on (firstSet.mrbtsId=fifthSet.mrbtsId) " +
+                "left join " +
+                "(Select mrbtsId,first(localIpAddress) as manIP from A_LTE_IPSECC_SECURITYPOLICIES where ipSecStatus ='2' group by mrbtsId) as sixthSet " +
+                "on (firstSet.mrbtsId=sixthSet.mrbtsId) " +
+                "left join " +
+                "(Select mrbtsId,first(localIpAddress) as s1Ip,first(localTunnelEndpoint) as secIp,first(remoteTunnelEndpoint) as secGw from A_LTE_IPSECC_SECURITYPOLICIES" +
+                " where ipSecStatus ='0' group by mrbtsId) as seventhSet " +
+                "on (firstSet.mrbtsId=seventhSet.mrbtsId) " +
+                "group by " +
+                "mrbtsId";
+//        }
+//        else {
+//            lQuery = "Select mrbtsId,sum(C),sum(O),first(V),first(N),first(BW),first(M),sum(S),sum(SO),first(TAC) from " +
+//                    "(Select mrbtsId,count(mrbtsId) as C,sum(administrativeState) as O,sum(actSuperCell) as S from A_LTE_LNCEL group by mrbtsId ) as firstSet " +
+//                    "left join " +
+//                    "(Select mrbtsId,first(name) as N from A_LTE_LNBTS group by mrbtsId) as secondSet " +
+//                    "on (firstSet.mrbtsId=secondSet.mrbtsId) " +
+//                    "left join " +
+//                    "(Select mrbtsId, sum(actSuperCell) as SO from A_LTE_LNCEL where administrativeState = '1'  group by mrbtsId) as thirdSet " +
+//                    "on (firstSet.mrbtsId=thirdSet.mrbtsId) " +
+//                    "left join " +
+//                    "(Select mrbtsId,max(dlChBw) as BW,max(dlMimoMode) as M from A_LTE_LNCEL_PS group by mrbtsId) as fourthSet " +
+//                    "on (firstSet.mrbtsId=fourthSet.mrbtsId) " +
+//                    "left join " +
+//                    "(Select mrbtsId,first(tac) as TAC from A_LTE_LNCEL_SIB group by mrbtsId) as fifthSet " +
+//                    "on (firstSet.mrbtsId=fifthSet.mrbtsId) " +
+//                    "left join " +
+//                    "(Select mrbtsId,first(version) as V from A_LTE_MRBTS group by mrbtsId) as sixthSet " +
+//                    "on (firstSet.mrbtsId=sixthSet.mrbtsId) " +
+//                    "group by " +
+//                    "mrbtsId";
+        ArrayList<EnodeB> enodeBS = new ArrayList<>();
+        ResultSet lResultSet = statement.executeQuery(lQuery);
+        while (lResultSet.next()) {
+            EnodeB site = new EnodeB();
+            site.setENodeBId(lResultSet.getString(1));
+            site.setENodeBNumberOfCells(lResultSet.getInt(2) + lResultSet.getInt(8));
+            site.setENodeBNumberOfOnAirCells(lResultSet.getInt(3), lResultSet.getInt(9));
+            site.setENodeBVersion(lResultSet.getString(4));
+            site.setENodeBName(lResultSet.getString(5));
+            site.setENodeBBW(lResultSet.getInt(6));
+            site.setENodeBMimo(lResultSet.getInt(7));
+            site.setTac(lResultSet.getString(10));
+            site.setManIp(lResultSet.getString(11));
+            site.setS1Ip(lResultSet.getString(12));
+            site.setSecIp(lResultSet.getString(13));
+            site.setSecGw(lResultSet.getString(14));
+            site.finalizeProperties(weekName);
+            enodeBS.add(site);
+        }
+        System.out.println("Number of eNodeBs: " + enodeBS.size());
+
+
+        return enodeBS;
+    }
 
     public ResultSet getTRXSheet() throws SQLException {
         Statement statement = connection.createStatement();
-        String query = "Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower,name,cellId from " +
+        String query = "Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower,name,cellId,frequencyBandInUse from " +
                 "(Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower from A_TRX ) as firstSet "
                 + "left join "
                 + "(Select BSCId,BCFId,name from A_BCF group by BSCId,BCFId )as secondSet "
                 + "on (firstSet.BSCId=secondSet.BSCId and firstSet.BCFId=secondSet.BCFId)"
                 + "left join "
-                + "(Select BSCId,BTSId,cellId from A_BTS )as thirdSet "
+                + "(Select BSCId,BTSId,cellId,frequencyBandInUse from A_BTS )as thirdSet "
                 + "on (firstSet.BSCId=thirdSet.BSCId and firstSet.BTSId=thirdSet.BTSId)";
 
         return statement.executeQuery(query);
@@ -701,36 +695,5 @@ public class DatabaseConnector {
         return statement.executeQuery(query);
     }
 
-    public HashMap<String, BCF> get2GBCFs(HashMap<String, BCF> bcfs) {
-//        ArrayList<BCF> bcfs = new ArrayList<>();
-        try {
-            Statement statement = connection.createStatement();
-            String query = "Select BSCId,BCFId,name from " +
-                    "(Select BSCId,BCFId from A_TRX group by BSCId,BCFId) as firstSet " +
-                    "left join " +
-                    "(Select BSCId,BCFId,name from A_BCF group by BSCId,BCFId) as secondSet " +
-                    "on (firstSet.BSCId=secondSet.BSCId and firstSet.BCFId=secondSet.BCFId)";
-            ResultSet resultSet = statement.executeQuery(query);
-            while (resultSet.next()) {
-                BCF bcf = new BCF();
-                String bscId = resultSet.getString(1);
-                String bcfId = resultSet.getString(2);
-                bcf.setBscId(bscId);
-                bcf.setBcfId(bcfId);
-                bcf.setBcfName(resultSet.getString(3));
-                String key = bcf.getBscId() + "_" + bcf.getBcfId();
-//                BtsHW btsHW = btsHwHashMap.get(key);
-//                if (btsHW != null)
-//                    bcf.setHwItems(btsHW.getHwItems());
-//                btsHwHashMap.remove(key);
-                bcfs.put(key, bcf);
-            }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return bcfs;
-    }
 }
-
-

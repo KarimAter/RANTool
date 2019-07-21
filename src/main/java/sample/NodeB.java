@@ -1,467 +1,360 @@
 package sample;
 
-import Helpers.Constants;
-import Helpers.PropertiesExtractor;
-
-import java.util.ArrayList;
+import Helpers.Utils;
 
 
-public class NodeB implements PropertiesExtractor {
+public class NodeB extends Cabinet {
 
-    public static final String TAG = "NodeBLogger";
-    private String nodeBName, nodeBCode, nodeBRncId, nodeBWbtsId, nodeBVersion, nodeBIP;
-    private int nodeBId, nodeBNumberOfSectors, nodeBNumberOfCells, nodeBNumberOfFirstCarriersCells, nodeBNumberOfOnAirFirstCarriersCells,
-            nodeBNumberOfSecondCarriersCells, nodeBNumberOfOnAirSecondCarriersCells, nodeBNumberOfThirdCarriersCells, nodeBNumberOfOnAirThirdCarriersCells,
-            nodeBNumberOfU900CarriersCells, nodeBNumberOfOnAirU900CarriersCells, nodeBNumberOfCarriers, nodeBNumberOfE1s, nodeBNumberOfOnAirCells, nodeBNumberOfOffAirCells,
-            numberOfHSDPASet1, numberOfHSDPASet2, numberOfHSDPASet3, numberOfHSUPASet1, numberOfChannelElements, lac, rac;
+    private static final int TECHNOLOGY = 3;
+    private String rncId;
+    private String wbtsId;
+    private String nodeBIP;
+    private String lac;
+    private String rac;
+    private String sfp;
+    private int sectors, numberOfCells, numberOfFirstCarriersCells, numberOfOnAirFirstCarriersCells,
+            numberOfSecondCarriersCells, numberOfOnAirSecondCarriersCells, numberOfThirdCarriersCells, numberOfOnAirThirdCarriersCells,
+            numberOfFirstU900Cells, numberOfSecondU900Cells, numberOfOnAirFirstU900Cells, numberOfOnAirSecondU900Cells,
+            numberOfCarriers, numberOfE1s, numberOfOnAirCells,
+            numberOfHSDPASet1, numberOfHSDPASet2, numberOfHSDPASet3, numberOfHSUPASet1, numberOfChannelElements;
 
-    private boolean firstCarrier, secondCarrier, thirdCarrier, u900;
-    double power, u900Power;
+    private boolean firstCarrier, u900;
+    private double power, u900Power;
     private boolean rfSharing;
-
-    private Constants.uTxMode nodeBTxMode;
     private boolean standAloneU900;
-    private String region;
-    private USite.UHardware uHardware;
-
-    public NodeB() {
-
-    }
+    private String r99Identifier;
+    private String u9Identifier;
+    private String powerIdentifier;
 
 
-    private enum onOff {onAir, offAir}
-
-//    private String siteName, rncId, wbtsId, siteCode;
-//    boolean multiNodeB, firstNodeB, secondNodeB, offAir;
-
-    USite.UHardware getUHardware() {
-        return uHardware;
-    }
-
-    void setUHardware(NodeBHW nodeBHW) {
-        USite.UHardware uHardware = new USite.UHardware();
-        if (nodeBHW != null) {
-            ArrayList<HwItem> hwItems = nodeBHW.getHwItems();
-            for (HwItem hwItem : hwItems) {
-                switch (hwItem.getUserLabel()) {
-                    case "FBBA":
-                        uHardware.FBBA++;
-                        break;
-                    case "FRGC":
-                        uHardware.FRGC++;
-                        break;
-                    case "FRGD":
-                        uHardware.FRGD++;
-                        break;
-                    case "FRGF":
-                        uHardware.FRGF++;
-                        break;
-                    case "FRGL":
-                        uHardware.FRGL++;
-                        break;
-                    case "FRGM":
-                        uHardware.FRGM++;
-                        break;
-                    case "FRGP":
-                        uHardware.FRGP++;
-                        break;
-                    case "FRGT":
-                        uHardware.FRGT++;
-                        break;
-                    case "FRGU":
-                        uHardware.FRGU++;
-                        break;
-                    case "FRGX":
-                        uHardware.FRGX++;
-                        break;
-                    case "FSMB":
-                        uHardware.FSMB++;
-                        break;
-                    case "FSMD":
-                        uHardware.FSMD++;
-                        break;
-                    case "FSME":
-                        uHardware.FSME++;
-                        break;
-                    case "FSMF":
-                        uHardware.FSMF++;
-                        break;
-                    case "FTIA":
-                        uHardware.FTIA++;
-                        break;
-                    case "FTIB":
-                        uHardware.FTIB++;
-                        break;
-                    case "FTIF":
-                        uHardware.FTIF++;
-                        break;
-                    case "FTPB":
-                        uHardware.FTPB++;
-                        break;
-                    case "FXDA":
-                        uHardware.FXDA++;
-                        break;
-                    case "FXDB":
-                        uHardware.FXDB++;
-                        break;
-                }
-            }
-        }
-        this.uHardware = uHardware;
-        this.uHardware.setIdentifiers();
-        this.uHardware.buildHWText();
-    }
-
-    public void finalizeProperties() {
-        this.setNumberOfSectors();
-        this.setStandAloneU900();
-        this.setRegion();
-//        this.setUniqueName();
-//        setIdentifiers();
-    }
-
-    public String getNodeBIP() {
-        return nodeBIP;
-    }
-
-    public void setNodeBIP(String nodeBIP) {
-        this.nodeBIP = nodeBIP;
-    }
-
-    public String getRegion() {
-        return region;
-    }
-
-    private void setRegion() {
-        if (nodeBCode != null) {
-            try {
-                String region = nodeBCode.substring(nodeBCode.length() - 2);
-                if (region.equalsIgnoreCase("UP") || region.equalsIgnoreCase("SI") || region.equalsIgnoreCase("RE")
-                        || region.equalsIgnoreCase("DE") || region.equalsIgnoreCase("AL"))
-                    this.region = region;
-                else {
-                    switch (this.nodeBRncId) {
-                        case "30":
-                        case "22":
-                        case "38":
-                        case "48":
-                        case "64":
-                            this.region = "AL";
-                        case "36":
-                        case "54":
-                        case "28":
-                        case "46":
-                        case "52":
-                        case "44":
-                        case "24":
-                        case "4":
-                        case "56":
-                            this.region = "DE";
-                        case "26":
-                        case "18":
-                            this.region = "RE";
-                        case "14":
-                        case "34":
-                        case "50":
-                        case "58":
-                        case "60":
-                        case "62":
-                            this.region = "UP";
-                    }
-                }
-            } catch (StringIndexOutOfBoundsException e) {
-                e.printStackTrace();
-                System.out.println(this.nodeBCode);
-                this.nodeBCode = "";
-            }
-
-        }
-    }
-
-    private void setNumberOfSectors() {
-        if (firstCarrier)
-            this.nodeBNumberOfSectors = this.nodeBNumberOfOnAirFirstCarriersCells;
-        else if (u900) {
-            this.nodeBNumberOfSectors = this.nodeBNumberOfOnAirU900CarriersCells;
-        }
-    }
-
-    public boolean isStandAloneU900() {
-        return standAloneU900;
-    }
-
-    public void setStandAloneU900() {
-        if (!firstCarrier && u900)
-            this.standAloneU900 = true;
-    }
-
-    public boolean isRfSharing() {
-        return rfSharing;
-    }
-
-    public void setRfSharing(int cSharing) {
-        if (cSharing > 0)
-            this.rfSharing = true;
-    }
-
-    public int getLac() {
-        return lac;
-    }
-
-    public void setLac(int lac) {
-        this.lac = lac;
-    }
-
-    public int getRac() {
-        return rac;
-    }
-
-    public void setRac(int rac) {
-        this.rac = rac;
-    }
-
-    private int noOfSectors;
-
-    public double getPower() {
-        return power;
-    }
-
-    public void setU900Power(int u900Power, int vam) {
-        int vamCoeff = 1;
-        if (vam > 0)
-            vamCoeff = 2;
-        if (u900Power == 430)
-            this.u900Power = vamCoeff * 20;
-        else if (u900Power == 442)
-            this.u900Power = vamCoeff * 26.65;
-        else if (u900Power == 448 || u900Power == 450)
-            this.u900Power = vamCoeff * 30;
-        else if (u900Power == 460)
-            this.u900Power = vamCoeff * 40;
-        else if (u900Power == 478)
-            this.u900Power = 60;
-        else if (u900Power == 490)
-            this.u900Power = 80;
-        else if (u900Power == 65535 || u900Power == 0)
-            this.u900Power = 0;
-    }
-
-    public double getU900Power() {
-        return u900Power;
-    }
-
-    public void setPower(int power, int vam) {
-        int vamCoeff = 1;
-        if (vam > 0)
-            vamCoeff = 2;
-        if (power == 210)
-            this.power = vamCoeff * .125;
-        else if (power == 240)
-            this.power = vamCoeff * 0.25;
-        else if (power == 400)
-            this.power = vamCoeff * 10;
-        else if (power == 418)
-            this.power = vamCoeff * 15;
-        else if (power == 430)
-            this.power = vamCoeff * 20;
-        else if (power == 442)
-            this.power = vamCoeff * 26.65;
-        else if (power == 448 || power == 450)
-            this.power = vamCoeff * 30;
-        else if (power == 460)
-            this.power = vamCoeff * 40;
-        else if (power == 478)
-            this.power = 60;
-        else if (power == 490)
-            this.power = 80;
-        else if (power == 65535 || power == 0)
-            this.power = 0;
+    @Override
+    public int getTechnology() {
+        return TECHNOLOGY;
     }
 
     @Override
-    public void calculateNumberOfSectors() {
-
+    public void setControllerId(String controllerId) {
+        this.setRncId(controllerId);
     }
 
-    private void createNodeB() {
-//        nodeBCode = extractSideCode(nodeBName);
-
+    @Override
+    public String getControllerId() {
+        return getRncId();
     }
 
-    //
-//    public NodeB(String nodeBRncId, String nodeBWbtsId,String txMode,
-//                 String nodeBVersion, String nodeBName) {
-//        this.nodeBName = nodeBName;
-//        this.nodeBRncId = nodeBRncId;
-//        this.nodeBWbtsId = nodeBWbtsId;
-//        this.nodeBVersion = nodeBVersion;
-//        createNodeB();
+    @Override
+    public void setNodeId(String nodeId) {
+        this.setWbtsId(nodeId);
+    }
+
+    @Override
+    public String getNodeId() {
+        return getWbtsId();
+    }
+
+    @Override
+    public void setTxMode(String mode) {
+        try {
+            switch (mode) {
+                case "0":
+                case "ATM":
+                    txMode = "ATM";
+                    break;
+                case "38":
+                case "DUAL_STACK":
+                    txMode = "DUAL STACK";
+                    break;
+                case "70":
+                case "FULL_IP":
+                    txMode = "FULL IP";
+                    break;
+                default:
+                    txMode = "FULL IP";
+            }
+        } catch (NullPointerException e) {
+            txMode = "FULL IP";
+        }
+    }
+
+    @Override
+    protected void generateUniqueName() {
+        this.uniqueName = "3G" +
+                "_" +
+                this.key;
+    }
+
+    @Override
+    protected void generateKey() {
+        this.key = this.rncId + "_" + this.wbtsId;
+    }
+
+    @Override
+    protected void generateProperties() {
+        this.properties =
+                this.cellIdentifier +
+                        "_" +
+                        this.r99Identifier +
+                        "_" +
+                        this.u9Identifier +
+                        "_" +
+                        this.powerIdentifier +
+                        "_" +
+                        this.txMode +
+                        "_" +
+                        this.numberOfE1s +
+                        "_" +
+                        this.lac +
+                        "_" +
+                        this.rac +
+                        "_" +
+                        this.version.replace("_I", "-I") +
+                        "_" +
+                        this.nodeBIP +
+                        "_" +
+                        this.sfp;
+    }
+
+    @Override
+    public void finishProperties() {
+        this.generateKey();
+        this.generateUniqueName();
+        this.findCodeAndRegion();
+        this.setNumberOfSectors();
+        this.setStandAloneU900();
+        this.generateCellIdentifier();
+        this.generateR99Identifier();
+        this.generateU9Identifier();
+        this.generatePowerIdentifier();
+        this.generateProperties();
+    }
+
+    private void findCodeAndRegion() {
+        this.code = Utils.extractSiteCode(this.name);
+        this.region = Utils.extractRegion(this.code);
+    }
+
+    @Override
+    protected void extractProperties() {
+        String[] parts = properties.split("_");
+        this.setCellIdentifier(parts[0]);
+        this.setR99Identifier(parts[1]);
+        this.setU9Identifier(parts[2]);
+        this.setPowerIdentifier(parts[3]);
+        this.setTxMode(parts[4]);
+        this.setNumberOfE1s(Integer.parseInt(parts[5]));
+        this.setLac(parts[6]);
+        this.setRac(parts[7]);
+        this.setVersion(parts[8]);
+        this.setNodeBIP(parts[9]);
+        this.setSfp(parts[10]);
+    }
+
+    @Override
+    protected void generateCellIdentifier() {
+        this.cellIdentifier = String.valueOf(this.numberOfFirstCarriersCells) +
+                "." +
+                this.numberOfSecondCarriersCells +
+                "." +
+                this.numberOfThirdCarriersCells +
+                "." +
+                this.numberOfFirstU900Cells +
+                "." +
+                this.numberOfSecondU900Cells +
+                "." +
+                this.numberOfOnAirFirstCarriersCells +
+                "." +
+                this.numberOfOnAirSecondCarriersCells +
+                "." +
+                this.numberOfOnAirThirdCarriersCells +
+                "." +
+                this.numberOfOnAirFirstU900Cells +
+                "." +
+                this.numberOfOnAirSecondU900Cells;
+    }
+
+
+    private void generateR99Identifier() {
+        this.r99Identifier = String.valueOf(this.numberOfHSDPASet1) +
+                "." +
+                this.numberOfHSDPASet2 +
+                "." +
+                this.numberOfHSDPASet3 +
+                "." +
+                this.numberOfHSUPASet1 +
+                "." +
+                this.numberOfChannelElements;
+    }
+
+    private void generateU9Identifier() {
+        this.u9Identifier = String.valueOf(this.standAloneU900) +
+                "." +
+                this.rfSharing;
+    }
+
+    private void generatePowerIdentifier() {
+        this.powerIdentifier = String.valueOf(this.power) +
+                "-" +
+                this.u900Power;
+    }
+
+
+    public String getProperties() {
+        return properties;
+    }
+
+    public void setProperties(String properties) {
+        this.properties = properties;
+        extractProperties();
+    }
+
+
+    public void finalizeProperties(String week) {
+//        this.setNumberOfSectors();
+//        this.setStandAloneU900();
+//        this.setRegion();
+//        this.setUniqueName();
+//        this.createCellIdentifier();
+//        this.generateR99Identifier();
+//        this.generateU9Identifier();
+//        this.generatePowerIdentifier();
+//        this.createProperties();
+//        this.setUHardware(new NodeBHW(), week);
+    }
+
+
+    public void extractCellsFromIdentifier() {
+        String[] parts = cellIdentifier.split("\\.");
+        numberOfFirstCarriersCells = Integer.valueOf(parts[0]);
+        numberOfSecondCarriersCells = Integer.valueOf(parts[1]);
+        numberOfThirdCarriersCells = Integer.valueOf(parts[2]);
+        numberOfFirstU900Cells = Integer.valueOf(parts[3]);
+        numberOfSecondU900Cells = Integer.valueOf(parts[4]);
+        this.setNumberOfOnAirFirstCarriersCells(Integer.valueOf(parts[5]));
+        this.setNumberOfOnAirSecondCarriersCells(Integer.valueOf(parts[6]));
+        this.setNumberOfOnAirThirdCarriersCells(Integer.valueOf(parts[7]));
+        this.setNumberOfOnAirFirstU900Cells(Integer.valueOf(parts[8]));
+        this.setNumberOfOnAirSecondU900Cells(Integer.valueOf(parts[9]));
+        numberOfCells = numberOfFirstCarriersCells + numberOfSecondCarriersCells + numberOfThirdCarriersCells + numberOfFirstU900Cells + numberOfSecondU900Cells;
+        numberOfOnAirCells = numberOfOnAirFirstCarriersCells + numberOfOnAirSecondCarriersCells + numberOfOnAirThirdCarriersCells + numberOfOnAirFirstU900Cells + numberOfOnAirSecondU900Cells;
+        this.setNumberOfSectors();
+    }
+
+
+    private void extractR99FromIdentifier() {
+        String[] parts = r99Identifier.split("\\.");
+        numberOfHSDPASet1 = Integer.valueOf(parts[0]);
+        numberOfHSDPASet2 = Integer.valueOf(parts[1]);
+        numberOfHSDPASet3 = Integer.valueOf(parts[2]);
+        numberOfHSUPASet1 = Integer.valueOf(parts[3]);
+        numberOfChannelElements = Integer.valueOf(parts[4]);
+    }
+
+
+    private void extractU9FromIdentifier() {
+        String[] parts = u9Identifier.split("\\.");
+        standAloneU900 = Boolean.valueOf(parts[0]);
+        rfSharing = Boolean.valueOf(parts[1]);
+    }
+
+
+    private void extractPowerFromIdentifier() {
+        String[] parts = powerIdentifier.split("-");
+        power = Double.valueOf(parts[0]);
+        u900Power = Double.valueOf(parts[1]);
+    }
+
+    private void setRegion() {
+//        if (nodeBCode != null) {
+//            try {
+//                String region = nodeBCode.substring(nodeBCode.length() - 2);
+//                if (region.equalsIgnoreCase("UP") || region.equalsIgnoreCase("SI") || region.equalsIgnoreCase("RE")
+//                        || region.equalsIgnoreCase("DE") || region.equalsIgnoreCase("AL"))
+//                    this.region = region;
+//                else {
+//                    switch (this.rncId) {
+//                        case "30":
+//                        case "22":
+//                        case "38":
+//                        case "48":
+//                        case "64":
+//                            this.region = "AL";
+//                        case "36":
+//                        case "54":
+//                        case "28":
+//                        case "46":
+//                        case "52":
+//                        case "44":
+//                        case "24":
+//                        case "4":
+//                        case "56":
+//                            this.region = "DE";
+//                        case "26":
+//                        case "18":
+//                            this.region = "RE";
+//                        case "14":
+//                        case "34":
+//                        case "50":
+//                        case "58":
+//                        case "60":
+//                        case "62":
+//                            this.region = "UP";
+//                    }
+//                }
+//            } catch (StringIndexOutOfBoundsException e) {
+//                e.printStackTrace();
+//                System.out.println(this.nodeBCode);
+////                this.nodeBCode = "";
+//            }
+//
+//        }
+    }
+
+
+    public void setNodeBName(String name) {
+        this.name = name;
+    }
+
+//    public void setNodeBCode(String code) {
+//        if (code != null)
+//            this.code = code;
+//        else this.code = Utils.extractSiteCode(this.name);
 //    }
-    public NodeB(String nodeBRncId, String nodeBWbtsId, int nodeBNumberOfCells, int nodeBNumberOfOnAirCells,
-                 int nodeBNumberOfFirstCarriersCells, int nodeBNumberOfSecondCarriersCells,
-                 int nodeBNumberOfThirdCarriersCells, int nodeBNumberOfU900CarriersCells, String nodeBName, String tx, String nodeBVersion) {
 
-        this.nodeBRncId = nodeBRncId;
-        this.nodeBWbtsId = nodeBWbtsId;
-        this.nodeBNumberOfCells = nodeBNumberOfCells;
-        this.nodeBNumberOfOnAirCells = nodeBNumberOfOnAirCells;
-        this.nodeBNumberOfFirstCarriersCells = nodeBNumberOfFirstCarriersCells;
-        this.nodeBNumberOfSecondCarriersCells = nodeBNumberOfSecondCarriersCells;
-        this.nodeBNumberOfThirdCarriersCells = nodeBNumberOfThirdCarriersCells;
-        this.nodeBNumberOfU900CarriersCells = nodeBNumberOfU900CarriersCells;
-        this.nodeBName = nodeBName;
-        this.nodeBVersion = nodeBVersion;
+    public void setRncId(String rncId) {
+        this.rncId = rncId;
     }
 
-    public String getNodeBName() {
-        return nodeBName;
-    }
-
-    public String getNodeBCode() {
-        return nodeBCode;
-    }
-
-    public String getNodeBRncId() {
-        return nodeBRncId;
-    }
-
-    public String getNodeBWbtsId() {
-        return nodeBWbtsId;
-    }
-
-    public String getNodeBVersion() {
-        return nodeBVersion;
-    }
-
-    public int getNodeBNumberOfSectors() {
-        return nodeBNumberOfSectors;
-    }
-
-    public int getNodeBNumberOfCells() {
-        return nodeBNumberOfCells;
-    }
-
-    public int getNodeBNumberOfOnAirCells() {
-        return nodeBNumberOfOnAirCells;
-    }
-
-    public int getNodeBNumberOfFirstCarriersCells() {
-        return nodeBNumberOfFirstCarriersCells;
-    }
-
-    public int getNodeBNumberOfSecondCarriersCells() {
-        return nodeBNumberOfSecondCarriersCells;
-    }
-
-    public int getNodeBNumberOfThirdCarriersCells() {
-        return nodeBNumberOfThirdCarriersCells;
-    }
-
-    public int getNodeBNumberOfU900CarriersCells() {
-        return nodeBNumberOfU900CarriersCells;
+    public void setWbtsId(String wbtsId) {
+        this.wbtsId = wbtsId;
     }
 
 
-    public int getNodeBNumberOfOnAirFirstCarriersCells() {
-        return nodeBNumberOfOnAirFirstCarriersCells;
+    public void setNumberOfCells(int numberOfCells) {
+        this.numberOfCells = numberOfCells;
     }
 
-    public int getNodeBNumberOfOnAirSecondCarriersCells() {
-        return nodeBNumberOfOnAirSecondCarriersCells;
+    public void setNumberOfFirstCarriersCells(int numberOfFirstCarriersCells) {
+
+        this.numberOfFirstCarriersCells = numberOfFirstCarriersCells;
     }
 
-    public int getNodeBNumberOfOnAirThirdCarriersCells() {
-        return nodeBNumberOfOnAirThirdCarriersCells;
+    public void setNumberOfSecondCarriersCells(int numberOfSecondCarriersCells) {
+        this.numberOfSecondCarriersCells = numberOfSecondCarriersCells;
     }
 
-    public int getNodeBNumberOfOnAirU900CarriersCells() {
-        return nodeBNumberOfOnAirU900CarriersCells;
+    public void setNumberOfThirdCarriersCells(int numberOfThirdCarriersCells) {
+        this.numberOfThirdCarriersCells = numberOfThirdCarriersCells;
     }
 
-    public int getNumberOfHSDPASet1() {
-        return numberOfHSDPASet1;
+
+    public void setNumberOfE1s(int numberOfE1s) {
+        this.numberOfE1s = numberOfE1s;
     }
 
-    public int getNumberOfHSDPASet2() {
-        return numberOfHSDPASet2;
+    public void setNumberOfOnAirCells(int numberOfOnAirCells) {
+        this.numberOfOnAirCells = numberOfOnAirCells;
     }
 
-    public int getNumberOfHSDPASet3() {
-        return numberOfHSDPASet3;
-    }
-
-    public int getNumberOfHSUPASet1() {
-        return numberOfHSUPASet1;
-    }
-
-    public int getNumberOfChannelElements() {
-        return numberOfChannelElements;
-    }
-
-    public int getNodeBNumberOfE1s() {
-        return nodeBNumberOfE1s;
-    }
-
-    public void setNodeBName(String nodeBName) {
-        this.nodeBName = nodeBName;
-    }
-
-    public void setNodeBCode(String nodeBCode) {
-        this.nodeBCode = nodeBCode;
-    }
-
-    public void setNodeBRncId(String nodeBRncId) {
-        this.nodeBRncId = nodeBRncId;
-    }
-
-    public void setNodeBWbtsId(String nodeBWbtsId) {
-        this.nodeBWbtsId = nodeBWbtsId;
-    }
-
-    public void setNodeBVersion(String nodeBVersion) {
-        this.nodeBVersion = nodeBVersion;
-    }
-
-    public void setNodeBId(int nodeBId) {
-        this.nodeBId = nodeBId;
-    }
-
-    public void setNodeBNumberOfSectors(int nodeBNumberOfSectors) {
-        this.nodeBNumberOfSectors = nodeBNumberOfSectors;
-    }
-
-    public void setNodeBNumberOfCells(int nodeBNumberOfCells) {
-        this.nodeBNumberOfCells = nodeBNumberOfCells;
-    }
-
-    public void setNodeBNumberOfFirstCarriersCells(int nodeBNumberOfFirstCarriersCells) {
-
-        this.nodeBNumberOfFirstCarriersCells = nodeBNumberOfFirstCarriersCells;
-    }
-
-    public void setNodeBNumberOfSecondCarriersCells(int nodeBNumberOfSecondCarriersCells) {
-        this.nodeBNumberOfSecondCarriersCells = nodeBNumberOfSecondCarriersCells;
-    }
-
-    public void setNodeBNumberOfThirdCarriersCells(int nodeBNumberOfThirdCarriersCells) {
-        this.nodeBNumberOfThirdCarriersCells = nodeBNumberOfThirdCarriersCells;
-    }
-
-    public void setNodeBNumberOfU900CarriersCells(int nodeBNumberOfU900CarriersCells) {
-        this.nodeBNumberOfU900CarriersCells = nodeBNumberOfU900CarriersCells;
-    }
-
-    public void setNodeBNumberOfE1s(int nodeBNumberOfE1s) {
-        this.nodeBNumberOfE1s = nodeBNumberOfE1s;
-    }
-
-    public void setNodeBNumberOfOnAirCells(int nodeBNumberOfOnAirCells) {
-        this.nodeBNumberOfOnAirCells = nodeBNumberOfOnAirCells;
-    }
-
-    public void setNodeBNumberOfOffAirCells(int nodeBNumberOfOffAirCells) {
-        this.nodeBNumberOfOffAirCells = nodeBNumberOfOffAirCells;
-    }
 
     public void setNumberOfHSDPASet1(int numberOfHSDPASet1) {
         if (numberOfHSDPASet1 < 0)
@@ -495,62 +388,317 @@ public class NodeB implements PropertiesExtractor {
         this.numberOfChannelElements = numberOfChannelElements;
     }
 
-    public void setNodeBNumberOfOnAirFirstCarriersCells(int nodeBNumberOfOnAirFirstCarriersCells) {
-        if (nodeBNumberOfFirstCarriersCells > 0) {
+    public void setNumberOfOnAirFirstCarriersCells(int numberOfOnAirFirstCarriersCells) {
+        if (numberOfOnAirFirstCarriersCells > 0) {
             this.firstCarrier = true;
-            this.nodeBNumberOfCarriers++;
+            this.numberOfCarriers++;
         }
-        this.nodeBNumberOfOnAirFirstCarriersCells = nodeBNumberOfOnAirFirstCarriersCells;
+        this.numberOfOnAirFirstCarriersCells = numberOfOnAirFirstCarriersCells;
     }
 
-    public void setNodeBNumberOfOnAirSecondCarriersCells(int nodeBNumberOfOnAirSecondCarriersCells) {
-        if (nodeBNumberOfOnAirSecondCarriersCells > 0) {
-            this.secondCarrier = true;
-            this.nodeBNumberOfCarriers++;
+    public void setNumberOfOnAirSecondCarriersCells(int numberOfOnAirSecondCarriersCells) {
+        if (numberOfOnAirSecondCarriersCells > 0) {
+            this.numberOfCarriers++;
         }
-        this.nodeBNumberOfOnAirSecondCarriersCells = nodeBNumberOfOnAirSecondCarriersCells;
+        this.numberOfOnAirSecondCarriersCells = numberOfOnAirSecondCarriersCells;
     }
 
-    public void setNodeBNumberOfOnAirThirdCarriersCells(int nodeBNumberOfOnAirThirdCarriersCells) {
-        if (nodeBNumberOfOnAirThirdCarriersCells > 0) {
-            this.thirdCarrier = true;
-            this.nodeBNumberOfCarriers++;
+    public void setNumberOfOnAirThirdCarriersCells(int numberOfOnAirThirdCarriersCells) {
+        if (numberOfOnAirThirdCarriersCells > 0) {
+            this.numberOfCarriers++;
         }
-        this.nodeBNumberOfOnAirThirdCarriersCells = nodeBNumberOfOnAirThirdCarriersCells;
+        this.numberOfOnAirThirdCarriersCells = numberOfOnAirThirdCarriersCells;
     }
 
-    public void setNodeBNumberOfOnAirU900CarriersCells(int nodeBNumberOfOnAirU900CarriersCells) {
-        if (nodeBNumberOfOnAirU900CarriersCells > 0) {
+
+    public int getNumberOfCarriers() {
+        return numberOfCarriers;
+    }
+
+
+    public String getCellIdentifier() {
+        return cellIdentifier;
+    }
+
+    public void setCellIdentifier(String cellIdentifier) {
+        this.cellIdentifier = cellIdentifier;
+        extractCellsFromIdentifier();
+    }
+
+    public String getUniqueName() {
+        return uniqueName;
+    }
+
+    public void setUniqueName(String uniqueName) {
+        this.uniqueName = uniqueName;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public int getNumberOfFirstU900Cells() {
+        return numberOfFirstU900Cells;
+    }
+
+    public int getNumberOfSecondU900Cells() {
+        return numberOfSecondU900Cells;
+    }
+
+    public int getNumberOfOnAirFirstU900Cells() {
+        return numberOfOnAirFirstU900Cells;
+    }
+
+    public int getNumberOfOnAirSecondU900Cells() {
+        return numberOfOnAirSecondU900Cells;
+    }
+
+    public void setHardware(Hardware hardware) {
+        this.hardware = hardware;
+    }
+
+    public Hardware getHardware() {
+        return hardware;
+    }
+
+
+    String getSfp() {
+        return sfp;
+    }
+
+    public void setSfp(String sfp) {
+        this.sfp = sfp;
+    }
+
+    public void setNumberOfFirstU900Cells(int numberOfFirstU900Cells) {
+        this.numberOfFirstU900Cells = numberOfFirstU900Cells;
+    }
+
+    public void setNumberOfSecondU900Cells(int numberOfSecondU900Cells) {
+        this.numberOfSecondU900Cells = numberOfSecondU900Cells;
+    }
+
+    public void setNumberOfOnAirFirstU900Cells(int numberOfOnAirFirstU900Cells) {
+        if (numberOfOnAirFirstU900Cells > 0) {
             this.u900 = true;
-            this.nodeBNumberOfCarriers++;
+            this.numberOfCarriers++;
         }
-        this.nodeBNumberOfOnAirU900CarriersCells = nodeBNumberOfOnAirU900CarriersCells;
+        this.numberOfOnAirFirstU900Cells = numberOfOnAirFirstU900Cells;
     }
 
-    public int getNodeBNumberOfCarriers() {
-        return nodeBNumberOfCarriers;
+    public void setNumberOfOnAirSecondU900Cells(int numberOfOnAirSecondU900Cells) {
+        if (numberOfOnAirSecondU900Cells > 0) {
+            this.u900 = true;
+            this.numberOfCarriers++;
+        }
+        this.numberOfOnAirSecondU900Cells = numberOfOnAirSecondU900Cells;
     }
 
-    public String getNodeBTxMode() {
-        return nodeBTxMode.toString();
+    public String getR99Identifier() {
+        return r99Identifier;
     }
 
-    public void setNodeBTxMode(String value) {
+    public void setR99Identifier(String r99Identifier) {
+        this.r99Identifier = r99Identifier;
+        extractR99FromIdentifier();
+    }
 
-        try {
-            switch (value) {
-                case "0":
-                    nodeBTxMode = Constants.uTxMode.ATM;
-                    break;
-                case "38":
-                case "70":
-                    nodeBTxMode = Constants.uTxMode.DUAL_STACK;
-                    break;
-                default:
-                    nodeBTxMode = Constants.uTxMode.FULL_IP;
-            }
-        } catch (NullPointerException e) {
-            nodeBTxMode = Constants.uTxMode.FULL_IP;
+    public String getU9Identifier() {
+        return u9Identifier;
+    }
+
+    public void setU9Identifier(String u9Identifier) {
+        this.u9Identifier = u9Identifier;
+        extractU9FromIdentifier();
+    }
+
+    public String getPowerIdentifier() {
+        return powerIdentifier;
+    }
+
+    public void setPowerIdentifier(String powerIdentifier) {
+        this.powerIdentifier = powerIdentifier;
+        extractPowerFromIdentifier();
+    }
+
+    public String getNodeBIP() {
+        return nodeBIP;
+    }
+
+    public void setNodeBIP(String nodeBIP) {
+        this.nodeBIP = nodeBIP;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    private void setNumberOfSectors() {
+        if (firstCarrier)
+            this.sectors = this.numberOfOnAirFirstCarriersCells;
+        else if (u900) {
+            this.sectors = this.numberOfOnAirFirstU900Cells;
         }
     }
+
+    boolean isStandAloneU900() {
+        return standAloneU900;
+    }
+
+    private void setStandAloneU900() {
+        if (!firstCarrier && u900)
+            this.standAloneU900 = true;
+    }
+
+    public boolean isRfSharing() {
+        return rfSharing;
+    }
+
+    public void setRfSharing(int cSharing) {
+        if (cSharing > 0)
+            this.rfSharing = true;
+    }
+
+    public String getLac() {
+        return lac;
+    }
+
+    public void setLac(String lac) {
+        this.lac = lac;
+    }
+
+    public String getRac() {
+        return rac;
+    }
+
+    public void setRac(String rac) {
+        this.rac = rac;
+    }
+
+    double getPower() {
+        return power;
+    }
+
+    public void setU900Power(int u900Power, int vam) {
+        int vamCoeff = 1;
+        if (vam > 0)
+            vamCoeff = 2;
+        if (u900Power == 430)
+            this.u900Power = vamCoeff * 20;
+        else if (u900Power == 442)
+            this.u900Power = vamCoeff * 26.65;
+        else if (u900Power == 448 || u900Power == 450)
+            this.u900Power = vamCoeff * 30;
+        else if (u900Power == 460)
+            this.u900Power = vamCoeff * 40;
+        else if (u900Power == 478)
+            this.u900Power = 60;
+        else if (u900Power == 490)
+            this.u900Power = 80;
+        else if (u900Power == 65535 || u900Power == 0)
+            this.u900Power = 0;
+    }
+
+    double getU900Power() {
+        return u900Power;
+    }
+
+    public void setPower(int power, int vam) {
+        int vamCoeff = 1;
+        if (vam > 0)
+            vamCoeff = 2;
+        if (power == 210)
+            this.power = vamCoeff * .125;
+        else if (power == 240)
+            this.power = vamCoeff * 0.25;
+        else if (power == 400)
+            this.power = vamCoeff * 10;
+        else if (power == 418)
+            this.power = vamCoeff * 15;
+        else if (power == 430)
+            this.power = vamCoeff * 20;
+        else if (power == 442)
+            this.power = vamCoeff * 26.65;
+        else if (power == 448 || power == 450)
+            this.power = vamCoeff * 30;
+        else if (power == 460)
+            this.power = vamCoeff * 40;
+        else if (power == 478)
+            this.power = 60;
+        else if (power == 490)
+            this.power = 80;
+        else if (power == 65535 || power == 0)
+            this.power = 0;
+    }
+
+
+    public String getRncId() {
+        return rncId;
+    }
+
+    public String getWbtsId() {
+        return wbtsId;
+    }
+
+    public int getSectors() {
+        return sectors;
+    }
+
+    public int getNumberOfCells() {
+        return numberOfCells;
+    }
+
+    public int getNumberOfOnAirCells() {
+        return numberOfOnAirCells;
+    }
+
+    public int getNumberOfFirstCarriersCells() {
+        return numberOfFirstCarriersCells;
+    }
+
+    public int getNumberOfSecondCarriersCells() {
+        return numberOfSecondCarriersCells;
+    }
+
+    public int getNumberOfThirdCarriersCells() {
+        return numberOfThirdCarriersCells;
+    }
+
+    public int getNumberOfOnAirFirstCarriersCells() {
+        return numberOfOnAirFirstCarriersCells;
+    }
+
+    public int getNumberOfOnAirSecondCarriersCells() {
+        return numberOfOnAirSecondCarriersCells;
+    }
+
+    public int getNumberOfOnAirThirdCarriersCells() {
+        return numberOfOnAirThirdCarriersCells;
+    }
+
+    public int getNumberOfHSDPASet1() {
+        return numberOfHSDPASet1;
+    }
+
+    public int getNumberOfHSDPASet2() {
+        return numberOfHSDPASet2;
+    }
+
+    public int getNumberOfHSDPASet3() {
+        return numberOfHSDPASet3;
+    }
+
+    public int getNumberOfHSUPASet1() {
+        return numberOfHSUPASet1;
+    }
+
+    public int getNumberOfChannelElements() {
+        return numberOfChannelElements;
+    }
+
+    public int getNumberOfE1s() {
+        return numberOfE1s;
+    }
+
+
 }

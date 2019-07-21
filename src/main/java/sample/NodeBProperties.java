@@ -19,8 +19,8 @@ public class NodeBProperties {
             table = database.getTable("A_WCEL");
 
             Cursor cursor = CursorBuilder.createCursor(table);
-            criteria.put("RncId", Integer.valueOf(nodeB.getNodeBRncId()));
-            criteria.put("WBTSId", Integer.valueOf(nodeB.getNodeBWbtsId()));
+            criteria.put("RncId", Integer.valueOf(nodeB.getRncId()));
+            criteria.put("WBTSId", Integer.valueOf(nodeB.getWbtsId()));
             criteria.put("UARFCN", 10612);
             criteria.put("AdminCellState", 1);
 
