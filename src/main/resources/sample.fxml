@@ -13,15 +13,13 @@
 
         <Button fx:id="load2R1DumpBu" mnemonicParsing="false" text="Load 2G RAN1 Dump" GridPane.rowIndex="0" />
         <Button fx:id="load2R2DumpBu" mnemonicParsing="false" text="Load 2G RAN2 Dump" GridPane.rowIndex="1" />
-        <Button fx:id="load3R1DumpBu" mnemonicParsing="false" text="Load 3G RAN1 Dump" GridPane.rowIndex="2" />
         <Button fx:id="load3R2DumpBu" mnemonicParsing="false" text="Load 3G RAN2 Dump" GridPane.rowIndex="3" />
-        <Button fx:id="load4R1DumpBu" mnemonicParsing="false" text="Load 4G RAN1 Dump" GridPane.rowIndex="4" />
         <Button fx:id="load4R2DumpBu" mnemonicParsing="false" text="Load 4G RAN2 Dump" GridPane.rowIndex="5" />
         <Button fx:id="exportDashboardBu" mnemonicParsing="false" prefHeight="25.0" prefWidth="131.0"
                 text="Export Dashboard" GridPane.rowIndex="7"/>
         <Button fx:id="exportDumpsheetsBu" mnemonicParsing="false" prefHeight="25.0" prefWidth="131.0"
                 text="Export Dump Sheets" GridPane.rowIndex="8"/>
-        <Button fx:id="saveDatabase" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="Save Database"
+        <Button fx:id="loadXMLs" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="Load XMLs"
                 GridPane.rowIndex="9"/>
         <Button fx:id="saveSummary" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0"
                 text="Save Summary from Database" GridPane.rowIndex="10"/>

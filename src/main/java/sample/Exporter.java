@@ -1,6 +1,8 @@
 package sample;
 
 import Helpers.DatabaseConnector;
+import Helpers.DatabaseHelper;
+import Helpers.SerialDatabaseSaver;
 import Helpers.Utils;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -12,6 +14,10 @@ import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 class Exporter {
 
@@ -28,8 +34,10 @@ class Exporter {
     static String lHardwareFileName = "C:\\Users\\Ater\\Desktop\\4GHW";
     XSSFWorkbook wb;
     XSSFWorkbook changesWrb;
+    private String weekName;
 
     Exporter(String weekName) {
+        this.weekName = weekName;
         wb = prepareWorkbooks(orginalFileName);
         updatedFileName = prepareDashboardName(weekName);
     }
@@ -40,7 +48,7 @@ class Exporter {
 
     void exportBcfList(ArrayList<Cabinet> bcfList) throws IOException {
         ZipSecureFile.setMinInflateRatio(0);
-        int numOfColumns = 23;
+        int numOfColumns = 24;
         XSSFSheet sheet = wb.getSheet("BCFs");
         final int[] r = {1};
 
@@ -60,34 +68,35 @@ class Exporter {
             cells.get(3).setCellValue(bcf.getBSCName());
             cells.get(4).setCellValue(Integer.valueOf(bcf.getBscId()));
             cells.get(5).setCellValue(Integer.valueOf(bcf.getBcfId()));
-            cells.get(6).setCellValue(value.getOnAir() == 1 && value.getNumberOfOnAirCells() > 0);
-            cells.get(7).setCellValue(bcf.getNumberOfTRXs());
-            cells.get(8).setCellValue(bcf.getNumberOfCells());
-            cells.get(9).setCellValue(bcf.getNumberOfOnAirCells());
-            cells.get(10).setCellValue(bcf.getNumberOfDcsCells());
-            cells.get(11).setCellValue(bcf.getNumberOfGsmCells());
-            cells.get(12).setCellValue(bcf.getTxMode());
-            cells.get(13).setCellValue(bcf.getNumberOfE1s());
-            cells.get(14).setCellValue(bcf.getNumberOfGTRXs());
-            cells.get(15).setCellValue(Integer.valueOf(bcf.getLac()));
-            cells.get(16).setCellValue(Integer.valueOf(bcf.getRac()));
-            cells.get(17).setCellValue(bcf.getVersion());
-            cells.get(18).setCellValue(bcf.getCtrlIp());
-            cells.get(19).setCellValue(bcf.getManIp());
+            cells.get(6).setCellValue(bcf.getKey());
+            cells.get(7).setCellValue(value.getOnAir() == 1 && value.getNumberOfOnAirCells() > 0);
+            cells.get(8).setCellValue(bcf.getNumberOfTRXs());
+            cells.get(9).setCellValue(bcf.getNumberOfCells());
+            cells.get(10).setCellValue(bcf.getNumberOfOnAirCells());
+            cells.get(11).setCellValue(bcf.getNumberOfDcsCells());
+            cells.get(12).setCellValue(bcf.getNumberOfGsmCells());
+            cells.get(13).setCellValue(bcf.getTxMode());
+            cells.get(14).setCellValue(bcf.getNumberOfE1s());
+            cells.get(15).setCellValue(bcf.getNumberOfGTRXs());
+            cells.get(16).setCellValue(Integer.valueOf(bcf.getLac()));
+            cells.get(17).setCellValue(Integer.valueOf(bcf.getRac()));
+            cells.get(18).setCellValue(bcf.getVersion());
+            cells.get(19).setCellValue(bcf.getCtrlIp());
+            cells.get(20).setCellValue(bcf.getManIp());
             try {
-                cells.get(20).setCellValue(Integer.valueOf(bcf.getUsedETP()));
+                cells.get(21).setCellValue(Integer.valueOf(bcf.getUsedETP()));
             } catch (NumberFormatException e) {
-                cells.get(20).setCellValue(bcf.getUsedETP());
+                cells.get(21).setCellValue(bcf.getUsedETP());
             }
             try {
-                cells.get(21).setCellValue(Integer.valueOf(bcf.getgConf()));
+                cells.get(22).setCellValue(Integer.valueOf(bcf.getgConf()));
             } catch (Exception e) {
-                cells.get(21).setCellValue(bcf.getgConf());
+                cells.get(22).setCellValue(bcf.getgConf());
             }
             try {
-                cells.get(22).setCellValue(Integer.valueOf(bcf.getdConf()));
+                cells.get(23).setCellValue(Integer.valueOf(bcf.getdConf()));
             } catch (Exception e) {
-                cells.get(22).setCellValue(bcf.getdConf());
+                cells.get(23).setCellValue(bcf.getdConf());
             }
             r[0]++;
         });
@@ -101,7 +110,7 @@ class Exporter {
     }
 
     void exportBcfHardWare(ArrayList<Cabinet> bcfList) throws IOException {
-        int numOfColumns = 21;
+        int numOfColumns = 22;
         XSSFSheet sheet = wb.getSheet("BCFs HW");
         final int[] r = {1};
         bcfList.forEach(cabinet -> {
@@ -118,38 +127,25 @@ class Exporter {
             cells.get(2).setCellValue(bcf.getRegion());
             cells.get(3).setCellValue(Integer.valueOf(bcf.getBscId()));
             cells.get(4).setCellValue(Integer.valueOf(bcf.getBcfId()));
+            cells.get(5).setCellValue(bcf.getKey());
             Hardware gHardware = bcf.getHardware();
+            cells.get(6).setCellValue(gHardware.getRfString());
+            cells.get(7).setCellValue(gHardware.getSmString());
+            cells.get(8).setCellValue(gHardware.getTxString());
+            cells.get(9).setCellValue(gHardware.getWeek());
 
-            cells.get(5).setCellValue(gHardware.getRfString());
-            cells.get(6).setCellValue(gHardware.getSmString());
-            cells.get(7).setCellValue(gHardware.getTxString());
-            cells.get(8).setCellValue(gHardware.getWeek());
-
-            cells.get(9).setCellValue(gHardware.getModuleValue("ESMB"));
-            cells.get(10).setCellValue(gHardware.getModuleValue("ESMC"));
-            cells.get(11).setCellValue(gHardware.getModuleValue("FIQA"));
-            cells.get(12).setCellValue(gHardware.getModuleValue("FIQB"));
-            cells.get(13).setCellValue(gHardware.getModuleValue("FSMF"));
-            cells.get(14).setCellValue(gHardware.getModuleValue("FTIF"));
-            cells.get(15).setCellValue(gHardware.getModuleValue("FXDA"));
-            cells.get(16).setCellValue(gHardware.getModuleValue("FXDB"));
-            cells.get(17).setCellValue(gHardware.getModuleValue("FXEA"));
-            cells.get(18).setCellValue(gHardware.getModuleValue("FXEB"));
-            cells.get(19).setCellValue(gHardware.getModuleValue("FXEF"));
-            cells.get(20).setCellValue(gHardware.getModuleValue("FXED"));
-//            cells.get(9).setCellValue(gHardware.ESMB);
-//            cells.get(10).setCellValue(gHardware.ESMC);
-//            cells.get(11).setCellValue(gHardware.FIQA);
-//            cells.get(12).setCellValue(gHardware.FIQB);
-//            cells.get(13).setCellValue(gHardware.FSMF);
-//            cells.get(14).setCellValue(gHardware.FTIF);
-//            cells.get(15).setCellValue(gHardware.FXDA);
-//            cells.get(16).setCellValue(gHardware.FXDB);
-//            cells.get(17).setCellValue(gHardware.FXEA);
-//            cells.get(18).setCellValue(gHardware.FXEB);
-//            cells.get(19).setCellValue(gHardware.FXX);
-//            cells.get(20).setCellValue(gHardware.FXED);
-
+            cells.get(10).setCellValue(gHardware.getModuleValue("ESMB"));
+            cells.get(11).setCellValue(gHardware.getModuleValue("ESMC"));
+            cells.get(12).setCellValue(gHardware.getModuleValue("FIQA"));
+            cells.get(13).setCellValue(gHardware.getModuleValue("FIQB"));
+            cells.get(14).setCellValue(gHardware.getModuleValue("FSMF"));
+            cells.get(15).setCellValue(gHardware.getModuleValue("FTIF"));
+            cells.get(16).setCellValue(gHardware.getModuleValue("FXDA"));
+            cells.get(17).setCellValue(gHardware.getModuleValue("FXDB"));
+            cells.get(18).setCellValue(gHardware.getModuleValue("FXEA"));
+            cells.get(19).setCellValue(gHardware.getModuleValue("FXEB"));
+            cells.get(20).setCellValue(gHardware.getModuleValue("FXX"));
+            cells.get(21).setCellValue(gHardware.getModuleValue("FXED"));
             r[0]++;
         });
 
@@ -173,15 +169,6 @@ class Exporter {
                 XSSFCell cell = row.createCell(i);
                 cells.add(i, cell);
             }
-//            cells.get(0).setCellValue(nodeB.getRegion());
-//            try {
-//                cells.get(1).setCellValue(Integer.valueOf(nodeB.getRncId()));
-//                cells.get(4).setCellValue(Integer.valueOf(nodeB.getWbtsId()));
-//            } catch (Exception e) {
-//                cells.get(1).setCellValue("");
-//                cells.get(4).setCellValue("");
-//            }
-            // Todo: add key in all
             NodeB nodeB = (NodeB) cabinet;
             cells.get(0).setCellValue(nodeB.getCode());
             cells.get(1).setCellValue(nodeB.getName());
@@ -237,7 +224,7 @@ class Exporter {
     }
 
     void exportNodeBHardWare(ArrayList<Cabinet> nodeBList) throws IOException {
-        int numOfColumns = 29;
+        int numOfColumns = 30;
         XSSFSheet sheet = wb.getSheet("NodeB HW");
         final int[] r = {1};
 
@@ -257,51 +244,31 @@ class Exporter {
             cells.get(2).setCellValue(nodeB.getRegion());
             cells.get(3).setCellValue(Integer.valueOf(nodeB.getRncId()));
             cells.get(4).setCellValue(Integer.valueOf(nodeB.getWbtsId()));
-            cells.get(5).setCellValue(nHardware.getWeek());
-            cells.get(6).setCellValue(nHardware.getRfString());
-            cells.get(7).setCellValue(nHardware.getSmString());
-            cells.get(8).setCellValue(nHardware.getTxString());
-            // todo: resume module values for all techs
-            cells.get(9).setCellValue(nHardware.getModuleValue("FBBA"));
-            cells.get(10).setCellValue(nHardware.getModuleValue("FRGC"));
-            cells.get(11).setCellValue(nHardware.getModuleValue("FRGD"));
-            cells.get(12).setCellValue(nHardware.getModuleValue("FRGF"));
-            cells.get(13).setCellValue(nHardware.getModuleValue("FRGL"));
-            cells.get(14).setCellValue(nHardware.getModuleValue("FRGM"));
-            cells.get(15).setCellValue(nHardware.getModuleValue("FRGP"));
-            cells.get(16).setCellValue(nHardware.getModuleValue("FRGT"));
-            cells.get(17).setCellValue(nHardware.getModuleValue("FRGU"));
-            cells.get(18).setCellValue(nHardware.getModuleValue("FRGX"));
-            cells.get(19).setCellValue(nHardware.getModuleValue("FSMB"));
-            cells.get(20).setCellValue(nHardware.getModuleValue("FSMD"));
-            cells.get(21).setCellValue(nHardware.getModuleValue("FSME"));
-            cells.get(22).setCellValue(nHardware.getModuleValue("FSMF"));
-            cells.get(23).setCellValue(nHardware.getModuleValue("FTIA"));
-            cells.get(24).setCellValue(nHardware.getModuleValue("FTIB"));
-            cells.get(25).setCellValue(nHardware.getModuleValue("FTIF"));
-            cells.get(26).setCellValue(nHardware.getModuleValue("FTPB"));
-            cells.get(27).setCellValue(nHardware.getModuleValue("FXDA"));
-            cells.get(28).setCellValue(nHardware.getModuleValue("FXDB"));
-//            cells.get(9).setCellValue(nHardware.FBBA);
-//            cells.get(10).setCellValue(nHardware.FRGC);
-//            cells.get(11).setCellValue(nHardware.FRGD);
-//            cells.get(12).setCellValue(nHardware.FRGF);
-//            cells.get(13).setCellValue(nHardware.FRGL);
-//            cells.get(14).setCellValue(nHardware.FRGM);
-//            cells.get(15).setCellValue(nHardware.FRGP);
-//            cells.get(16).setCellValue(nHardware.FRGT);
-//            cells.get(17).setCellValue(nHardware.FRGU);
-//            cells.get(18).setCellValue(nHardware.FRGX);
-//            cells.get(19).setCellValue(nHardware.FSMB);
-//            cells.get(20).setCellValue(nHardware.FSMD);
-//            cells.get(21).setCellValue(nHardware.FSME);
-//            cells.get(22).setCellValue(nHardware.FSMF);
-//            cells.get(23).setCellValue(nHardware.FTIA);
-//            cells.get(24).setCellValue(nHardware.FTIB);
-//            cells.get(25).setCellValue(nHardware.FTIF);
-//            cells.get(26).setCellValue(nHardware.FTPB);
-//            cells.get(27).setCellValue(nHardware.FXDA);
-//            cells.get(28).setCellValue(nHardware.FXDB);
+            cells.get(5).setCellValue(nodeB.getKey());
+            cells.get(6).setCellValue(nHardware.getWeek());
+            cells.get(7).setCellValue(nHardware.getRfString());
+            cells.get(8).setCellValue(nHardware.getSmString());
+            cells.get(9).setCellValue(nHardware.getTxString());
+            cells.get(10).setCellValue(nHardware.getModuleValue("FBBA"));
+            cells.get(11).setCellValue(nHardware.getModuleValue("FRGC"));
+            cells.get(12).setCellValue(nHardware.getModuleValue("FRGD"));
+            cells.get(13).setCellValue(nHardware.getModuleValue("FRGF"));
+            cells.get(14).setCellValue(nHardware.getModuleValue("FRGL"));
+            cells.get(15).setCellValue(nHardware.getModuleValue("FRGM"));
+            cells.get(16).setCellValue(nHardware.getModuleValue("FRGP"));
+            cells.get(17).setCellValue(nHardware.getModuleValue("FRGT"));
+            cells.get(18).setCellValue(nHardware.getModuleValue("FRGU"));
+            cells.get(19).setCellValue(nHardware.getModuleValue("FRGX"));
+            cells.get(20).setCellValue(nHardware.getModuleValue("FSMB"));
+            cells.get(21).setCellValue(nHardware.getModuleValue("FSMD"));
+            cells.get(22).setCellValue(nHardware.getModuleValue("FSME"));
+            cells.get(23).setCellValue(nHardware.getModuleValue("FSMF"));
+            cells.get(24).setCellValue(nHardware.getModuleValue("FTIA"));
+            cells.get(25).setCellValue(nHardware.getModuleValue("FTIB"));
+            cells.get(26).setCellValue(nHardware.getModuleValue("FTIF"));
+            cells.get(27).setCellValue(nHardware.getModuleValue("FTPB"));
+            cells.get(28).setCellValue(nHardware.getModuleValue("FXDA"));
+            cells.get(29).setCellValue(nHardware.getModuleValue("FXDB"));
             r[0]++;
         });
         FileOutputStream fileOut = new FileOutputStream(updatedFileName);
@@ -309,6 +276,106 @@ class Exporter {
         wb.write(fileOut);
         fileOut.flush();
         fileOut.close();
+    }
+
+    void exportEnodeBList(ArrayList<Cabinet> eNodeBList) throws IOException {
+
+        int numOfColumns = 14;
+        XSSFSheet sheet = wb.getSheet("LTE");
+        final int[] r = {1};
+        eNodeBList.forEach(cabinet -> {
+            ArrayList<XSSFCell> cells = new ArrayList<>();
+            XSSFRow row = sheet.createRow(r[0]);
+            //iterating c number of columns
+            for (int i = 0; i < numOfColumns; i++) {
+                XSSFCell cell = row.createCell(i);
+                cells.add(i, cell);
+            }
+            EnodeB enodeB = (EnodeB) cabinet;
+
+            cells.get(0).setCellValue(enodeB.getCode());
+            cells.get(1).setCellValue(enodeB.getName());
+            cells.get(2).setCellValue(Integer.valueOf(enodeB.getNodeId()));
+            cells.get(3).setCellValue(enodeB.getRegion());
+            cells.get(4).setCellValue(enodeB.getNumberOfCells());
+            cells.get(5).setCellValue(enodeB.getNumberOfOnAirCells());
+            cells.get(6).setCellValue(enodeB.getVersion());
+            cells.get(7).setCellValue(enodeB.getBw());
+            cells.get(8).setCellValue(enodeB.getMimo());
+            cells.get(10).setCellValue(enodeB.getManIp());
+            cells.get(11).setCellValue(enodeB.getS1Ip());
+            cells.get(12).setCellValue(enodeB.getSecIp());
+            cells.get(13).setCellValue(enodeB.getSecGw());
+            try {
+                cells.get(9).setCellValue(Integer.valueOf(enodeB.getTac()));
+            } catch (NumberFormatException e) {
+                cells.get(9).setCellValue(enodeB.getTac());
+            }
+
+            r[0]++;
+        });
+        FileOutputStream fileOut = new FileOutputStream(updatedFileName);
+        //write this workbook to an Outputstream.
+        wb.write(fileOut);
+        fileOut.flush();
+        fileOut.close();
+        System.out.println("4G Site list done..");
+//        wb.close();
+    }
+
+    void exportEnodeBHardWare(ArrayList<Cabinet> eNodeBList) throws IOException {
+        int numOfColumns = 16;
+        XSSFSheet sheet = wb.getSheet("4G HW");
+        final int[] r = {1};
+
+        eNodeBList.forEach(cabinet -> {
+            ArrayList<XSSFCell> cells = new ArrayList<>();
+            XSSFRow row = sheet.createRow(r[0]);
+            //iterating c number of columns
+            for (int i = 0; i < numOfColumns; i++) {
+                XSSFCell cell = row.createCell(i);
+                cells.add(i, cell);
+            }
+
+            EnodeB enodeB = (EnodeB) cabinet;
+            Hardware lHardware = enodeB.getHardware();
+            cells.get(0).setCellValue(enodeB.getCode());
+            cells.get(1).setCellValue(enodeB.getName());
+            cells.get(2).setCellValue(Integer.valueOf(enodeB.getMrbtsId()));
+            cells.get(3).setCellValue(enodeB.getRegion());
+            cells.get(4).setCellValue(lHardware.getRfString());
+            cells.get(5).setCellValue(lHardware.getSmString());
+            cells.get(6).setCellValue(lHardware.getTxString());
+            cells.get(7).setCellValue(lHardware.getWeek());
+            cells.get(8).setCellValue(lHardware.getModuleValue("FBBA"));
+            cells.get(9).setCellValue(lHardware.getModuleValue("FBBC"));
+            cells.get(10).setCellValue(lHardware.getModuleValue("FRGT"));
+            cells.get(11).setCellValue(lHardware.getModuleValue("FRGU"));
+            cells.get(12).setCellValue(lHardware.getModuleValue("FSMF"));
+            cells.get(13).setCellValue(lHardware.getModuleValue("FTIF"));
+            cells.get(14).setCellValue(lHardware.getModuleValue("FXEB"));
+            cells.get(15).setCellValue(lHardware.getModuleValue("FXED"));
+
+
+//            cells.get(4).setCellValue(lHardware.rfString);
+//            cells.get(5).setCellValue(lHardware.smString);
+//            cells.get(6).setCellValue(lHardware.getWeek());
+//            cells.get(7).setCellValue(lHardware.FBBA);
+//            cells.get(8).setCellValue(lHardware.FBBC);
+//            cells.get(9).setCellValue(lHardware.FRGT);
+//            cells.get(10).setCellValue(lHardware.FSMF);
+//            cells.get(11).setCellValue(lHardware.FSPD);
+//            cells.get(12).setCellValue(lHardware.FTIF);
+//            cells.get(13).setCellValue(lHardware.FXEB);
+//            cells.get(14).setCellValue(lHardware.FXED);
+            r[0]++;
+        });
+        FileOutputStream fileOut = new FileOutputStream(updatedFileName);
+        //write this workbook to an Outputstream.
+        wb.write(fileOut);
+        fileOut.flush();
+        fileOut.close();
+        wb.close();
     }
 
 //    void export2GSitesList(ArrayList<GSite> sitesList, String sites) throws IOException {
@@ -411,49 +478,6 @@ class Exporter {
         System.out.println("3G Site list done..");
     }
 
-    void export4GSitesList(ArrayList<EnodeB> lSitesList) throws IOException {
-
-        int numOfColumns = 14;
-        XSSFSheet sheet = wb.getSheet("LTE");
-        int r = 1;
-        for (EnodeB site : lSitesList) {
-            ArrayList<XSSFCell> cells = new ArrayList<>();
-            XSSFRow row = sheet.createRow(r);
-            //iterating c number of columns
-            for (int i = 0; i < numOfColumns; i++) {
-                XSSFCell cell = row.createCell(i);
-                cells.add(i, cell);
-            }
-            cells.get(0).setCellValue(site.getENodeBCode());
-            cells.get(1).setCellValue(site.getENodeBName());
-            cells.get(2).setCellValue(Integer.valueOf(site.getENodeBId()));
-            cells.get(3).setCellValue(site.getENodeBRegion());
-            cells.get(4).setCellValue(site.getENodeBNumberOfCells());
-            cells.get(5).setCellValue(site.getENodeBNumberOfOnAirCells());
-            cells.get(6).setCellValue(site.getENodeBVersion());
-            cells.get(7).setCellValue(site.getENodeBBW());
-            cells.get(8).setCellValue(site.getENodeBMimo());
-            cells.get(10).setCellValue(site.getManIp());
-            cells.get(11).setCellValue(site.getS1Ip());
-            cells.get(12).setCellValue(site.getSecIp());
-            cells.get(13).setCellValue(site.getSecGw());
-            try {
-                cells.get(9).setCellValue(Integer.valueOf(site.getTac()));
-            } catch (NumberFormatException e) {
-                cells.get(9).setCellValue(site.getTac());
-            }
-
-            r++;
-        }
-        FileOutputStream fileOut = new FileOutputStream(updatedFileName);
-        //write this workbook to an Outputstream.
-        wb.write(fileOut);
-        fileOut.flush();
-        fileOut.close();
-        System.out.println("4G Site list done..");
-//        wb.close();
-    }
-
 
 //    void export2GHardWare(ArrayList<GSite> sitesList, String sheetName) throws IOException {
 //        int numOfColumns = 17;
@@ -550,16 +574,16 @@ class Exporter {
         XSSFSheet sheet = wb.getSheet(sheetName);
         DatabaseConnector databaseConnector1 = new DatabaseConnector(dump3R1Path);
         DatabaseConnector databaseConnector2 = new DatabaseConnector(dump3R2Path);
-        ArrayList<USite> carrierList;
+        ArrayList<USite> carrierList, carrierList2;
         try {
             if (sheetName.equals("3rd Carrier")) {
-                carrierList = databaseConnector1.getThirdCarrierSites(new ArrayList<>());
-                carrierList = databaseConnector2.getThirdCarrierSites(carrierList);
+                carrierList = databaseConnector1.getThirdCarrierSites();
+                carrierList2 = databaseConnector2.getThirdCarrierSites();
             } else {
-                carrierList = databaseConnector1.getU900List(new ArrayList<>());
-                carrierList = databaseConnector2.getU900List(carrierList);
+                carrierList = databaseConnector1.getU900List();
+                carrierList2 = databaseConnector2.getU900List();
             }
-
+            carrierList.addAll(carrierList2);
             int r = 1;
             for (USite site : carrierList) {
                 ArrayList<XSSFCell> cells = new ArrayList<>(4);
@@ -587,65 +611,7 @@ class Exporter {
     }
 
 
-    void export4GHardWare(ArrayList<EnodeB> sitesList) throws IOException {
-        int numOfColumns = 15;
-        XSSFSheet sheet = wb.getSheet("4G HW");
-        int r = 1;
-
-        for (EnodeB site : sitesList) {
-            ArrayList<XSSFCell> cells = new ArrayList<>();
-            XSSFRow row = sheet.createRow(r);
-            //iterating c number of columns
-            for (int i = 0; i < numOfColumns; i++) {
-                XSSFCell cell = row.createCell(i);
-                cells.add(i, cell);
-            }
-            LHardware lHardware = site.getLHardware();
-            cells.get(0).setCellValue(site.getENodeBCode());
-            cells.get(1).setCellValue(site.getENodeBName());
-            cells.get(2).setCellValue(Integer.valueOf(site.getENodeBId()));
-            cells.get(3).setCellValue(site.getENodeBRegion());
-
-
-            Hardware hardware = site.getHardware();
-            cells.get(4).setCellValue(hardware.getRfString());
-            cells.get(5).setCellValue(hardware.getSmString());
-            //todo:tx string
-            cells.get(6).setCellValue(hardware.getWeek());
-
-
-            cells.get(7).setCellValue(hardware.getModuleValue("FBBA"));
-//            cells.get(8).setCellValue(lHardware.FBBC);
-//            cells.get(9).setCellValue(lHardware.FRGT);
-//            cells.get(10).setCellValue(lHardware.FSMF);
-//            cells.get(11).setCellValue(lHardware.FSPD);
-//            cells.get(12).setCellValue(lHardware.FTIF);
-//            cells.get(13).setCellValue(lHardware.FXEB);
-            cells.get(14).setCellValue(hardware.getModuleValue("FXED"));
-
-
-//            cells.get(4).setCellValue(lHardware.rfString);
-//            cells.get(5).setCellValue(lHardware.smString);
-//            cells.get(6).setCellValue(lHardware.getWeek());
-//            cells.get(7).setCellValue(lHardware.FBBA);
-//            cells.get(8).setCellValue(lHardware.FBBC);
-//            cells.get(9).setCellValue(lHardware.FRGT);
-//            cells.get(10).setCellValue(lHardware.FSMF);
-//            cells.get(11).setCellValue(lHardware.FSPD);
-//            cells.get(12).setCellValue(lHardware.FTIF);
-//            cells.get(13).setCellValue(lHardware.FXEB);
-//            cells.get(14).setCellValue(lHardware.FXED);
-            r++;
-        }
-        FileOutputStream fileOut = new FileOutputStream(updatedFileName);
-        //write this workbook to an Outputstream.
-        wb.write(fileOut);
-        fileOut.flush();
-        fileOut.close();
-        wb.close();
-    }
-
-    XSSFWorkbook prepareWorkbooks(String path) {
+    private XSSFWorkbook prepareWorkbooks(String path) {
         File file = new File(path);
 //        prepareDashboardName(weekName);
         InputStream ExcelFileToRead;
@@ -706,6 +672,7 @@ class Exporter {
         }
         return workbook;
     };
+
 
     private interface getWorkbook {
         XSSFWorkbook prepareWB(String templatePath) throws IOException;
@@ -771,15 +738,11 @@ class Exporter {
 
     // Todo: store dump path in shared pref
     void exportTRXSheet(String dump2R1Path, String dump2R2Path, String weekName) throws SQLException, IOException {
-        DatabaseConnector databaseConnector1 = new DatabaseConnector(dump2R1Path);
-        DatabaseConnector databaseConnector2 = new DatabaseConnector(dump2R2Path);
-        ResultSet trxResultSet1 = databaseConnector1.getTRXSheet();
-        ResultSet trxResultSet2 = databaseConnector2.getTRXSheet();
         prepareTrxSheetNames(weekName);
-        exportTrx(trxResultSet1, TRX1FileName);
-        exportTrx(trxResultSet2, TRX2FileName);
-
-
+        DatabaseConnector databaseConnector1 = new DatabaseConnector(dump2R1Path);
+        exportTrx(databaseConnector1.getTRXSheet(), TRX1FileName);
+        DatabaseConnector databaseConnector2 = new DatabaseConnector(dump2R2Path);
+        exportTrx(databaseConnector2.getTRXSheet(), TRX2FileName);
     }
 
     private void exportTrx(ResultSet resultSet, String trxFileName) throws IOException, SQLException {
@@ -1176,7 +1139,7 @@ class Exporter {
     }
 
     //  2G HW list
-    void export2GHWfromXML(ArrayList<BCF> bcfs, String weekName) throws IOException {
+    void export2GHWfromXML(ArrayList<Cabinet> bcfs, String weekName) throws IOException {
         XSSFWorkbook gHardwareWb;
 //        gHardwareWb = get2GHWWorkbook();
         gHardwareWb = lambda.prepareWB("D:\\RAN Tool\\2GHWList.xlsx");
@@ -1197,8 +1160,8 @@ class Exporter {
                 }
                 cells.get(0).setCellValue(bcf.getCode());
                 cells.get(1).setCellValue(bcf.getName());
-                cells.get(2).setCellValue(Integer.valueOf(bcf.getBscId()));
-                cells.get(3).setCellValue(Integer.valueOf(bcf.getBcfId()));
+                cells.get(2).setCellValue(Integer.valueOf(bcf.getControllerId()));
+                cells.get(3).setCellValue(Integer.valueOf(bcf.getNodeId()));
                 cells.get(4).setCellValue(hwItem.getUserLabel());
                 cells.get(5).setCellValue(hwItem.getSerialNumber());
                 cells.get(6).setCellValue(hwItem.getIdentificationCode());
@@ -1214,6 +1177,161 @@ class Exporter {
         fileOut.close();
         System.out.println("2G hardwarefile is done");
     }
+
+    void exportHwFromDatabase() throws IOException, SQLException {
+        DatabaseHelper databaseHelper = new DatabaseHelper("D:/RAN Tool/NokiaDumpToolHistory.db", weekName);
+        HashMap<String, Hardware> dumpHwMap = databaseHelper.loadDumpHwMap();
+
+        exportGandU(dumpHwMap, weekName, gHardwareFileName, "D:\\RAN Tool\\2GHWListDb.xlsx", 2);
+        exportGandU(dumpHwMap, weekName, uHardwareFileName, "D:\\RAN Tool\\3GHWListDb.xlsx", 3);
+        exLte(dumpHwMap, weekName);
+
+    }
+
+    private void exLte(HashMap<String, Hardware> dumpHwMap, String weekName) throws IOException, SQLException {
+        List<String> foundKeys = new ArrayList<>();
+        SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver("D:/RAN Tool/serials.db");
+        ResultSet resultSet = serialDatabaseSaver.load(4);
+        XSSFWorkbook hardwareWb;
+        hardwareWb = lambda.prepareWB("D:\\RAN Tool\\4GHWListDb.xlsx");
+        int numOfColumns = 8;
+        XSSFSheet sheet = hardwareWb.getSheet("Sheet1");
+        final int[] r = {1};
+        while (resultSet.next()) {
+            ArrayList<XSSFCell> cells = new ArrayList<>();
+            XSSFRow row = sheet.createRow(r[0]);
+            //iterating c number of columns
+            for (int i = 0; i < numOfColumns; i++) {
+                XSSFCell cell = row.createCell(i);
+                cells.add(i, cell);
+            }
+            String key = resultSet.getString(1);
+            if (dumpHwMap.containsKey(key)) {
+                cells.get(0).setCellValue(resultSet.getString(2));
+                cells.get(1).setCellValue(resultSet.getString(3));
+
+                Hardware hardware = dumpHwMap.get(key);
+                if (hardware != null) {
+                    cells.get(6).setCellValue(hardware.getWeek());
+                    String[] parts = key.split("_");
+                    cells.get(2).setCellValue(Integer.valueOf(parts[1]));
+                }
+                cells.get(3).setCellValue(resultSet.getString(4));
+                cells.get(4).setCellValue(resultSet.getString(5));
+                cells.get(5).setCellValue(resultSet.getString(6));
+                r[0]++;
+            }
+        }
+
+        // filter hwMap to export empty hw sites
+        Map<String, Hardware> missingKeys = dumpHwMap.entrySet().stream().
+                filter(x -> !foundKeys.contains(x.getKey()) && x.getKey().contains("4G")).
+                collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        // printing empty hw sites
+        missingKeys.forEach((s, hardware) -> {
+            ArrayList<XSSFCell> cells = new ArrayList<>();
+            XSSFRow row = sheet.createRow(r[0]);
+            //iterating c number of columns
+            for (int i = 0; i < numOfColumns; i++) {
+                XSSFCell cell = row.createCell(i);
+                cells.add(i, cell);
+            }
+            cells.get(0).setCellValue(hardware.getCode());
+            cells.get(1).setCellValue(hardware.getName());
+//            System.out.println(hardware.getCode() + hardware.getName());
+            String[] parts = s.split("_");
+            cells.get(2).setCellValue(Integer.valueOf(parts[1]));
+            cells.get(6).setCellValue(hardware.getWeek());
+            r[0]++;
+
+
+        });
+
+        lHardwareFileName = lHardwareFileName + "Database" + weekName + ".xlsx";
+        FileOutputStream fileOut = new FileOutputStream(lHardwareFileName);
+        //write this workbook to an Outputstream.
+        hardwareWb.write(fileOut);
+        fileOut.flush();
+        fileOut.close();
+        System.out.println("4G hardwarefile is done");
+
+    }
+
+    private void exportGandU(HashMap<String, Hardware> dumpHwMap, String weekName,
+                             String optFileName, String iptFileName, int tech) throws IOException, SQLException {
+        List<String> foundKeys = new ArrayList<>();
+
+        SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver("D:/RAN Tool/serials.db");
+        ResultSet resultSet = serialDatabaseSaver.load(tech);
+        XSSFWorkbook hardwareWb;
+        hardwareWb = lambda.prepareWB(iptFileName);
+        int numOfColumns = 8;
+        XSSFSheet sheet = hardwareWb.getSheet("Sheet1");
+        final int[] r = {1};
+        while (resultSet.next()) {
+            ArrayList<XSSFCell> cells = new ArrayList<>();
+            XSSFRow row = sheet.createRow(r[0]);
+            //iterating c number of columns
+            for (int i = 0; i < numOfColumns; i++) {
+                XSSFCell cell = row.createCell(i);
+                cells.add(i, cell);
+            }
+            String key = resultSet.getString(1);
+            if (dumpHwMap.containsKey(key)) {
+
+                cells.get(0).setCellValue(resultSet.getString(2));
+                cells.get(1).setCellValue(resultSet.getString(3));
+                Hardware hardware = dumpHwMap.get(key);
+                if (hardware != null) {
+                    cells.get(7).setCellValue(hardware.getWeek());
+                    String[] parts = key.split("_");
+                    cells.get(2).setCellValue(Integer.valueOf(parts[1]));
+                    cells.get(3).setCellValue(Integer.valueOf(parts[2]));
+                }
+                cells.get(4).setCellValue(resultSet.getString(4));
+                cells.get(5).setCellValue(resultSet.getString(5));
+                cells.get(6).setCellValue(resultSet.getString(6));
+                foundKeys.add(key);
+                r[0]++;
+            }
+        }
+        // filter hwMap to export empty hw sites
+        Map<String, Hardware> missingKeys = dumpHwMap.entrySet().stream().
+                filter(x -> !foundKeys.contains(x.getKey()) && x.getKey().contains(tech + "G")).
+                collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        // printing empty hw sites
+        missingKeys.forEach((s, hardware) -> {
+            ArrayList<XSSFCell> cells = new ArrayList<>();
+            XSSFRow row = sheet.createRow(r[0]);
+            //iterating c number of columns
+            for (int i = 0; i < numOfColumns; i++) {
+                XSSFCell cell = row.createCell(i);
+                cells.add(i, cell);
+            }
+            cells.get(0).setCellValue(hardware.getCode());
+            cells.get(1).setCellValue(hardware.getName());
+//                System.out.println(hardware.getCode() + hardware.getName());
+            String[] parts = s.split("_");
+            cells.get(2).setCellValue(Integer.valueOf(parts[1]));
+            cells.get(3).setCellValue(Integer.valueOf(parts[2]));
+            cells.get(7).setCellValue(hardware.getWeek());
+            r[0]++;
+
+
+        });
+
+
+        optFileName = optFileName + "Database" + weekName + ".xlsx";
+        FileOutputStream fileOut = new FileOutputStream(optFileName);
+        //write this workbook to an Outputstream.
+        hardwareWb.write(fileOut);
+        fileOut.flush();
+        fileOut.close();
+        System.out.println(tech + "G hardwarefile is done");
+    }
+
 
     // 3G HW list
     void export3GHWfromXML(ArrayList<NodeB> nodeBList, String weekName) throws IOException {
@@ -1265,7 +1383,7 @@ class Exporter {
         XSSFSheet sheet = lHardwareWb.getSheet("Sheet1");
         int r = 1;
         for (EnodeB enodeB : lSitesList) {
-            for (HwItem hwItem : enodeB.getLHardware().hwItems) {
+            for (HwItem hwItem : enodeB.getHardware().getHwItems()) {
                 ArrayList<XSSFCell> cells = new ArrayList<>();
                 XSSFRow row = sheet.createRow(r);
                 //iterating c number of columns
@@ -1279,7 +1397,7 @@ class Exporter {
                 cells.get(3).setCellValue(hwItem.getUserLabel());
                 cells.get(4).setCellValue(hwItem.getSerialNumber());
                 cells.get(5).setCellValue(hwItem.getIdentificationCode());
-                cells.get(6).setCellValue(enodeB.getLHardware().getWeek());
+                cells.get(6).setCellValue(enodeB.getHardware().getWeek());
                 r++;
             }
         }

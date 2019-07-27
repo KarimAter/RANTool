@@ -1,19 +1,23 @@
 package Helpers;
 
+import javafx.scene.control.Alert;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class Utils {
-
-    static File defaultPath = new File(System.getProperty("user.home"));
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static File defaultPath = new File(System.getProperty("user.home"));
 
     public static ArrayList<File> loadXMLsFromMachine(Stage stage) {
         ArrayList<File> fileList = new ArrayList<>();
         FileChooser fileChooser = new FileChooser();
+        configureFileChooser("Load XMLs..", fileChooser);
         List<File> list = fileChooser.showOpenMultipleDialog(stage);
         if (list != null) {
             for (File file : list) {
@@ -26,7 +30,7 @@ public class Utils {
 
     public static File loadXMLFromMachine(Stage stage) {
         FileChooser fileChooser = getFileChooser("*.xml");
-        configureFileChooser(fileChooser);
+        configureFileChooser("", fileChooser);
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
             defaultPath = new File(file.getParentFile().getPath());
@@ -37,7 +41,7 @@ public class Utils {
 
     public static String loadDumpFromMachine(Stage stage) {
         FileChooser fileChooser = getFileChooser("*.mdb");
-        configureFileChooser(fileChooser);
+        configureFileChooser("Load dump..", fileChooser);
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
             defaultPath = new File(file.getParentFile().getPath());
@@ -48,7 +52,7 @@ public class Utils {
 
     public static String loadDatabaseFromMachine(Stage stage) {
         FileChooser fileChooser = getFileChooser("*.db");
-        configureFileChooser(fileChooser);
+        configureFileChooser("load database", fileChooser);
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
             defaultPath = new File(file.getParentFile().getPath());
@@ -65,8 +69,8 @@ public class Utils {
         return fileChooser;
     }
 
-    private static void configureFileChooser(final FileChooser fileChooser) {
-        fileChooser.setTitle("Load Dump");
+    private static void configureFileChooser(String title, final FileChooser fileChooser) {
+        fileChooser.setTitle(title);
         fileChooser.setInitialDirectory(defaultPath);
 
     }
@@ -129,5 +133,16 @@ public class Utils {
             }
         } else regionId = 99;
         return regionId;
+    }
+
+    public static void showErrorMessage(String header, String body) {
+        Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+        errorAlert.setHeaderText(header);
+        errorAlert.setContentText(body);
+        errorAlert.showAndWait();
+    }
+
+    public static String getTime() {
+        return dateFormat.format(Calendar.getInstance().getTime());
     }
 }

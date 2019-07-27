@@ -1,8 +1,5 @@
 package sample;
 
-import Helpers.Utils;
-
-
 public class NodeB extends Cabinet {
 
     private static final int TECHNOLOGY = 3;
@@ -128,11 +125,6 @@ public class NodeB extends Cabinet {
         this.generateProperties();
     }
 
-    private void findCodeAndRegion() {
-        this.code = Utils.extractSiteCode(this.name);
-        this.region = Utils.extractRegion(this.code);
-    }
-
     @Override
     protected void extractProperties() {
         String[] parts = properties.split("_");
@@ -197,30 +189,10 @@ public class NodeB extends Cabinet {
                 this.u900Power;
     }
 
-
-    public String getProperties() {
-        return properties;
-    }
-
     public void setProperties(String properties) {
         this.properties = properties;
         extractProperties();
     }
-
-
-    public void finalizeProperties(String week) {
-//        this.setNumberOfSectors();
-//        this.setStandAloneU900();
-//        this.setRegion();
-//        this.setUniqueName();
-//        this.createCellIdentifier();
-//        this.generateR99Identifier();
-//        this.generateU9Identifier();
-//        this.generatePowerIdentifier();
-//        this.createProperties();
-//        this.setUHardware(new NodeBHW(), week);
-    }
-
 
     public void extractCellsFromIdentifier() {
         String[] parts = cellIdentifier.split("\\.");
@@ -350,11 +322,6 @@ public class NodeB extends Cabinet {
     public void setNumberOfE1s(int numberOfE1s) {
         this.numberOfE1s = numberOfE1s;
     }
-
-    public void setNumberOfOnAirCells(int numberOfOnAirCells) {
-        this.numberOfOnAirCells = numberOfOnAirCells;
-    }
-
 
     public void setNumberOfHSDPASet1(int numberOfHSDPASet1) {
         if (numberOfHSDPASet1 < 0)

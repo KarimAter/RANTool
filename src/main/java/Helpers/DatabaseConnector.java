@@ -10,7 +10,9 @@ public class DatabaseConnector {
     private static final String driver = "net.ucanaccess.jdbc.UcanaccessDriver";
 
     public DatabaseConnector(String dumpPath) {
+        System.out.println("Starting connection" + Utils.getTime());
         this.connection = conn(dumpPath);
+        System.out.println("got connection" + Utils.getTime());
     }
 
     private Connection conn(String dumpPath) {
@@ -332,8 +334,8 @@ public class DatabaseConnector {
     }
 
 
-    public ArrayList<USite> getThirdCarrierSites(ArrayList<USite> thirdCarrierList) throws SQLException {
-
+    public ArrayList<USite> getThirdCarrierSites() throws SQLException {
+        ArrayList<USite> thirdCarrierList = new ArrayList<>();
         Statement statement = connection.createStatement();
         String thirdCarrierQuery = "Select  BTSAdditionalInfo,min(RncId),first(WBTSName) from " +
                 "(Select RncId,WBTSId from A_WCEL where UARFCN='10662' and AdminCellState ='1' )" +
@@ -350,8 +352,8 @@ public class DatabaseConnector {
         return thirdCarrierList;
     }
 
-    public ArrayList<USite> getU900List(ArrayList<USite> u900List) throws SQLException {
-
+    public ArrayList<USite> getU900List() throws SQLException {
+        ArrayList<USite> u900List = new ArrayList<>();
         Statement statement = connection.createStatement();
         String u900Query = "Select  BTSAdditionalInfo,min(RncId),first(WBTSName) from " +
                 "(Select RncId,WBTSId from A_WCEL where UARFCN='2988' and AdminCellState ='1' )" +
@@ -590,7 +592,7 @@ public class DatabaseConnector {
         return nodeBList;
     }
 
-    public ArrayList<EnodeB> get4GSites(String weekName) throws SQLException {
+    public ArrayList<Cabinet> getEnodeBs() throws SQLException {
 
         String lQuery;
         Statement statement = connection.createStatement();
@@ -644,24 +646,24 @@ public class DatabaseConnector {
 //                    "on (firstSet.mrbtsId=sixthSet.mrbtsId) " +
 //                    "group by " +
 //                    "mrbtsId";
-        ArrayList<EnodeB> enodeBS = new ArrayList<>();
+        ArrayList<Cabinet> enodeBS = new ArrayList<>();
         ResultSet lResultSet = statement.executeQuery(lQuery);
         while (lResultSet.next()) {
-            EnodeB site = new EnodeB();
-            site.setENodeBId(lResultSet.getString(1));
-            site.setENodeBNumberOfCells(lResultSet.getInt(2) + lResultSet.getInt(8));
-            site.setENodeBNumberOfOnAirCells(lResultSet.getInt(3), lResultSet.getInt(9));
-            site.setENodeBVersion(lResultSet.getString(4));
-            site.setENodeBName(lResultSet.getString(5));
-            site.setENodeBBW(lResultSet.getInt(6));
-            site.setENodeBMimo(lResultSet.getInt(7));
-            site.setTac(lResultSet.getString(10));
-            site.setManIp(lResultSet.getString(11));
-            site.setS1Ip(lResultSet.getString(12));
-            site.setSecIp(lResultSet.getString(13));
-            site.setSecGw(lResultSet.getString(14));
-            site.finalizeProperties(weekName);
-            enodeBS.add(site);
+            EnodeB eNodeB = new EnodeB();
+            eNodeB.setENodeBId(lResultSet.getString(1));
+            eNodeB.setNumberOfCells(lResultSet.getInt(2) + lResultSet.getInt(8));
+            eNodeB.setNumberOfOnAirCells(lResultSet.getInt(3), lResultSet.getInt(9));
+            eNodeB.setVersion(lResultSet.getString(4));
+            eNodeB.setName(lResultSet.getString(5));
+            eNodeB.setBw(lResultSet.getInt(6));
+            eNodeB.setMimo(lResultSet.getInt(7));
+            eNodeB.setTac(lResultSet.getString(10));
+            eNodeB.setManIp(lResultSet.getString(11));
+            eNodeB.setS1Ip(lResultSet.getString(12));
+            eNodeB.setSecIp(lResultSet.getString(13));
+            eNodeB.setSecGw(lResultSet.getString(14));
+            eNodeB.finishProperties();
+            enodeBS.add(eNodeB);
         }
         System.out.println("Number of eNodeBs: " + enodeBS.size());
 
