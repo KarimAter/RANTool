@@ -446,7 +446,6 @@ public class Main extends Application {
         }
 
 
-//        Exporter.export3GSitesList(uSitesList, "Sites");
 
 
 //        Exporter.export3GHardWare(uSitesList, "3G HW");
