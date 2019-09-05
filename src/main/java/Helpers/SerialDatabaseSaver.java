@@ -341,10 +341,11 @@ public class SerialDatabaseSaver {
         return resultSet;
     }
 
-    public Hardware getMissinHw(String uniqueName) {
+    public Hardware getMissinHw(String uniqueName, int weekNumber) {
         ArrayList<HwItem> hwItems = new ArrayList<>();
         ResultSet resultSet;
         Statement statement;
+        Hardware hardware;
         try {
             statement = connection.createStatement();
             String bcfQuery = "Select " + USER_LABEL + " from " + TABLE_NAME + " where " + ID + " = '" + uniqueName + "'";
@@ -358,6 +359,9 @@ public class SerialDatabaseSaver {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return new Hardware(hwItems);
+        hardware = new Hardware(hwItems);
+        DatabaseHelper databaseHelper = new DatabaseHelper("D:/RAN Tool/NokiaDumpToolHistory.db");
+        hardware.setWeek(databaseHelper.getMissingHWWeek(uniqueName, weekNumber));
+        return hardware;
     }
 }

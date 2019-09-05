@@ -15,7 +15,7 @@ public class NodeB extends Cabinet {
             numberOfCarriers, numberOfE1s, numberOfOnAirCells,
             numberOfHSDPASet1, numberOfHSDPASet2, numberOfHSDPASet3, numberOfHSUPASet1, numberOfChannelElements;
 
-    private boolean firstCarrier, u900;
+    private boolean firstCarrier, u900, thirdCarrier;
     private double power, u900Power;
     private boolean rfSharing;
     private boolean standAloneU900;
@@ -372,6 +372,7 @@ public class NodeB extends Cabinet {
 
     public void setNumberOfOnAirThirdCarriersCells(int numberOfOnAirThirdCarriersCells) {
         if (numberOfOnAirThirdCarriersCells > 0) {
+            this.thirdCarrier = true;
             this.numberOfCarriers++;
         }
         this.numberOfOnAirThirdCarriersCells = numberOfOnAirThirdCarriersCells;
@@ -665,6 +666,22 @@ public class NodeB extends Cabinet {
 
     public int getNumberOfE1s() {
         return numberOfE1s;
+    }
+
+    public boolean isU900() {
+        return u900;
+    }
+
+    public void setU900(boolean u900) {
+        this.u900 = u900;
+    }
+
+    public boolean isThirdCarrier() {
+        return thirdCarrier;
+    }
+
+    public void setThirdCarrier(boolean thirdCarrier) {
+        this.thirdCarrier = thirdCarrier;
     }
 
 

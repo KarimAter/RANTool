@@ -166,11 +166,11 @@ public class GSite {
 //        this.siteNumberOfGTRXs = siteNumberOfGTRXs;
 //    }
 //
-//    public String getRegion() {
+//    public String getControllerId() {
 //        return region;
 //    }
 //
-//    private void setRegion() {
+//    private void setControllerId() {
 //        if (siteCode != null) {
 //            String region = siteCode.substring(4);
 //            if (region.equalsIgnoreCase("UP") || region.equalsIgnoreCase("SI") || region.equalsIgnoreCase("RE")
@@ -197,7 +197,7 @@ public class GSite {
 //
 //    public void finalizeProperties() {
 //        this.setSiteCode();
-//        this.setRegion();
+//        this.setControllerId();
 //        this.setSiteNumberOfGsmCells();
 //        this.setUniqueName();
 //        setIdentifiers();

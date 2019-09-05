@@ -391,7 +391,7 @@ class Exporter {
 //                XSSFCell cell = row.createCell(i);
 //                cells.add(i, cell);
 //            }
-//            cells.get(0).setCellValue(site.getRegion());
+//            cells.get(0).setCellValue(site.getControllerId());
 //            cells.get(1).setCellValue(site.getSiteBSCName());
 //            cells.get(2).setCellValue(site.getSiteName());
 //            cells.get(3).setCellValue(site.getSiteCode());
@@ -493,7 +493,7 @@ class Exporter {
 //                cells.add(i, cell);
 //            }
 //            GSite.GHardware gHardware = site.getGHardware();
-//            cells.get(0).setCellValue(site.getRegion());
+//            cells.get(0).setCellValue(site.getControllerId());
 //            cells.get(1).setCellValue(site.getSiteName());
 //            cells.get(2).setCellValue(site.getSiteCode());
 //            cells.get(3).setCellValue(gHardware.ESMB);
@@ -611,6 +611,148 @@ class Exporter {
     }
 
 
+    void exportSiteHardwareMap(Map<String, List<Hardware>> sitesList) {
+        System.out.println("Exporting sites map.. " + Utils.getTime());
+
+        XSSFSheet sheet1;
+        XSSFWorkbook mapWb;
+
+        try {
+            mapWb = lambda.prepareWB("D:\\RAN Tool\\SitesMap.xlsx");
+            sheet1 = mapWb.getSheet("Sheet1");
+            int numOfColumns = 8;
+            final int[] r = {2};
+            sitesList.forEach((key, value) -> {
+                ArrayList<XSSFCell> cells = new ArrayList<>();
+                XSSFRow row = sheet1.createRow(r[0]);
+                //iterating c number of columns
+                for (int i = 0; i < numOfColumns; i++) {
+                    XSSFCell cell = row.createCell(i);
+                    cells.add(i, cell);
+                }
+                value.forEach(h -> {
+                    switch (h.getTech()) {
+                        case 2:
+                            cells.get(2).setCellValue(h.getSmString());
+                            cells.get(3).setCellValue(h.getRfString());
+                            break;
+                        case 3:
+                            cells.get(4).setCellValue(h.getSmString());
+                            cells.get(5).setCellValue(h.getRfString());
+                            break;
+                        case 4:
+                            cells.get(6).setCellValue(h.getSmString());
+                            cells.get(7).setCellValue(h.getRfString());
+                            break;
+
+                    }
+                });
+                cells.get(0).setCellValue(value.get(0).getName());
+                cells.get(1).setCellValue(value.get(0).getCode());
+                r[0]++;
+            });
+            FileOutputStream fileOut;
+            fileOut = new FileOutputStream(prepareSitesMapName(weekName));
+            mapWb.write(fileOut);
+            fileOut.flush();
+            fileOut.close();
+            mapWb.close();
+            System.out.println("Sites map done.. " + Utils.getTime());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    void exportConfPivot(List<StatBox> uTable) {
+
+        System.out.println("Exporting pivots.. " + Utils.getTime());
+
+        XSSFSheet sheet2;
+        XSSFWorkbook mapWb;
+
+
+        try {
+            mapWb = lambda.prepareWB("D:\\RAN Tool\\SitesMap.xlsx");
+            sheet2 = mapWb.getSheet("Sheet2");
+            int numOfColumns = 9;
+            final int[] r = {1};
+            uTable.forEach(statBox -> {
+                ArrayList<XSSFCell> cells = new ArrayList<>();
+                XSSFRow row = sheet2.createRow(r[0]);
+                //iterating c number of columns
+                for (int i = 0; i < numOfColumns; i++) {
+                    XSSFCell cell = row.createCell(i);
+                    cells.add(i, cell);
+                }
+
+                cells.get(0).setCellValue(Integer.valueOf(statBox.getControllerId()));
+                ArrayList<Integer> param = statBox.getParam();
+                for (int i = 0; i < param.size(); i++) {
+                    cells.get(i + 1).setCellValue(param.get(i));
+                }
+                r[0]++;
+            });
+            FileOutputStream fileOut;
+            fileOut = new FileOutputStream(prepareSitesMapName(weekName));
+            mapWb.write(fileOut);
+            fileOut.flush();
+            fileOut.close();
+            mapWb.close();
+            System.out.println("pivots done.. " + Utils.getTime());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void exportCarrierPivot(Map<String, List<Integer>> carrierTable) {
+
+
+        System.out.println("Exporting Carrier pivots.. " + Utils.getTime());
+
+        XSSFSheet sheet2;
+        XSSFWorkbook mapWb;
+
+
+        try {
+            mapWb = lambda.prepareWB("D:\\RAN Tool\\SitesMap.xlsx");
+            sheet2 = mapWb.getSheet("Sheet3");
+            int numOfColumns = 4;
+            final int[] r = {1};
+            carrierTable.forEach((rnc, counts) -> {
+                ArrayList<XSSFCell> cells = new ArrayList<>();
+                XSSFRow row = sheet2.createRow(r[0]);
+                //iterating c number of columns
+                for (int i = 0; i < numOfColumns; i++) {
+                    XSSFCell cell = row.createCell(i);
+                    cells.add(i, cell);
+                }
+                cells.get(0).setCellValue(Integer.valueOf(rnc));
+                for (int i = 0; i < counts.size(); i++) {
+                    try {
+                        cells.get(i + 1).setCellValue(counts.get(i));
+                    } catch (NullPointerException e) {
+                        cells.get(i + 1).setCellValue(0);
+                    }
+                }
+                r[0]++;
+            });
+            FileOutputStream fileOut;
+            fileOut = new FileOutputStream(prepareSitesMapName(weekName));
+            mapWb.write(fileOut);
+            fileOut.flush();
+            fileOut.close();
+            mapWb.close();
+            System.out.println("Carrier pivots done.. " + Utils.getTime());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     private XSSFWorkbook prepareWorkbooks(String path) {
         File file = new File(path);
 //        prepareDashboardName(weekName);
@@ -643,6 +785,10 @@ class Exporter {
     private void prepare3GcellsSheetNames(String weekName) {
         uCells1FileName = "C:\\Users\\Ater\\Desktop\\3G Cells1" + weekName + ".xlsx";
         uCells2FileName = "C:\\Users\\Ater\\Desktop\\3G Cells2" + weekName + ".xlsx";
+    }
+
+    private String prepareSitesMapName(String weekName) {
+        return "C:\\Users\\Ater\\Desktop\\SitesMap " + weekName + ".xlsx";
     }
 
     private XSSFWorkbook get2GHWWorkbook() throws IOException {
@@ -1248,7 +1394,7 @@ class Exporter {
 
         });
 
-        lHardwareFileName = lHardwareFileName + "Database" + weekName + ".xlsx";
+        lHardwareFileName = lHardwareFileName + " " + weekName + ".xlsx";
         FileOutputStream fileOut = new FileOutputStream(lHardwareFileName);
         //write this workbook to an Outputstream.
         hardwareWb.write(fileOut);
@@ -1323,7 +1469,7 @@ class Exporter {
         });
 
 
-        optFileName = optFileName + "Database" + weekName + ".xlsx";
+        optFileName = optFileName + " " + weekName + ".xlsx";
         FileOutputStream fileOut = new FileOutputStream(optFileName);
         //write this workbook to an Outputstream.
         hardwareWb.write(fileOut);

@@ -153,7 +153,7 @@ public class DatabaseHelper {
 //                pr3.setString(1, nodeB.getUniqueName());
 //                pr3.setString(2, nodeB.getNodeBCode());
 //                pr3.setString(3, nodeB.getNodeBName());
-//                pr3.setString(4, nodeB.getRegion());
+//                pr3.setString(4, nodeB.getControllerId());
 //                pr3.setInt(5, 3);
 //                pr3.setString(6, nodeB.getRncId());
 //                pr3.setString(7, nodeB.getWbtsId());
@@ -193,7 +193,7 @@ public class DatabaseHelper {
 //                pr4.setString(1, enodeB.getUniqueName());
 //                pr4.setString(2, enodeB.getCode());
 //                pr4.setString(3, enodeB.getName());
-//                pr4.setString(4, enodeB.getRegion());
+//                pr4.setString(4, enodeB.getControllerId());
 //                pr4.setInt(5, 4);
 //                pr4.setString(6, enodeB.getNodeId());
 //                pr4.setString(7, enodeB.getCellIdentifier());
@@ -365,6 +365,53 @@ public class DatabaseHelper {
                 hardware.setWeek(resultSet.getString(4));
                 connection.close();
                 return hardware;
+            }
+        }
+        this.connection.close();
+        return null;
+    }
+
+
+    public String getMissingHWWeek(String uniqueName, int weekNumber) {
+        ResultSet resultSet;
+        String week;
+        try {
+            Statement statement = connection.createStatement();
+            while (weekNumber > 0) {
+
+                String existingTable = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='W" + weekNumber + "'";
+                resultSet = statement.executeQuery(existingTable);
+                if (resultSet.getInt(1) > 0) {
+                    week = getHardwareWeek(uniqueName, weekNumber);
+                    if (week != null) {
+                        return week;
+                    }
+                }
+                weekNumber--;
+            }
+
+            this.connection.close();
+            //Todo:check close conn here
+
+        } catch (SQLException e) {
+//            e.printStackTrace();
+        }
+        return "W" + weekNumber;
+    }
+
+    private String getHardwareWeek(String uniqueName, int weekNumber) throws SQLException {
+
+        Hardware hardware;
+        ResultSet resultSet;
+        Statement statement = connection.createStatement();
+        String hwQuery = "Select " + RF_IDENTIFIER + "," + SM_IDENTIFIER + "," + TX_IDENTIFIER + "," + WEEK + " from W" +
+                weekNumber + " where ID='" + uniqueName + "'";
+        resultSet = statement.executeQuery(hwQuery);
+        while (resultSet.next()) {
+//            if (!resultSet.getString(1).equals("")) {
+            if (resultSet.getString(1) != null) {
+                connection.close();
+                return resultSet.getString(4);
             }
         }
         this.connection.close();
@@ -555,5 +602,33 @@ public class DatabaseHelper {
         return resultSet.next();
     }
 
+
+//    public ArrayList<Cabinet> loadData() {
+//        ResultSet resultSet;
+//        Statement statement;
+//        ArrayList<Cabinet> cabinets = new ArrayList<>();
+//        try {
+//            statement = connection.createStatement();
+//            String nodeBQuery = "Select " + ID + "," + CODE + "," + NAME + "," + WEEK + ","+ TECHNOLOGY + ","  + RF_IDENTIFIER + "," + SM_IDENTIFIER + " from " + tableName;
+//            resultSet = statement.executeQuery(nodeBQuery);
+//
+//
+//            while (resultSet.next()) {
+//                String key = resultSet.getString(ID);
+//                BCF bcf=new BCF();
+//                bcf.setUniqueName(key);
+//                bcf.setName(resultSet.getString(NAME));
+//                bcf.setCode(resultSet.getString(CODE));
+//                bcf.setT(resultSet.getString(CODE));
+//                bcf.setUniqueName(key);
+//
+//                cabinets.add(key, hardware);
+//
+//            }
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//        return cabinets;
+//    }
 
 }
