@@ -108,31 +108,87 @@ public class Utils {
         return "";
     }
 
-    public static int extractRegionId(String region) {
-        int regionId;
-        if (region != null) {
+    public static String mapToRegion(String controller) {
+        String region;
 
-            switch (region) {
-                case "AL":
-                    regionId = 11;
-                    break;
-                case "DE":
-                    regionId = 22;
-                    break;
-                case "SI":
-                    regionId = 33;
-                    break;
-                case "RE":
-                    regionId = 44;
-                    break;
-                case "UP":
-                    regionId = 55;
-                    break;
-                default:
-                    regionId = 99;
-            }
-        } else regionId = 99;
-        return regionId;
+        switch (controller) {
+
+            case "16":
+            case "22":
+            case "30":
+            case "38":
+            case "48":
+            case "64":
+            case "AMERYA01":
+            case "MAMOURA01":
+            case "MANSHIA01":
+            case "MANSHIA02":
+            case "MIAMI01":
+            case "NEWAWAYED01":
+            case "NEWAWAYED02":
+            case "SEMOUHA02":
+            case "SMOUHA01":
+                region = "AL";
+                break;
+            case "4":
+            case "12":
+            case "24":
+            case "36":
+            case "54":
+            case "28":
+            case "46":
+            case "52":
+            case "44":
+            case "56":
+            case "Banha mcBSC":
+            case "BANHA01":
+            case "DAMANHOUR01":
+            case "DAMAS01":
+            case "DUMYAT01":
+            case "FAQOUS01":
+            case "HIHYA01":
+            case "KFDW01":
+            case "KFRELSHKH01":
+            case "MAHALLA01":
+            case "MANSOURA01":
+            case "MINUF01":
+            case "Port Said":
+            case "SHIBIN01":
+            case "TANTA01":
+            case "ZAGAZIG01":
+            case "ZAGAZIG02":
+                region = "DE";
+                break;
+            case "26":
+            case "18":
+            case "SHARM01":
+                region = "RE";
+                break;
+            case "2":
+            case "14":
+            case "34":
+            case "50":
+            case "58":
+            case "60":
+            case "62":
+            case "ASWAN01":
+            case "ASWAN02":
+            case "ASYOUT01":
+            case "ASYOUT02":
+            case "BENISUEF01":
+            case "BNISUEF02":
+            case "MINYA01":
+            case "QENA01":
+            case "QENA02":
+            case "SOHAG01":
+            case "SOHAG02":
+                region = "UP";
+                break;
+            default:
+                region = "";
+                break;
+        }
+        return region;
     }
 
     public static void showErrorMessage(String header, String body) {

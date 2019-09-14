@@ -23,7 +23,9 @@ class Exporter {
 
     static String[] carrierHeader = {"Code", "Name", "Rnc"};
     static String orginalFileName = "D:\\RAN Tool\\Dashboard.xlsx";
-    static String updatedFileName = "D:\\RAN Tool\\Dashboard.xlsx";
+    static String updatedFileName = "";
+    static String updatedSiteMapName = "";
+    static String originalSiteMapName = "D:\\RAN Tool\\SitesMap.xlsx";
     static String TRX1FileName;
     static String TRX2FileName;
     static String uCells1FileName;
@@ -40,6 +42,7 @@ class Exporter {
         this.weekName = weekName;
         wb = prepareWorkbooks(orginalFileName);
         updatedFileName = prepareDashboardName(weekName);
+        updatedSiteMapName = prepareSiteMapName(weekName);
     }
 
     Exporter() {
@@ -612,14 +615,13 @@ class Exporter {
 
 
     void exportSiteHardwareMap(Map<String, List<Hardware>> sitesList) {
-        System.out.println("Exporting sites map.. " + Utils.getTime());
-
+        System.out.println("Exporting HW Map.. " + Utils.getTime());
         XSSFSheet sheet1;
         XSSFWorkbook mapWb;
 
         try {
-            mapWb = lambda.prepareWB("D:\\RAN Tool\\SitesMap.xlsx");
-            sheet1 = mapWb.getSheet("Sheet1");
+            mapWb = lambda.prepareWB(updatedSiteMapName, originalSiteMapName);
+            sheet1 = mapWb.getSheet("HW");
             int numOfColumns = 8;
             final int[] r = {2};
             sitesList.forEach((key, value) -> {
@@ -657,7 +659,7 @@ class Exporter {
             fileOut.flush();
             fileOut.close();
             mapWb.close();
-            System.out.println("Sites map done.. " + Utils.getTime());
+            System.out.println("HW map done.. " + Utils.getTime());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -666,63 +668,98 @@ class Exporter {
 
     }
 
-    void exportConfPivot(List<StatBox> uTable) {
-
-        System.out.println("Exporting pivots.. " + Utils.getTime());
-
-        XSSFSheet sheet2;
+    void exportConfPivot(List<StatBox> configMap, int numOfColumns, String sheetName) {
+        System.out.println("Exporting " + sheetName + " configuration pivots.. " + Utils.getTime());
+        XSSFSheet sheet;
         XSSFWorkbook mapWb;
-
-
         try {
-            mapWb = lambda.prepareWB("D:\\RAN Tool\\SitesMap.xlsx");
-            sheet2 = mapWb.getSheet("Sheet2");
-            int numOfColumns = 9;
+            mapWb = lambda.prepareWB(updatedSiteMapName, originalSiteMapName);
+            sheet = mapWb.getSheet(sheetName);
+//             int numOfColumns = 4;
             final int[] r = {1};
-            uTable.forEach(statBox -> {
+            configMap.forEach(statBox -> {
                 ArrayList<XSSFCell> cells = new ArrayList<>();
-                XSSFRow row = sheet2.createRow(r[0]);
+                XSSFRow row = sheet.createRow(r[0]);
                 //iterating c number of columns
                 for (int i = 0; i < numOfColumns; i++) {
                     XSSFCell cell = row.createCell(i);
                     cells.add(i, cell);
                 }
-
-                cells.get(0).setCellValue(Integer.valueOf(statBox.getControllerId()));
+                cells.get(0).setCellValue(statBox.getRegion());
+                try {
+                    cells.get(1).setCellValue(Integer.valueOf(statBox.getControllerId()));
+                } catch (NumberFormatException e) {
+                    cells.get(1).setCellValue(statBox.getControllerId());
+                }
                 ArrayList<Integer> param = statBox.getParam();
                 for (int i = 0; i < param.size(); i++) {
-                    cells.get(i + 1).setCellValue(param.get(i));
+                    cells.get(i + 2).setCellValue(param.get(i));
                 }
                 r[0]++;
             });
             FileOutputStream fileOut;
-            fileOut = new FileOutputStream(prepareSitesMapName(weekName));
+            fileOut = new FileOutputStream(updatedSiteMapName);
             mapWb.write(fileOut);
             fileOut.flush();
             fileOut.close();
             mapWb.close();
-            System.out.println("pivots done.. " + Utils.getTime());
+            System.out.println(sheetName + " pivots done.. " + Utils.getTime());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
 
-    public void exportCarrierPivot(Map<String, List<Integer>> carrierTable) {
+//    void exportUConfPivot(List<StatBox> uTable) {
+//
+//        System.out.println("Exporting pivots.. " + Utils.getTime());
+//        XSSFSheet sheet2;
+//        XSSFWorkbook mapWb;
+//        try {
+//            mapWb = lambda.prepareWB("D:\\RAN Tool\\SitesMap.xlsx");
+//            sheet2 = mapWb.getSheet("Sheet2");
+//            int numOfColumns = 9;
+//            final int[] r = {1};
+//            uTable.forEach(statBox -> {
+//                ArrayList<XSSFCell> cells = new ArrayList<>();
+//                XSSFRow row = sheet2.createRow(r[0]);
+//                //iterating c number of columns
+//                for (int i = 0; i < numOfColumns; i++) {
+//                    XSSFCell cell = row.createCell(i);
+//                    cells.add(i, cell);
+//                }
+//
+//                cells.get(0).setCellValue(Integer.valueOf(statBox.getControllerId()));
+//                ArrayList<Integer> param = statBox.getParam();
+//                for (int i = 0; i < param.size(); i++) {
+//                    cells.get(i + 1).setCellValue(param.get(i));
+//                }
+//                r[0]++;
+//            });
+//            FileOutputStream fileOut;
+//            fileOut = new FileOutputStream(updatedSiteMapName);
+//            mapWb.write(fileOut);
+//            fileOut.flush();
+//            fileOut.close();
+//            mapWb.close();
+//            System.out.println("pivots done.. " + Utils.getTime());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 
-        System.out.println("Exporting Carrier pivots.. " + Utils.getTime());
-
+    public void exportSitesPivot(Map<String, List<Integer>> sitesTable, int numOfColumns, String sheetName) {
+        System.out.println("Exporting " + sheetName + " pivots.. " + Utils.getTime());
         XSSFSheet sheet2;
         XSSFWorkbook mapWb;
 
-
         try {
-            mapWb = lambda.prepareWB("D:\\RAN Tool\\SitesMap.xlsx");
-            sheet2 = mapWb.getSheet("Sheet3");
-            int numOfColumns = 4;
+            mapWb = lambda.prepareWB(updatedSiteMapName, originalSiteMapName);
+            sheet2 = mapWb.getSheet(sheetName);
+//            int numOfColumns = 4;
             final int[] r = {1};
-            carrierTable.forEach((rnc, counts) -> {
+            sitesTable.forEach((controller, counts) -> {
                 ArrayList<XSSFCell> cells = new ArrayList<>();
                 XSSFRow row = sheet2.createRow(r[0]);
                 //iterating c number of columns
@@ -730,23 +767,28 @@ class Exporter {
                     XSSFCell cell = row.createCell(i);
                     cells.add(i, cell);
                 }
-                cells.get(0).setCellValue(Integer.valueOf(rnc));
+                cells.get(0).setCellValue(Utils.mapToRegion(controller));
+                try {
+                    cells.get(1).setCellValue(Integer.valueOf(controller));
+                } catch (NumberFormatException e) {
+                    cells.get(1).setCellValue(controller);
+                }
                 for (int i = 0; i < counts.size(); i++) {
                     try {
-                        cells.get(i + 1).setCellValue(counts.get(i));
+                        cells.get(i + 2).setCellValue(counts.get(i));
                     } catch (NullPointerException e) {
-                        cells.get(i + 1).setCellValue(0);
+                        cells.get(i + 2).setCellValue(0);
                     }
                 }
                 r[0]++;
             });
             FileOutputStream fileOut;
-            fileOut = new FileOutputStream(prepareSitesMapName(weekName));
+            fileOut = new FileOutputStream(updatedSiteMapName);
             mapWb.write(fileOut);
             fileOut.flush();
             fileOut.close();
             mapWb.close();
-            System.out.println("Carrier pivots done.. " + Utils.getTime());
+            System.out.println(sheetName + "pivots done.. " + Utils.getTime());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -755,7 +797,6 @@ class Exporter {
 
     private XSSFWorkbook prepareWorkbooks(String path) {
         File file = new File(path);
-//        prepareDashboardName(weekName);
         InputStream ExcelFileToRead;
         XSSFWorkbook workbook = null;
         if (file.exists()) {
@@ -770,6 +811,10 @@ class Exporter {
             workbook = new XSSFWorkbook();
         }
         return workbook;
+    }
+
+    private String prepareSiteMapName(String weekName) {
+        return "C:\\Users\\Ater\\Desktop\\SitesMap " + weekName + ".xlsx";
     }
 
     private String prepareDashboardName(String weekName) {
@@ -805,23 +850,26 @@ class Exporter {
         return workbook;
     }
 
-    getWorkbook lambda = (templatePath) -> {
-        File file = new File(templatePath);
+    getWorkbook lambda = (templatePath, originalPath) -> {
+
         InputStream ExcelFileToRead;
         XSSFWorkbook workbook;
+        File file = new File(templatePath);
         if (file.exists()) {
             ZipSecureFile.setMinInflateRatio(0);
             ExcelFileToRead = new FileInputStream(file);
             workbook = new XSSFWorkbook(ExcelFileToRead);
         } else {
-            workbook = new XSSFWorkbook();
+            ZipSecureFile.setMinInflateRatio(0);
+            ExcelFileToRead = new FileInputStream(new File(originalPath));
+            workbook = new XSSFWorkbook(ExcelFileToRead);
         }
         return workbook;
     };
 
 
     private interface getWorkbook {
-        XSSFWorkbook prepareWB(String templatePath) throws IOException;
+        XSSFWorkbook prepareWB(String templatePath, String originalPath) throws IOException;
 
     }
 
@@ -895,7 +943,7 @@ class Exporter {
         XSSFSheet sheet1;
         XSSFWorkbook trxWb;
 //        trxWb = getTRXWorkbook();
-        trxWb = lambda.prepareWB("D:\\RAN Tool\\Dashboard_TRX1.xlsx");
+        trxWb = lambda.prepareWB(TRX1FileName, "D:\\RAN Tool\\Dashboard_TRX1.xlsx");
         sheet1 = trxWb.getSheet("TRX");
         int numOfColumns = 13;
         int r = 1;
@@ -1288,7 +1336,8 @@ class Exporter {
     void export2GHWfromXML(ArrayList<Cabinet> bcfs, String weekName) throws IOException {
         XSSFWorkbook gHardwareWb;
 //        gHardwareWb = get2GHWWorkbook();
-        gHardwareWb = lambda.prepareWB("D:\\RAN Tool\\2GHWList.xlsx");
+
+        gHardwareWb = lambda.prepareWB(gHardwareFileName, "D:\\RAN Tool\\2GHWList.xlsx");
         int numOfColumns = 8;
         XSSFSheet sheet = gHardwareWb.getSheet("Sheet1");
         final int[] r = {1};
@@ -1339,7 +1388,7 @@ class Exporter {
         SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver("D:/RAN Tool/serials.db");
         ResultSet resultSet = serialDatabaseSaver.load(4);
         XSSFWorkbook hardwareWb;
-        hardwareWb = lambda.prepareWB("D:\\RAN Tool\\4GHWListDb.xlsx");
+        hardwareWb = lambda.prepareWB(lHardwareFileName, "D:\\RAN Tool\\4GHWListDb.xlsx");
         int numOfColumns = 8;
         XSSFSheet sheet = hardwareWb.getSheet("Sheet1");
         final int[] r = {1};
@@ -1411,7 +1460,7 @@ class Exporter {
         SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver("D:/RAN Tool/serials.db");
         ResultSet resultSet = serialDatabaseSaver.load(tech);
         XSSFWorkbook hardwareWb;
-        hardwareWb = lambda.prepareWB(iptFileName);
+        hardwareWb = lambda.prepareWB(uHardwareFileName, iptFileName);
         int numOfColumns = 8;
         XSSFSheet sheet = hardwareWb.getSheet("Sheet1");
         final int[] r = {1};
@@ -1478,83 +1527,83 @@ class Exporter {
         System.out.println(tech + "G hardwarefile is done");
     }
 
-
-    // 3G HW list
-    void export3GHWfromXML(ArrayList<NodeB> nodeBList, String weekName) throws IOException {
-
-        XSSFWorkbook uHardwareWb;
-//        uHardwareWb = get3GHWWorkbook();
-        uHardwareWb = lambda.prepareWB("D:\\RAN Tool\\3GHWList.xlsx");
-        int numOfColumns = 8;
-        XSSFSheet sheet = uHardwareWb.getSheet("Sheet1");
-        int r = 1;
-        for (NodeB nodeB : nodeBList) {
-            for (HwItem hwItem : nodeB.getHardware().getHwItems()) {
-                ArrayList<XSSFCell> cells = new ArrayList<>();
-                XSSFRow row = sheet.createRow(r);
-                //iterating c number of columns
-                for (int i = 0; i < numOfColumns; i++) {
-                    XSSFCell cell = row.createCell(i);
-                    cells.add(i, cell);
-                }
-                cells.get(0).setCellValue(nodeB.getCode());
-                cells.get(1).setCellValue(nodeB.getName());
-                cells.get(2).setCellValue(Integer.valueOf(nodeB.getRncId()));
-                cells.get(3).setCellValue(Integer.valueOf(nodeB.getWbtsId()));
-                cells.get(4).setCellValue(hwItem.getUserLabel());
-                cells.get(5).setCellValue(hwItem.getSerialNumber());
-                cells.get(6).setCellValue(hwItem.getIdentificationCode());
-                cells.get(7).setCellValue(nodeB.getHardware().getWeek());
-
-                r++;
+//
+//    // 3G HW list
+//    void export3GHWfromXML(ArrayList<NodeB> nodeBList, String weekName) throws IOException {
+//
+//        XSSFWorkbook uHardwareWb;
+////        uHardwareWb = get3GHWWorkbook();
+//        uHardwareWb = lambda.prepareWB("D:\\RAN Tool\\3GHWList.xlsx");
+//        int numOfColumns = 8;
+//        XSSFSheet sheet = uHardwareWb.getSheet("Sheet1");
+//        int r = 1;
+//        for (NodeB nodeB : nodeBList) {
+//            for (HwItem hwItem : nodeB.getHardware().getHwItems()) {
+//                ArrayList<XSSFCell> cells = new ArrayList<>();
+//                XSSFRow row = sheet.createRow(r);
+//                //iterating c number of columns
+//                for (int i = 0; i < numOfColumns; i++) {
+//                    XSSFCell cell = row.createCell(i);
+//                    cells.add(i, cell);
 //                }
-            }
-        }
-        uHardwareFileName = uHardwareFileName + weekName + ".xlsx";
-        FileOutputStream fileOut = new FileOutputStream(uHardwareFileName);
-        //write this workbook to an Outputstream.
-        uHardwareWb.write(fileOut);
-        fileOut.flush();
-        fileOut.close();
-        System.out.println("3G hardwarefile is done");
-    }
-
-    // 4G HW list
-    void export4GHWfromXML(ArrayList<EnodeB> lSitesList, String weekName) throws IOException {
-
-        XSSFWorkbook lHardwareWb;
-//        lHardwareWb = get4GHWWorkbook();
-        lHardwareWb = lambda.prepareWB("D:\\RAN Tool\\4GHWList.xlsx");
-        int numOfColumns = 7;
-        XSSFSheet sheet = lHardwareWb.getSheet("Sheet1");
-        int r = 1;
-        for (EnodeB enodeB : lSitesList) {
-            for (HwItem hwItem : enodeB.getHardware().getHwItems()) {
-                ArrayList<XSSFCell> cells = new ArrayList<>();
-                XSSFRow row = sheet.createRow(r);
-                //iterating c number of columns
-                for (int i = 0; i < numOfColumns; i++) {
-                    XSSFCell cell = row.createCell(i);
-                    cells.add(i, cell);
-                }
-                cells.get(0).setCellValue(enodeB.getENodeBCode());
-                cells.get(1).setCellValue(enodeB.getENodeBName());
-                cells.get(2).setCellValue(Integer.valueOf(enodeB.getENodeBId()));
-                cells.get(3).setCellValue(hwItem.getUserLabel());
-                cells.get(4).setCellValue(hwItem.getSerialNumber());
-                cells.get(5).setCellValue(hwItem.getIdentificationCode());
-                cells.get(6).setCellValue(enodeB.getHardware().getWeek());
-                r++;
-            }
-        }
-        lHardwareFileName = lHardwareFileName + weekName + ".xlsx";
-        FileOutputStream fileOut = new FileOutputStream(lHardwareFileName);
-        //write this workbook to an Outputstream.
-        lHardwareWb.write(fileOut);
-        fileOut.flush();
-        fileOut.close();
-        System.out.println("4G hardwarefile is done");
-    }
+//                cells.get(0).setCellValue(nodeB.getCode());
+//                cells.get(1).setCellValue(nodeB.getName());
+//                cells.get(2).setCellValue(Integer.valueOf(nodeB.getRncId()));
+//                cells.get(3).setCellValue(Integer.valueOf(nodeB.getWbtsId()));
+//                cells.get(4).setCellValue(hwItem.getUserLabel());
+//                cells.get(5).setCellValue(hwItem.getSerialNumber());
+//                cells.get(6).setCellValue(hwItem.getIdentificationCode());
+//                cells.get(7).setCellValue(nodeB.getHardware().getWeek());
+//
+//                r++;
+////                }
+//            }
+//        }
+//        uHardwareFileName = uHardwareFileName + weekName + ".xlsx";
+//        FileOutputStream fileOut = new FileOutputStream(uHardwareFileName);
+//        //write this workbook to an Outputstream.
+//        uHardwareWb.write(fileOut);
+//        fileOut.flush();
+//        fileOut.close();
+//        System.out.println("3G hardwarefile is done");
+//    }
+//
+//    // 4G HW list
+//    void export4GHWfromXML(ArrayList<EnodeB> lSitesList, String weekName) throws IOException {
+//
+//        XSSFWorkbook lHardwareWb;
+////        lHardwareWb = get4GHWWorkbook();
+//        lHardwareWb = lambda.prepareWB("D:\\RAN Tool\\4GHWList.xlsx");
+//        int numOfColumns = 7;
+//        XSSFSheet sheet = lHardwareWb.getSheet("Sheet1");
+//        int r = 1;
+//        for (EnodeB enodeB : lSitesList) {
+//            for (HwItem hwItem : enodeB.getHardware().getHwItems()) {
+//                ArrayList<XSSFCell> cells = new ArrayList<>();
+//                XSSFRow row = sheet.createRow(r);
+//                //iterating c number of columns
+//                for (int i = 0; i < numOfColumns; i++) {
+//                    XSSFCell cell = row.createCell(i);
+//                    cells.add(i, cell);
+//                }
+//                cells.get(0).setCellValue(enodeB.getENodeBCode());
+//                cells.get(1).setCellValue(enodeB.getENodeBName());
+//                cells.get(2).setCellValue(Integer.valueOf(enodeB.getENodeBId()));
+//                cells.get(3).setCellValue(hwItem.getUserLabel());
+//                cells.get(4).setCellValue(hwItem.getSerialNumber());
+//                cells.get(5).setCellValue(hwItem.getIdentificationCode());
+//                cells.get(6).setCellValue(enodeB.getHardware().getWeek());
+//                r++;
+//            }
+//        }
+//        lHardwareFileName = lHardwareFileName + weekName + ".xlsx";
+//        FileOutputStream fileOut = new FileOutputStream(lHardwareFileName);
+//        //write this workbook to an Outputstream.
+//        lHardwareWb.write(fileOut);
+//        fileOut.flush();
+//        fileOut.close();
+//        System.out.println("4G hardwarefile is done");
+//    }
 
 
 }

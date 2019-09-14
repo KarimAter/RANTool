@@ -1,7 +1,6 @@
 package sample;
 
 import Helpers.Constants;
-import Helpers.Utils;
 
 import java.util.ArrayList;
 
@@ -448,34 +447,6 @@ public class USite {
         builder.append(siteName);
         builder.append(siteCode);
         this.uniqueName = builder.toString();
-    }
-
-    public int getUniqueId() {
-        return uniqueId;
-    }
-
-    private void setUniqueId() {
-        int codeValue = 0;
-        StringBuilder builder = new StringBuilder();
-        builder.append(33);
-        try {
-            codeValue = Integer.valueOf(siteCode.substring(0, siteCode.length() - 2));
-        } catch (NumberFormatException ex) {
-            char[] letters = siteCode.toCharArray();
-            for (char ch : letters) {
-                codeValue += (int) ch;
-                codeValue += Integer.valueOf(siteRncId);
-            }
-
-            System.out.println(codeValue);
-        } catch (NullPointerException e) {
-            codeValue = Integer.valueOf(siteRncId);
-            ;
-        } finally {
-            builder.append(codeValue);
-        }
-        builder.append(Utils.extractRegionId(siteRegion));
-        this.uniqueId = Integer.valueOf(builder.toString());
     }
 
     public void finalizeProperties() {

@@ -1,19 +1,22 @@
 package sample;
 
+import Helpers.Utils;
+
 import java.util.ArrayList;
 import java.util.Objects;
 
 public class StatBox {
 
-    private String controllerId, name;
+    private String controllerId, name, region;
     private ArrayList<Integer> param;
 
-    public String getControllerId() {
+    String getControllerId() {
         return controllerId;
     }
 
-    public void setControllerId(String controllerId) {
+    void setControllerId(String controllerId) {
         this.controllerId = controllerId;
+        this.setRegion(Utils.mapToRegion(this.controllerId));
     }
 
     public String getName() {
@@ -30,6 +33,14 @@ public class StatBox {
 
     public void setParam(ArrayList<Integer> param) {
         this.param = param;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    private void setRegion(String region) {
+        this.region = region;
     }
 
     @Override

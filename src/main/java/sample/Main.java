@@ -129,81 +129,26 @@ public class Main extends Application {
         {
             DatabaseHelper databaseHelper = new DatabaseHelper(databasePath, weekName);
             try {
-
+                ArrayList<Cabinet> gCabinets = databaseHelper.loadCabinets(2);
                 ArrayList<Cabinet> uCabinets = databaseHelper.loadCabinets(3);
-                Map<String, List<StatBox>> uStats = uCabinets.stream().map(cabinet -> {
-                    StatBox statBox = new StatBox();
-                    statBox.setControllerId(cabinet.getControllerId());
-                    statBox.setName(cabinet.getCode());
-                    ArrayList<Integer> params = new ArrayList<>();
-                    params.add(cabinet.getNumberOfCells());
-                    params.add(cabinet.getNumberOfOnAirCells());
-                    params.add(((NodeB) cabinet).getNumberOfHSDPASet1());
-                    params.add(((NodeB) cabinet).getNumberOfHSDPASet2());
-                    params.add(((NodeB) cabinet).getNumberOfHSDPASet3());
-                    params.add(((NodeB) cabinet).getNumberOfHSUPASet1());
-                    params.add(((NodeB) cabinet).getNumberOfChannelElements());
-                    params.add(cabinet.getTxMode().equalsIgnoreCase("FULL IP") || cabinet.getTxMode().equalsIgnoreCase("PACKET ABIS") ? 1 : 0);
-                    statBox.setParam(params);
-                    return statBox;
-                }).collect(Collectors.groupingBy(StatBox::getControllerId));
+                ArrayList<Cabinet> lCabinets = databaseHelper.loadCabinets(4);
 
-
-                List<StatBox> uTable = uStats.entrySet().stream().map(stringListEntry -> {
-                    StatBox statBox = new StatBox();
-
-                    ArrayList<Integer> outtt = stringListEntry.getValue().stream().map(StatBox::getParam).reduce(
-                            (integers, integers2) -> {
-                                ArrayList<Integer> output = new ArrayList<>();
-                                for (int i = 0; i < integers.size(); i++) {
-                                    output.add(integers.get(i) + integers2.get(i));
-                                }
-                                return output;
-                            }).get();
-                    statBox.setControllerId(stringListEntry.getKey());
-                    statBox.setParam(outtt);
-                    return statBox;
-
-                }).collect(Collectors.toList());
-
-//                uCabinets.stream().collect(Collectors.toMap(Cabinet::getCode,cabinet -> ((NodeB) cabinet).isU900() ? 1 : 0))
-//                        .entrySet().stream().filter(entry -> entry.getValue()==1).collect(Collectors.toList());
-
-                List<StatBox> sites = uCabinets.stream().map(cabinet -> {
-                    StatBox statBox = new StatBox();
-                    statBox.setControllerId(cabinet.getControllerId());
-                    statBox.setName(cabinet.getCode());
-                    ArrayList<Integer> params = new ArrayList<>();
-                    params.add(((NodeB) cabinet).isU900() ? 1 : 0);
-                    params.add(((NodeB) cabinet).isThirdCarrier() ? 1 : 0);
-                    statBox.setParam(params);
-                    return statBox;
-                }).collect(Collectors.toList());
-
-
-                Map<String, List<StatBox>> sitesCount = sites.stream().distinct().collect(Collectors.groupingBy(StatBox::getControllerId));
-
-                Map<String, List<StatBox>> u9List = sites.stream().filter(statBox -> statBox.getParam().get(0) == 1).distinct().collect(Collectors.groupingBy(StatBox::getControllerId));
-
-                Map<String, Integer> u9Count = u9List.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
-
-                Map<String, List<StatBox>> thirdCarrierList = sites.stream().filter(statBox -> statBox.getParam().get(1) == 1).distinct().collect(Collectors.groupingBy(StatBox::getControllerId));
-                Map<String, Integer> thirdCarrierCount = thirdCarrierList.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
-
-
-                Map<String, List<Integer>> carrierTable = new HashMap<>();
-                sitesCount.forEach((s, statBoxes) -> {
-                    List<Integer> counts = new ArrayList<>();
-                    counts.add(statBoxes.size());
-                    counts.add(u9Count.get(s));
-                    counts.add(thirdCarrierCount.get(s));
-                    carrierTable.put(s, counts);
-                });
 
                 int x = 1;
                 Exporter exporter = new Exporter(weekName);
-                exporter.exportConfPivot(uTable);
-                exporter.exportCarrierPivot(carrierTable);
+                // Exporting Hardware Map..
+                exporter.exportSiteHardwareMap(getHwMap());
+                // Exporting 2G configuration..
+                exporter.exportConfPivot(SiteMapper.getGConfigMap(gCabinets), 5, "BCFs");
+                // Exporting GSM sites map..
+                exporter.exportSitesPivot(SiteMapper.getGSitesMap(gCabinets), 4, "2G Sites");
+                // Exporting 3G configuration..
+                exporter.exportConfPivot(SiteMapper.getUConfigMap(uCabinets), 9, "NodeBs");
+                // Exporting UMTS sites map..
+                exporter.exportSitesPivot(SiteMapper.getUSitesMap(uCabinets), 6, "3G Sites");
+                // Exporting 4G configuration..
+                exporter.exportConfPivot(SiteMapper.getLConfigMap(lCabinets), 8, "LTE");
+
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -224,31 +169,6 @@ public class Main extends Application {
                     .collect(Collectors.toList());
 
             int xqq = 1;
-
-//            Pattern pattern2 = Pattern.compile("\\.");
-//            strings.forEach(x -> {
-//                List<Integer> collect = pattern2.splitAsStream(x).mapToInt(Integer::parseInt).boxed().collect(Collectors.toList());
-//            });
-
-
-//            TextField textField = new TextField();
-//            Button button = new Button();
-//            VBox vBox = new VBox();
-//            vBox.getChildren().add(textField);
-//            vBox.getChildren().add(button);
-//            vBox.setSpacing(10);
-//            Scene scene2 = new Scene(vBox, 300, 200);
-//            Stage stage2 = new Stage();
-//            stage2.setScene(scene2);
-//            stage2.show();
-//            button.setOnAction(event1 -> {
-////                String tableName = textField.getText();
-//                String databaseName = Utils.loadDatabaseFromMachine(stage2);
-//                String tableName = databaseName.replace(".db", "");
-////              String [] parts = dbPath.split("/");
-////              String tableName=
-//            });
-
 
         });
 
@@ -296,35 +216,6 @@ public class Main extends Application {
                 e.printStackTrace();
             }
 
-            // Exporting Sites Map..
-            DatabaseHelper databaseHelper = new DatabaseHelper(databasePath, weekName);
-            try {
-                Map<String, List<Cabinet>> gHardware = databaseHelper.loadCabinets(2).stream().
-                        collect(Collectors.groupingBy(Cabinet::getCode));
-
-                Map<String, List<Cabinet>> uHardware = databaseHelper.loadCabinets(3).stream().
-                        collect(Collectors.groupingBy(Cabinet::getCode));
-
-                Map<String, List<Cabinet>> lHardware = databaseHelper.loadCabinets(4).stream().
-                        collect(Collectors.groupingBy(Cabinet::getCode));
-
-                List<Hardware> gSites = gHardware.entrySet().stream().map(getHwItemsMapper(2)).collect(Collectors.toList());
-                List<Hardware> uSites = uHardware.entrySet().stream().map(getHwItemsMapper(3)).collect(Collectors.toList());
-                List<Hardware> lSites = lHardware.entrySet().stream().map(getHwItemsMapper(4)).collect(Collectors.toList());
-
-                List<Hardware> hardwareList = new ArrayList<>();
-                hardwareList.addAll(gSites);
-                hardwareList.addAll(uSites);
-                hardwareList.addAll(lSites);
-
-                Map<String, List<Hardware>> sitesList = hardwareList.stream().sorted(Comparator.comparing(Hardware::getTech))
-                        .collect(Collectors.groupingBy(Hardware::getCode));
-                Exporter exporter = new Exporter(weekName);
-                exporter.exportSiteHardwareMap(sitesList);
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         });
 
         loadXMls.setOnAction(event ->
@@ -518,6 +409,31 @@ public class Main extends Application {
             showCalendar();
         });
     }
+
+    private Map<String, List<Hardware>> getHwMap() throws SQLException {
+        DatabaseHelper databaseHelper = new DatabaseHelper(databasePath, weekName);
+        Map<String, List<Cabinet>> gHardware = databaseHelper.loadCabinets(2).stream().
+                collect(Collectors.groupingBy(Cabinet::getCode));
+
+        Map<String, List<Cabinet>> uHardware = databaseHelper.loadCabinets(3).stream().
+                collect(Collectors.groupingBy(Cabinet::getCode));
+
+        Map<String, List<Cabinet>> lHardware = databaseHelper.loadCabinets(4).stream().
+                collect(Collectors.groupingBy(Cabinet::getCode));
+
+        List<Hardware> gSites = gHardware.entrySet().stream().map(getHwItemsMapper(2)).collect(Collectors.toList());
+        List<Hardware> uSites = uHardware.entrySet().stream().map(getHwItemsMapper(3)).collect(Collectors.toList());
+        List<Hardware> lSites = lHardware.entrySet().stream().map(getHwItemsMapper(4)).collect(Collectors.toList());
+
+        List<Hardware> hardwareList = new ArrayList<>();
+        hardwareList.addAll(gSites);
+        hardwareList.addAll(uSites);
+        hardwareList.addAll(lSites);
+
+        return hardwareList.stream().sorted(Comparator.comparing(Hardware::getTech))
+                .collect(Collectors.groupingBy(Hardware::getCode));
+    }
+
 
     private Function<Map.Entry<String, List<Cabinet>>, Hardware> getHwItemsMapper(int tech) {
         return cabins -> {
@@ -1108,3 +1024,28 @@ public class Main extends Application {
     }
 
 }
+
+//            Pattern pattern2 = Pattern.compile("\\.");
+//            strings.forEach(x -> {
+//                List<Integer> collect = pattern2.splitAsStream(x).mapToInt(Integer::parseInt).boxed().collect(Collectors.toList());
+//            });
+
+
+//            TextField textField = new TextField();
+//            Button button = new Button();
+//            VBox vBox = new VBox();
+//            vBox.getChildren().add(textField);
+//            vBox.getChildren().add(button);
+//            vBox.setSpacing(10);
+//            Scene scene2 = new Scene(vBox, 300, 200);
+//            Stage stage2 = new Stage();
+//            stage2.setScene(scene2);
+//            stage2.show();
+//            button.setOnAction(event1 -> {
+////                String tableName = textField.getText();
+//                String databaseName = Utils.loadDatabaseFromMachine(stage2);
+//                String tableName = databaseName.replace(".db", "");
+////              String [] parts = dbPath.split("/");
+////              String tableName=
+//            });
+
