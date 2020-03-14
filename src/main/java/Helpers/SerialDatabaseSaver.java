@@ -4,10 +4,7 @@ import sample.Hardware;
 import sample.HwItem;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SerialDatabaseSaver {
@@ -49,7 +46,7 @@ public class SerialDatabaseSaver {
 
     public boolean insertAndRemove(HashMap<String, Hardware> xmlHwMap, String weekName) {
 
-        DatabaseHelper databaseHelper = new DatabaseHelper("D:/RAN Tool/NokiaDumpToolHistory.db", weekName);
+        DatabaseHelper databaseHelper = new DatabaseHelper("C:/Ater/D/RAN Tool/NokiaDumpToolHistory.db", weekName);
         HashMap<String, Hardware> dumpHwMap = databaseHelper.loadDumpHwMap();
 
         // creating a map with all serials in serials database
@@ -205,7 +202,7 @@ public class SerialDatabaseSaver {
 //                        Hardware h = xmlHwMap.get(key);
 //                        if (h != null) {
 //                            h.setCode(value.getCode());
-//                            h.setName(value.getName());
+//                            h.setCode(value.getCode());
 //                            xmlHwMap.remove(key);
 //                            return h;
 //                        }
@@ -248,7 +245,7 @@ public class SerialDatabaseSaver {
 //                        hwItems.forEach(hwItem -> {
 //                            counter[0]++;
 //                            String code = value.getCode();
-//                            String name = value.getName();
+//                            String name = value.getCode();
 //                            try {
 //                                pr2.setString(1, key);
 //                                pr2.setString(2, code);
@@ -325,6 +322,45 @@ public class SerialDatabaseSaver {
         return false;
     }
 
+    public void updateSiteNames(String weekName) {
+        DatabaseHelper databaseHelper = new DatabaseHelper("C:/Ater/D/RAN Tool/NokiaDumpToolHistory.db", weekName);
+        HashMap<String, Hardware> stringHardwareHashMap = databaseHelper.loadDumpHwMap();
+        ResultSet resultSet;
+        Statement statement;
+        ArrayList<String> ids = new ArrayList<>();
+        try {
+            statement = connection.createStatement();
+            String selectBlanks = "Select " + ID + " from " + TABLE_NAME + " where " + CODE + " is NULL or Code =''";
+            resultSet = statement.executeQuery(selectBlanks);
+            while (resultSet.next()) {
+                ids.add(resultSet.getString(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        for (String id : ids) {
+            try {
+                String code;
+                String name;
+                try {
+                    code = stringHardwareHashMap.get(id).getCode();
+                    name = stringHardwareHashMap.get(id).getName();
+                } catch (Exception e) {
+                    code = "";
+                    name = "";
+                }
+                System.out.println(id);
+                System.out.println(code + " " + name);
+                statement = connection.createStatement();
+                String update = "UPDATE Serials SET Code = '"
+                        + code + "', Name = '" +
+                        name + "' where ID = '" + id + "'";
+                statement.execute(update);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public ResultSet load(int tech) {
 
@@ -341,7 +377,7 @@ public class SerialDatabaseSaver {
         return resultSet;
     }
 
-    public Hardware getMissinHw(String uniqueName, int weekNumber) {
+    public Hardware getMissinHw(String uniqueName, String weekName) {
         ArrayList<HwItem> hwItems = new ArrayList<>();
         ResultSet resultSet;
         Statement statement;
@@ -354,14 +390,39 @@ public class SerialDatabaseSaver {
 
             while (resultSet.next()) {
                 hwItems.add(new HwItem(resultSet.getString(1)));
-                System.out.println(resultSet.getString(1));
+//                System.out.println(resultSet.getString(1));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         hardware = new Hardware(hwItems);
-        DatabaseHelper databaseHelper = new DatabaseHelper("D:/RAN Tool/NokiaDumpToolHistory.db");
-        hardware.setWeek(databaseHelper.getMissingHWWeek(uniqueName, weekNumber));
+        DatabaseHelper databaseHelper = new DatabaseHelper("C:/Ater/D/RAN Tool/NokiaDumpToolHistory.db");
+        hardware.setWeek(databaseHelper.getMissingHWWeek(uniqueName, weekName));
         return hardware;
+    }
+
+    public Map<String, Long> getHardwareCount() {
+        Map<String, Long> modules = new LinkedHashMap<>();
+        ResultSet resultSet = null;
+        Statement statement;
+        try {
+            statement = connection.createStatement();
+            String bcfQuery = "Select UserLabel,count(UserLabel) from (" +
+                    "Select * from Serials group by SerialNumber ) group by UserLabel";
+
+            resultSet = statement.executeQuery(bcfQuery);
+            while (resultSet.next()) {
+                modules.put(resultSet.getString(1), resultSet.getLong(2));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        ArrayList<String> userLabels = new ArrayList<>(Constants.rfMap.values());
+        userLabels.addAll(new ArrayList<>(Constants.smMap.values()));
+        userLabels.addAll(new ArrayList<>(Constants.txMap.values()));
+        return modules.entrySet().stream()
+                .filter(stringLongEntry -> userLabels.contains(stringLongEntry.getKey())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
     }
 }

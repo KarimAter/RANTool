@@ -24,6 +24,8 @@ public class DatabaseHelper {
     private static final String RF_IDENTIFIER = "rfIdentifier";
     private static final String SM_IDENTIFIER = "smIdentifier";
     private static final String TX_IDENTIFIER = "txIdentifier";
+    private static final int pastWeeksCount = 7;
+//    private int weeksCount;
 
 
     public DatabaseHelper(String path) {
@@ -36,7 +38,7 @@ public class DatabaseHelper {
         this.tableName = tableName;
         try {
             Statement statement = connection.createStatement();
-            String tableCreator = "create table if not exists " + tableName + " ( " + ID + " text , " + CODE + " text, "
+            String tableCreator = "create table if not exists W" + tableName + " ( " + ID + " text , " + CODE + " text, "
                     + NAME + " text, " + REGION + " text, " + WEEK + " text NOT NULL , " + TECHNOLOGY + " text, " + CONTROLLER_ID + " text, "
                     + NODE_ID + " text, " + PROPERTIES + " text, " + RF_IDENTIFIER + " text NOT NULL , " + SM_IDENTIFIER + " text NOT NULL , " + TX_IDENTIFIER + " text NOT NULL  "
                     + ")";
@@ -73,7 +75,7 @@ public class DatabaseHelper {
     //, ArrayList<USite> uSitesList, ArrayList<EnodeB> lSitesList
     public void insertCabinets(ArrayList<Cabinet> cabinets) {
 
-        String gsm = "INSERT INTO " + tableName + " (" + ID + "," + CODE + " ," + NAME + "," + REGION + "," + WEEK + "," + TECHNOLOGY + ","
+        String gsm = "INSERT INTO W" + tableName + " (" + ID + "," + CODE + " ," + NAME + "," + REGION + "," + WEEK + "," + TECHNOLOGY + ","
                 + CONTROLLER_ID + "," + NODE_ID + "," + PROPERTIES + "," + RF_IDENTIFIER + "," + SM_IDENTIFIER + "," + TX_IDENTIFIER + " )"
                 + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
 
@@ -101,6 +103,7 @@ public class DatabaseHelper {
                     pr2.executeUpdate();
                 } catch (SQLException e) {
                     e.printStackTrace();
+                    System.out.println(cabinet.getName() + " null");
                 }
             });
             pr2.executeBatch();
@@ -115,7 +118,7 @@ public class DatabaseHelper {
 //                + "VALUES(?,?,?,?,?,?,?,?)";
 //        EnodeB lSite = null;
 //        try (PreparedStatement pr4 = connection.prepareStatement(lte)) {
-//            for (int i = 0; i < lSitesList.size(); i++) {
+//            for (int i = 0; i < lSitesList.weeksCount(); i++) {
 //                lSite = lSitesList.get(i);
 //                pr4.setString(1, lSite.getUniqueName());
 //                pr4.setString(2, lSite.getENodeBName());
@@ -192,7 +195,7 @@ public class DatabaseHelper {
 //            for (EnodeB enodeB : eNodeBs) {
 //                pr4.setString(1, enodeB.getUniqueName());
 //                pr4.setString(2, enodeB.getCode());
-//                pr4.setString(3, enodeB.getName());
+//                pr4.setString(3, enodeB.getCode());
 //                pr4.setString(4, enodeB.getControllerId());
 //                pr4.setInt(5, 4);
 //                pr4.setString(6, enodeB.getNodeId());
@@ -215,7 +218,7 @@ public class DatabaseHelper {
 //        }
 //    }
 
-//    public void insertAndRemove(ResultSet gResultSet, ResultSet uResultSet, ResultSet lResultSet) {
+    //    public void insertAndRemove(ResultSet gResultSet, ResultSet uResultSet, ResultSet lResultSet) {
 //
 //        String gsm = "INSERT INTO " + tableName + " (ID, siteName , siteCode , Technology_Identifier,onAirCells, trxIdentifier,"
 //                + "pAbisIdentifier ,gRfModuleIdentifier ,gSystemModuleIdentifier ,"
@@ -289,6 +292,18 @@ public class DatabaseHelper {
 //            e.printStackTrace();
 //        }
 //    }
+    private int getTablesCount() {
+        ResultSet resultSet = null;
+        int weeksCount = 0;
+        try {
+            Statement statement = connection.createStatement();
+            resultSet = statement.executeQuery("select count(*) from sqlite_master as tables where type='table'");
+            weeksCount = resultSet.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return weeksCount;
+    }
 
     public ArrayList<String> getTableNames() {
         ArrayList<String> tableNames = new ArrayList<>();
@@ -302,8 +317,8 @@ public class DatabaseHelper {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+//        weeksCount = tableNames.size();
         return tableNames;
-
     }
 
     public ResultSet compareDumps(String currentTable, String oldTable) {
@@ -321,40 +336,44 @@ public class DatabaseHelper {
         return resultSet;
     }
 
-    public Hardware getMissingHW(String uniqueName, int weekNumber) {
+    public Hardware getMissingHW(String uniqueName, String weekName) {
         ResultSet resultSet;
         Hardware hardware;
-        try {
-            Statement statement = connection.createStatement();
-            while (weekNumber > 0) {
-
-                String existingTable = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='W" + weekNumber + "'";
+//        int weeksCount = this.getTablesCount();
+        ArrayList<String> tableNames = this.getTableNames();
+        for (int i = pastWeeksCount; i > 0; i--) {
+            try {
+                Statement statement = connection.createStatement();
+                String existingTable = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='W" + weekName + "'";
                 resultSet = statement.executeQuery(existingTable);
                 if (resultSet.getInt(1) > 0) {
-                    hardware = getHardwareFromWeek(uniqueName, weekNumber);
+                    hardware = getHardwareFromWeek(uniqueName, weekName);
                     if (hardware != null) {
                         return hardware;
                     }
                 }
-                weekNumber--;
-            }
+                weekName = ToolCalendar.getPreviousWeek(weekName);
+                this.connection.close();
+                //Todo:check close conn here
 
-            this.connection.close();
-            //Todo:check close conn here
-
-        } catch (SQLException e) {
+            } catch (SQLException e) {
 //            e.printStackTrace();
+            }
         }
-        return new Hardware("W" + weekNumber);
+        {
+
+        }
+
+        return new Hardware("W" + ToolCalendar.getNextWeek(weekName));
     }
 
-    private Hardware getHardwareFromWeek(String uniqueName, int weekNumber) throws SQLException {
+    private Hardware getHardwareFromWeek(String uniqueName, String weekName) throws SQLException {
 
         Hardware hardware;
         ResultSet resultSet;
         Statement statement = connection.createStatement();
         String hwQuery = "Select " + RF_IDENTIFIER + "," + SM_IDENTIFIER + "," + TX_IDENTIFIER + "," + WEEK + " from W" +
-                weekNumber + " where ID='" + uniqueName + "'";
+                weekName + " where ID='" + uniqueName + "'";
         resultSet = statement.executeQuery(hwQuery);
         while (resultSet.next()) {
 //            if (!resultSet.getString(1).equals("")) {
@@ -372,46 +391,45 @@ public class DatabaseHelper {
     }
 
 
-    public String getMissingHWWeek(String uniqueName, int weekNumber) {
+    String getMissingHWWeek(String uniqueName, String weekName) {
         ResultSet resultSet;
-        String week;
-        try {
-            Statement statement = connection.createStatement();
-            while (weekNumber > 0) {
+        String week = "";
+        for (int i = pastWeeksCount; i > 0; i--) {
+            try {
+                Statement statement = connection.createStatement();
 
-                String existingTable = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='W" + weekNumber + "'";
+
+                String existingTable = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='W" + weekName + "'";
                 resultSet = statement.executeQuery(existingTable);
                 if (resultSet.getInt(1) > 0) {
-                    week = getHardwareWeek(uniqueName, weekNumber);
+                    week = getHardwareWeek(uniqueName, weekName);
                     if (week != null) {
                         return week;
                     }
                 }
-                weekNumber--;
-            }
+                this.connection.close();
+                //Todo:check close conn here
 
-            this.connection.close();
-            //Todo:check close conn here
-
-        } catch (SQLException e) {
+            } catch (SQLException e) {
 //            e.printStackTrace();
+            }
         }
-        return "W" + weekNumber;
+        return week;
     }
 
-    private String getHardwareWeek(String uniqueName, int weekNumber) throws SQLException {
+    private String getHardwareWeek(String uniqueName, String weekName) throws SQLException {
 
-        Hardware hardware;
         ResultSet resultSet;
         Statement statement = connection.createStatement();
         String hwQuery = "Select " + RF_IDENTIFIER + "," + SM_IDENTIFIER + "," + TX_IDENTIFIER + "," + WEEK + " from W" +
-                weekNumber + " where ID='" + uniqueName + "'";
+                weekName + " where ID='" + uniqueName + "'";
         resultSet = statement.executeQuery(hwQuery);
         while (resultSet.next()) {
 //            if (!resultSet.getString(1).equals("")) {
             if (resultSet.getString(1) != null) {
+                String w = resultSet.getString(4);
                 connection.close();
-                return resultSet.getString(4);
+                return w;
             }
         }
         this.connection.close();
@@ -546,7 +564,7 @@ public class DatabaseHelper {
         ArrayList<Cabinet> cabinets = new ArrayList<>();
         ResultSet resultSet;
         Statement statement = connection.createStatement();
-        String bcfQuery = "Select * from " + tableName + " where +" + TECHNOLOGY + " = '" + technology + "'";
+        String bcfQuery = "Select * from W" + tableName + " where +" + TECHNOLOGY + " = '" + technology + "'";
         resultSet = statement.executeQuery(bcfQuery);
         while (resultSet.next()) {
             Cabinet cabinet = Cabinet.nodeProvider(technology);
@@ -568,7 +586,28 @@ public class DatabaseHelper {
         System.out.println("Number of " + technology + "G Cabinets: " + cabinets.size());
         return cabinets;
     }
-
+//    public HashMap<String, String[]> loadNames() {
+//        HashMap<String, String[]> nodeNames=new HashMap<>();
+//        ResultSet resultSet;
+//        Statement statement;
+//        try {
+//            statement = connection.createStatement();
+//            String nodeBQuery = "Select " + ID + "," + CODE + "," + NAME + "," + WEEK + " from " + tableName;
+//            resultSet = statement.executeQuery(nodeBQuery);
+//
+//
+//            while (resultSet.next()) {
+//                String key = resultSet.getString(ID);
+//                Hardware hardware = new Hardware(resultSet.getString(WEEK));
+//                hardware.setCode(resultSet.getString(CODE));
+//                hardware.setName(resultSet.getString(NAME));
+//                dumpHwMap.put(key, hardware);
+//
+//            }
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     public HashMap<String, Hardware> loadDumpHwMap() {
         ResultSet resultSet;
@@ -576,7 +615,7 @@ public class DatabaseHelper {
         HashMap<String, Hardware> dumpHwMap = new HashMap<>();
         try {
             statement = connection.createStatement();
-            String nodeBQuery = "Select " + ID + "," + CODE + "," + NAME + "," + WEEK + " from " + tableName;
+            String nodeBQuery = "Select " + ID + "," + CODE + "," + NAME + "," + WEEK + " from W" + tableName;
             resultSet = statement.executeQuery(nodeBQuery);
 
 
@@ -597,7 +636,7 @@ public class DatabaseHelper {
     public boolean isWeekInserted(int tech) throws SQLException {
         ResultSet resultSet;
         Statement statement = connection.createStatement();
-        String query = "Select technology from " + tableName + " where technology = " + tech;
+        String query = "Select technology from W" + tableName + " where technology = " + tech;
         resultSet = statement.executeQuery(query);
         return resultSet.next();
     }
@@ -617,7 +656,7 @@ public class DatabaseHelper {
 //                String key = resultSet.getString(ID);
 //                BCF bcf=new BCF();
 //                bcf.setUniqueName(key);
-//                bcf.setName(resultSet.getString(NAME));
+//                bcf.setCode(resultSet.getString(NAME));
 //                bcf.setCode(resultSet.getString(CODE));
 //                bcf.setT(resultSet.getString(CODE));
 //                bcf.setUniqueName(key);

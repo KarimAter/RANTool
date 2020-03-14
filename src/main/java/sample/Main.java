@@ -1,9 +1,6 @@
 package sample;
 
-import Helpers.DatabaseConnector;
-import Helpers.DatabaseHelper;
-import Helpers.SerialDatabaseSaver;
-import Helpers.Utils;
+import Helpers.*;
 import com.sun.javafx.scene.control.skin.DatePickerSkin;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
@@ -32,7 +29,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.temporal.WeekFields;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -76,8 +72,8 @@ public class Main extends Application {
         Calendar calendar = Calendar.getInstance();
 //        weekNumber = calendar.get(Calendar.WEEK_OF_YEAR);
 //        weekName = "W" + weekNumber;
-        databasePath = "D:/RAN Tool/NokiaDumpToolHistory.db";
-        serialDatabasePath = "D:/RAN Tool/serials.db";
+        databasePath = "C:/Ater/D/RAN Tool/NokiaDumpToolHistory.db";
+        serialDatabasePath = "C:/Ater/D/RAN Tool/serials.db";
         imagePath = "D:/RAN Tool/Databases/";
 
 
@@ -110,13 +106,14 @@ public class Main extends Application {
             boolean uCheck = process3GDump();
             boolean lCheck = process4GDump();
 
-            // creates serial database for the first time..
+            //creates serial database for the first time..
 
             if (gCheck || uCheck || lCheck) {
 
                 System.out.println("Inserting serials in serial database. " + Utils.getTime());
                 SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver(serialDatabasePath);
                 serialDatabaseSaver.insertAndRemove(hwHashMap, weekName);
+                serialDatabaseSaver.updateSiteNames(weekName);
                 System.out.println("Done.");
                 System.out.println(Utils.getTime());
             }
@@ -134,7 +131,7 @@ public class Main extends Application {
                 ArrayList<Cabinet> lCabinets = databaseHelper.loadCabinets(4);
 
 
-                int x = 1;
+//                int x = 1;
                 Exporter exporter = new Exporter(weekName);
                 // Exporting Hardware Map..
                 exporter.exportSiteHardwareMap(getHwMap());
@@ -148,7 +145,14 @@ public class Main extends Application {
                 exporter.exportSitesPivot(SiteMapper.getUSitesMap(uCabinets), 6, "3G Sites");
                 // Exporting 4G configuration..
                 exporter.exportConfPivot(SiteMapper.getLConfigMap(lCabinets), 8, "LTE");
+                //Exporting U900 list
+                exporter.exportCarr(SiteMapper.getCarriersMap(uCabinets, cabinet -> ((NodeB) cabinet).isU900()), "U900 Sites");
+                //Exporting 3rd Carrier list
+                exporter.exportCarr(SiteMapper.getCarriersMap(uCabinets, cabinet -> ((NodeB) cabinet).isThirdCarrier()), "3rd Carrier Sites");
 
+                SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver(serialDatabasePath);
+
+                exporter.exportHardwareCount(serialDatabaseSaver.getHardwareCount(), "Hardware Count");
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -175,7 +179,7 @@ public class Main extends Application {
         exportChangesBu.setOnAction(event ->
 
         {
-            ArrayList<String> tableNames = new ArrayList<>();
+            ArrayList<String> tableNames;
             DatabaseHelper databaseHelper = new DatabaseHelper(databasePath);
             tableNames = databaseHelper.getTableNames();
             createDumpsSelector(tableNames);
@@ -205,11 +209,16 @@ public class Main extends Application {
 
         {
             try {
-                System.out.println("Exporting TRX Sheet1..." + Utils.getTime());
+                System.out.println("Exporting Dump Sheets..." + Utils.getTime());
                 Exporter exporter = new Exporter();
+                System.out.println("Exporting TRX Sheet1..." + Utils.getTime());
                 exporter.exportTRXSheet(dumpR1Path, dump2R2Path, weekName);
-                System.out.println("Exporting 3G Cells RAN1..." + Utils.getTime());
+                System.out.println("Exporting 2G Cells ..." + Utils.getTime());
+                exporter.exportGcellsSheet(dumpR1Path, dump2R2Path, weekName);
+                System.out.println("Exporting 3G Cells ..." + Utils.getTime());
                 exporter.exportUcellsSheet(dumpR1Path, dump3R2Path, weekName);
+                System.out.println("Exporting 4G Cells ..." + Utils.getTime());
+                exporter.exportLcellsSheet(dumpR1Path, dump4R2Path, weekName);
                 System.out.println("Exporting Dump Sheets is done..." + Utils.getTime());
 
             } catch (Exception e) {
@@ -225,7 +234,6 @@ public class Main extends Application {
             ArrayList<File> xmlFiles = Utils.loadXMLsFromMachine(primaryStage);
             for (File xmlFile : xmlFiles) {
                 try {
-                    int x;
                     String fileName = xmlFile.getName();
                     if (fileName.contains("RNC")) {
                         Hardware hardware = parse3GHardwareXML(xmlFile);
@@ -494,10 +502,10 @@ public class Main extends Application {
             exporter.exportNodeBList(nodeBList);
             System.out.println("Exporting NodeBs Hardware..." + Utils.getTime());
             exporter.exportNodeBHardWare(nodeBList);
-            System.out.println("Exporting 3rd Carrier..." + Utils.getTime());
-            exporter.exportCarrierList(dumpR1Path, dump3R2Path, "3rd Carrier");
-            System.out.println("Exporting U900..." + Utils.getTime());
-            exporter.exportCarrierList(dumpR1Path, dump3R2Path, "U900");
+//            System.out.println("Exporting 3rd Carrier..." + Utils.getTime());
+//            exporter.exportCarrierList(dumpR1Path, dump3R2Path, "3rd Carrier");
+//            System.out.println("Exporting U900..." + Utils.getTime());
+//            exporter.exportCarrierList(dumpR1Path, dump3R2Path, "U900");
             System.out.println("3G Dashboard is ready.." + Utils.getTime());
         } catch (SQLException e) {
             e.printStackTrace();
@@ -646,12 +654,13 @@ public class Main extends Application {
                 cabinet.setHardware(hardware);
             } else {
                 SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver(serialDatabasePath);
-                Hardware serialsDbHardware = serialDatabaseSaver.getMissinHw(uniqueName, weekNumber - 1);
+                Hardware serialsDbHardware = serialDatabaseSaver.getMissinHw(uniqueName,
+                        ToolCalendar.getPreviousWeek(weekName));
                 if (serialsDbHardware.getHwItems().size() != 0)
                     cabinet.setHardware(serialsDbHardware);
                 else {
                     DatabaseHelper databaseHelper = new DatabaseHelper(databasePath);
-                    cabinet.setHardware(databaseHelper.getMissingHW(uniqueName, weekNumber - 1));
+                    cabinet.setHardware(databaseHelper.getMissingHW(uniqueName, ToolCalendar.getPreviousWeek(weekName)));
                 }
             }
         });
@@ -675,7 +684,7 @@ public class Main extends Application {
 //                }
             else {
                 DatabaseHelper databaseHelper = new DatabaseHelper(databasePath);
-                nodeB.setHardware(databaseHelper.getMissingHW(uniqueName, weekNumber - 1));
+                nodeB.setHardware(databaseHelper.getMissingHW(uniqueName, ToolCalendar.getPreviousWeek(weekName)));
             }
             nodeBList.set(i, nodeB);
         }
@@ -698,7 +707,7 @@ public class Main extends Application {
 //                }
             else {
                 DatabaseHelper databaseHelper = new DatabaseHelper(databasePath);
-                enodeB.setHardware(databaseHelper.getMissingHW(uniqueName, weekNumber - 1));
+                enodeB.setHardware(databaseHelper.getMissingHW(uniqueName, ToolCalendar.getPreviousWeek(weekName)));
             }
             enodeBS.set(i, enodeB);
         }
@@ -757,7 +766,7 @@ public class Main extends Application {
         }
         Hardware hardware = new Hardware(hwItems);
         hardware.setUniqueName(uniqueName);
-        hardware.setWeek(weekName);
+        hardware.setWeek('W' + weekName);
         return hardware;
     }
 
@@ -825,7 +834,7 @@ public class Main extends Application {
         }
         Hardware hardware = new Hardware(hwItems);
         hardware.setUniqueName(uniqueName);
-        hardware.setWeek(weekName);
+        hardware.setWeek('W' + weekName);
         return hardware;
     }
 
@@ -894,7 +903,7 @@ public class Main extends Application {
 
         Hardware hardware = new Hardware(hwItems);
         hardware.setUniqueName("4G_" + mrbtsId);
-        hardware.setWeek(weekName);
+        hardware.setWeek('W' + weekName);
         return hardware;
     }
 
@@ -945,14 +954,15 @@ public class Main extends Application {
 
         BorderPane root = new BorderPane();
         Scene scene = new Scene(root, 400, 400);
-        DatePicker d = new DatePicker();
+        DatePicker d = new DatePicker(LocalDate.now());
         d.setShowWeekNumbers(true);
         d.setOnAction(event -> {
-            LocalDate date = d.getValue();
-            WeekFields weekFields = WeekFields.of(Locale.getDefault());
-            weekNumber = date.get(weekFields.weekOfWeekBasedYear());
-            weekName = "W" + weekNumber;
-            System.out.println(weekNumber);
+            LocalDate localDate = d.getValue();
+
+//            WeekFields weekFields = WeekFields.of(Locale.getDefault());
+//            weekNumber = date.get(weekFields.weekOfWeekBasedYear());
+            weekName = ToolCalendar.getWeekName(localDate);
+            System.out.println(weekName);
         });
 
         DatePickerSkin datePickerSkin = new DatePickerSkin(d);

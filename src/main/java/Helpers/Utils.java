@@ -75,6 +75,36 @@ public class Utils {
 
     }
 
+    public static String convertLTEMIMO(int mimo) {
+        switch (mimo) {
+            case 0:
+
+                return "SISO";
+            case 30:
+            case 40:
+                return "2X2";
+            case 43:
+                return "4X4";
+            default:
+                return "";
+        }
+    }
+
+    public static String convertLTEBW(int bw) {
+        switch (bw) {
+            case 0:
+                return "0";
+            case 50:
+                return "5M";
+            case 100:
+                return "10M";
+            case 150:
+                return "15M";
+            default:
+                return "";
+        }
+    }
+
     public static String extractSiteCode(String siteName) {
         String siteCode = "";
         try {

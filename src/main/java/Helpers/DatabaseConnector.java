@@ -16,7 +16,7 @@ public class DatabaseConnector {
     }
 
     private Connection conn(String dumpPath) {
-//        connection = null;
+
         try {
             Class.forName(driver);
             connection = DriverManager.getConnection
@@ -374,8 +374,9 @@ public class DatabaseConnector {
         ArrayList<Cabinet> bcfs = new ArrayList<>();
         try {
             Statement statement = connection.createStatement();
-            String query = "Select BSCId,BCFId,first(name),first(T),first(BSCName),first(C),first(O),first(TX),first(E),first(G),first(F),first(LAC),first(RAC)," +
-                    "first(status), first(version) , first(ctrlIP) , first(manIp) , first(etp) , first(gConf) , first(dConf) from" +
+            String query = "Select BSCId,BCFId,first(name),first(T),first(BSCName),first(newCellCount),first(newOnAirCount),first(TX),first(E),first(G),first(newDCount),first(LAC),first(RAC)," +
+                    "first(status), first(version) , first(ctrlIP) , first(manIp) , first(etp) , first(gConf) , first(dConf) " +
+                    " from" +
                     "(Select BSCId,BCFId,count(TRXId) as T,sum(gprsEnabledTrx) as G from A_TRX group by BSCId,BCFId) as firstSet " +
                     "left join " +
                     "(Select BSCId,BCFId,name,adminState as status,bcfPackVers as version,btsCuPlaneIpAddress as ctrlIP,btsMPlaneIpAddress as manIp, usedEtpId as etp " +
@@ -398,34 +399,60 @@ public class DatabaseConnector {
                     "on (firstSet.BSCId=sixthSet.BSCId and firstSet.BCFId=sixthSet.BCFId) " +
                     " left join " +
                     "(SELECT BSCId,BCFId,GROUP_CONCAT(gT SEPARATOR'/ ') as gConf " +
-                    "FROM (Select BSCId,BCFId,BTSId,count(initialFrequency) as gT  from A_TRX where initialFrequency < '600' group by BSCId,BCFId,BTSId) GROUP BY BSCId,BCFId)" +
+                    "FROM " +
+                    "(Select BSCId,BCFId,segmentId,count(initialFrequency) as gT " +
+                    "from " +
+                    "(Select BSCId,BCFId,BTSId,initialFrequency from A_TRX where initialFrequency < '600' ) as xGSet " +
+                    "left join " +
+                    "(Select BSCId,BCFId,BTSId,segmentId from A_BTS ) as bGSet " +
+                    "on (xGSet.BSCId=bGSet.BSCId and xGSet.BTSId=bGSet.BTSId ) " +
+                    "GROUP BY BSCId,BCFId,segmentId ) " +
+                    "GROUP BY BSCId,BCFId) " +
                     " as seventhSet " +
                     "on (firstSet.BSCId=seventhSet.BSCId and firstSet.BCFId=seventhSet.BCFId) " +
                     " left join " +
                     "(SELECT BSCId,BCFId,GROUP_CONCAT(dT SEPARATOR'/ ') as dConf " +
-                    "FROM (Select BSCId,BCFId,BTSId,count(initialFrequency) as dT  from A_TRX where initialFrequency > '600' group by BSCId,BCFId,BTSId) GROUP BY BSCId,BCFId)" +
+                    "FROM " +
+                    "(Select BSCId,BCFId,segmentId,count(initialFrequency) as dT " +
+                    "from " +
+                    "(Select BSCId,BCFId,BTSId,initialFrequency from A_TRX where initialFrequency > '600' ) as xDSet " +
+                    "left join " +
+                    "(Select BSCId,BCFId,BTSId,segmentId from A_BTS ) as bDSet " +
+                    "on (xDSet.BSCId=bDSet.BSCId and xDSet.BTSId=bDSet.BTSId ) " +
+                    "GROUP BY BSCId,BCFId,segmentId ) " +
+                    "GROUP BY BSCId,BCFId) " +
                     " as eighthSet " +
                     "on (firstSet.BSCId=eighthSet.BSCId and firstSet.BCFId=eighthSet.BCFId) " +
+                    "left join " +
+                    "(select BSCId,BCFId, count(distinct CONCAT(segmentId, '_', frequencyBandInUse)) as newCellCount from A_BTS GROUP by BSCId,BCFId) as ninthSet " +
+                    "on (firstSet.BSCId=ninthSet.BSCId and firstSet.BCFId=ninthSet.BCFId)" +
+                    "left join " +
+                    "(select BSCId,BCFId, count(distinct CONCAT(segmentId, '_', frequencyBandInUse)) as newOnAirCount from A_BTS where adminState = '1' GROUP by BSCId,BCFId)" +
+                    " as tenthSet " +
+                    "on (firstSet.BSCId=tenthSet.BSCId and firstSet.BCFId=tenthSet.BCFId)" +
+                    "left join " +
+                    "(select BSCId,BCFId, count(distinct CONCAT(segmentId, '_', frequencyBandInUse)) as newDCount from A_BTS where " +
+                    "frequencyBandInUse = '1' GROUP by BSCId,BCFId)" +
+                    " as eleventhSet " +
+                    "on (firstSet.BSCId=eleventhSet.BSCId and firstSet.BCFId=eleventhSet.BCFId)" +
                     " group by BSCId,BCFId";
             ResultSet resultSet = statement.executeQuery(query);
 
             while (resultSet.next()) {
                 BCF bcf = new BCF();
-//                String bscId = resultSet.getString(1);
-//                String bcfId = resultSet.getString(2);
-//                bcf.setBscId(bscId);
-//                bcf.setBcfId(bcfId);
-
                 bcf.setKey(resultSet.getString(1), resultSet.getString(2));
                 bcf.setName(resultSet.getString(3));
                 bcf.setNumberOfTRXs(resultSet.getInt(4));
                 bcf.setBSCName(resultSet.getString(5));
-                bcf.setNumberOfCells(resultSet.getInt(6));
-                bcf.setNumberOfOnAirCells(resultSet.getInt(7));
+//                bcf.setNumberOfCells(resultSet.getInt(6));
+//                bcf.setNumberOfOnAirCells(resultSet.getInt(7));
+                bcf.setNewCellCount(resultSet.getInt(6));
+                bcf.setNewOnAirCount(resultSet.getInt(7));
                 bcf.setTxMode(resultSet.getString(8));
                 bcf.setNumberOfE1s(resultSet.getInt(9));
                 bcf.setNumberOfGTRXs(resultSet.getInt(10));
-                bcf.setNumberOfDcsCells(resultSet.getInt(11));
+//                bcf.setNumberOfDcsCells(resultSet.getInt(11));
+                bcf.setNewDCount(resultSet.getInt(11));
                 bcf.setLac(resultSet.getString(12));
                 bcf.setRac(resultSet.getString(13));
                 bcf.setOnAir(resultSet.getInt(14));
@@ -435,6 +462,8 @@ public class DatabaseConnector {
                 bcf.setUsedETP(resultSet.getString(18));
                 bcf.setgConf(resultSet.getString(19));
                 bcf.setdConf(resultSet.getString(20));
+
+
                 bcf.finishProperties();
                 bcfs.add(bcf);
 
@@ -499,7 +528,7 @@ public class DatabaseConnector {
 //        } else {
         uQuery = "Select  BTSAdditionalInfo,RncId,WBTSId,C,O,BTSAdditionalInfo,fC,onFC,sC,onSC,tC,onTC\n" +
                 ",uC,onUC,I,V,HD1,HD2,HD3,HU1,R99,P,S,Name,maxFPower,maxUPower," +
-                "vamF,vamU,LAC,RAC,IP,u2C,onU2C,sfp from (\n" +
+                "vamF,vamU,LAC,RAC,IP,u2C,onU2C,sfp,lcg,noOfChains from (" +
                 "(Select RncId,WBTSId,COCOId,BTSAdditionalInfo ,IubTransportMedia as I,NESWVersion as V,WBTSName as Name,BTSIPAddress as IP from A_WBTS ) as firstSet \n" +
                 "left join\n" +
                 "(Select RncId,WBTSId,count(WBTSId) as C,sum(AdminCellState) as O, first(LAC) as LAC ,first(RAC) as RAC from A_WCEL group by RncId,WBTSId) as secondSet \n" +
@@ -527,6 +556,13 @@ public class DatabaseConnector {
                 "as R99,rfSharingEnabled as S  from A_WBTSF_RNC_WBTS_MRBTS_BTSSCW  ) as seventhSet \n" +
                 "on (firstSet.RncId=seventhSet.RncId and firstSet.WBTSId=seventhSet.WBTSId)\n" +
                 "left join\n" +
+                "(Select RncId,WBTSId,count(WBTSId) as lcg from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELGW group by RncId,WBTSId ) lcgSet " +
+                "on (firstSet.RncId=lcgSet.RncId and firstSet.WBTSId=lcgSet.WBTSId) " +
+                "left join\n" +
+                "(Select RncId,WBTSId,count(positionInChain) as noOfChains from A_WBTSF_RMOD_CONNECTIONLIST " +
+                "where positionInChain = '2' group by RncId,WBTSId ) chainSet " +
+                "on (firstSet.RncId=chainSet.RncId and firstSet.WBTSId=chainSet.WBTSId) " +
+                "left join\n" +
                 "(Select RncId ,WBTSId,COCOId from A_WBTS ) as twelvthSet\n" +
                 "on (firstSet.RncId=twelvthSet.RncId and firstSet.WBTSId=twelvthSet.WBTSId)\n" +
                 "left join\n" +
@@ -544,9 +580,9 @@ public class DatabaseConnector {
                 "left join\n" +
                 "(Select RncId,WBTSId,sum(vamEnabled) as vamF from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW   where defaultCarrier ='10612' group by RncId,WBTSId ) as sixteenthSet \n" +
                 "on (firstSet.RncId=sixteenthSet.RncId and firstSet.WBTSId=sixteenthSet.WBTSId)\n" +
-                "left join\n" +
-                "(Select RncId,WBTSId,sum(vamEnabled) as vamU from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW    where defaultCarrier ='2988' or defaultCarrier= '3009' group by RncId,WBTSId ) as seventeenthSet \n" +
-                "on (firstSet.RncId=seventeenthSet.RncId and firstSet.WBTSId=seventeenthSet.WBTSId)\n ) where C  != '0' ";
+                "left join \n" +
+                "(Select RncId,WBTSId,sum(vamEnabled) as vamU from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW where defaultCarrier ='2988' or defaultCarrier= '3009' group by RncId,WBTSId ) as seventeenthSet \n" +
+                "on (firstSet.RncId=seventeenthSet.RncId and firstSet.WBTSId=seventeenthSet.WBTSId) ) where C  != '0' ";
 //        }
 
         ResultSet nResultSet = statement.executeQuery(uQuery);
@@ -585,6 +621,8 @@ public class DatabaseConnector {
             nodeB.setNumberOfSecondU900Cells(nResultSet.getInt(32));
             nodeB.setNumberOfOnAirSecondU900Cells(nResultSet.getInt(33));
             nodeB.setSfp(nResultSet.getString(34));
+            nodeB.setNumberOfLCGs(nResultSet.getInt(35));
+            nodeB.setNumberOfChains(nResultSet.getInt(36));
             nodeB.finishProperties();
             nodeBList.add(nodeB);
         }
@@ -673,17 +711,31 @@ public class DatabaseConnector {
 
     public ResultSet getTRXSheet() throws SQLException {
         Statement statement = connection.createStatement();
-        String query = "Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower,name,cellId,frequencyBandInUse from " +
+        String query = "Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower,name,cellId,frequencyBandInUse,segmentId from " +
                 "(Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower from A_TRX ) as firstSet "
                 + "left join "
                 + "(Select BSCId,BCFId,name from A_BCF group by BSCId,BCFId )as secondSet "
-                + "on (firstSet.BSCId=secondSet.BSCId and firstSet.BCFId=secondSet.BCFId)"
+                + "on (firstSet.BSCId=secondSet.BSCId and firstSet.BCFId=secondSet.BCFId) "
                 + "left join "
-                + "(Select BSCId,BTSId,cellId,frequencyBandInUse from A_BTS )as thirdSet "
+                + "(Select BSCId,BTSId,cellId,frequencyBandInUse,segmentId from A_BTS )as thirdSet "
                 + "on (firstSet.BSCId=thirdSet.BSCId and firstSet.BTSId=thirdSet.BTSId)";
 
         return statement.executeQuery(query);
 
+    }
+
+    public ResultSet getGcellsSheet() throws SQLException {
+        Statement statement = connection.createStatement();
+        String query = "Select BSCId,BCFId,BTSId,adminState,cellId,frequencyBandInUse,locationAreaIdLAC,rac,segmentId,name,BSCName from " +
+                "(Select BSCId,BCFId,BTSId,adminState,cellId,frequencyBandInUse,locationAreaIdLAC,rac,segmentId from A_BTS ) as firstSet "
+                + "left join "
+                + "(Select BSCId,BCFId,name from A_BCF group by BSCId,BCFId )as secondSet "
+                + "on (firstSet.BSCId=secondSet.BSCId and firstSet.BCFId=secondSet.BCFId) "
+                + "left join "
+                + "(Select BSCId,name as BSCName from A_BSC) as thirdSet " +
+                "on (firstSet.BSCId=thirdSet.BSCId)";
+
+        return statement.executeQuery(query);
     }
 
     public ResultSet getUcellsSheet() throws SQLException {
@@ -697,5 +749,16 @@ public class DatabaseConnector {
         return statement.executeQuery(query);
     }
 
-
+    public ResultSet getLcellsSheet() throws SQLException {
+        Statement statement = connection.createStatement();
+        String query = "Select name,mrbtsId,administrativeState,eutraCelId,tac,dlChBw,dlMimoMode,cellName from " +
+                "(Select mrbtsId,administrativeState,cellName,eutraCelId,tac,lnCelId from A_LTE_MRBTS_LNBTS_LNCEL ) as firstSet " +
+                "left join " +
+                "(Select mrbtsId,name from A_LTE_MRBTS_LNBTS) as secondSet " +
+                "on (firstSet.mrbtsId=secondSet.mrbtsId) " +
+                "left join " +
+                "(Select mrbtsId,dlChBw,dlMimoMode,lnCelId from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD) as thirdSet " +
+                "on (firstSet.mrbtsId=thirdSet.mrbtsId and firstSet.lnCelId=thirdSet.lnCelId) ";
+        return statement.executeQuery(query);
+    }
 }

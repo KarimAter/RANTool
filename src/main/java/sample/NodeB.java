@@ -13,7 +13,7 @@ public class NodeB extends Cabinet {
             numberOfSecondCarriersCells, numberOfOnAirSecondCarriersCells, numberOfThirdCarriersCells, numberOfOnAirThirdCarriersCells,
             numberOfFirstU900Cells, numberOfSecondU900Cells, numberOfOnAirFirstU900Cells, numberOfOnAirSecondU900Cells,
             numberOfCarriers, numberOfE1s, numberOfOnAirCells,
-            numberOfHSDPASet1, numberOfHSDPASet2, numberOfHSDPASet3, numberOfHSUPASet1, numberOfChannelElements;
+            numberOfHSDPASet1, numberOfHSDPASet2, numberOfHSDPASet3, numberOfHSUPASet1, numberOfChannelElements, numberOfLCGs;
 
     private boolean firstCarrier, u900, thirdCarrier;
     private double power, u900Power;
@@ -22,6 +22,7 @@ public class NodeB extends Cabinet {
     private String r99Identifier;
     private String u9Identifier;
     private String powerIdentifier;
+    private int numberOfChains;
 
 
     @Override
@@ -89,26 +90,30 @@ public class NodeB extends Cabinet {
     protected void generateProperties() {
         this.properties =
                 this.cellIdentifier +
-                        "_" +
+                        "__" +
                         this.r99Identifier +
-                        "_" +
+                        "__" +
                         this.u9Identifier +
-                        "_" +
+                        "__" +
                         this.powerIdentifier +
-                        "_" +
+                        "__" +
                         this.txMode +
-                        "_" +
+                        "__" +
                         this.numberOfE1s +
-                        "_" +
+                        "__" +
                         this.lac +
-                        "_" +
+                        "__" +
                         this.rac +
-                        "_" +
+                        "__" +
                         this.version.replace("_I", "-I") +
-                        "_" +
+                        "__" +
                         this.nodeBIP +
-                        "_" +
-                        this.sfp;
+                        "__" +
+                        this.sfp +
+                        "__" +
+                        this.numberOfLCGs +
+                        "__" +
+                        this.numberOfChains;
     }
 
     @Override
@@ -127,7 +132,7 @@ public class NodeB extends Cabinet {
 
     @Override
     protected void extractProperties() {
-        String[] parts = properties.split("_");
+        String[] parts = properties.split("__");
         this.setCellIdentifier(parts[0]);
         this.setR99Identifier(parts[1]);
         this.setU9Identifier(parts[2]);
@@ -139,6 +144,16 @@ public class NodeB extends Cabinet {
         this.setVersion(parts[8]);
         this.setNodeBIP(parts[9]);
         this.setSfp(parts[10]);
+        try {
+            this.setNumberOfLCGs(Integer.parseInt(parts[11]));
+        } catch (NumberFormatException e) {
+            this.setNumberOfLCGs(0);
+        }
+        try {
+            this.setNumberOfChains(Integer.parseInt(parts[12]));
+        } catch (NumberFormatException e) {
+            this.setNumberOfChains(0);
+        }
     }
 
     @Override
@@ -495,6 +510,22 @@ public class NodeB extends Cabinet {
 
     public void setNodeBIP(String nodeBIP) {
         this.nodeBIP = nodeBIP;
+    }
+
+    public int getNumberOfLCGs() {
+        return numberOfLCGs;
+    }
+
+    public void setNumberOfLCGs(int numberOfLCGs) {
+        this.numberOfLCGs = numberOfLCGs;
+    }
+
+    public void setNumberOfChains(int numberOfChains) {
+        this.numberOfChains = numberOfChains;
+    }
+
+    public int getNumberOfChains() {
+        return numberOfChains;
     }
 
     public String getRegion() {

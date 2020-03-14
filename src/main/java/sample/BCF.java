@@ -15,6 +15,10 @@ public class BCF extends Cabinet {
     private int numberOfGTRXs;
     private int numberOfDcsCells;
     private int numberOfGsmCells;
+    private int newCellCount;
+    private int newOnAirCount;
+    private int newDCount;
+    private int newGCount;
 
     @Override
     public void finishProperties() {
@@ -65,21 +69,44 @@ public class BCF extends Cabinet {
 
 
     private void setNumberOfGsmCells() {
-        this.numberOfGsmCells = numberOfCells - numberOfDcsCells;
+//        this.numberOfGsmCells = numberOfCells - numberOfDcsCells;
+        this.newGCount = newCellCount - newDCount;
     }
+
+//    @Override
+//    protected void generateCellIdentifier() {
+//        this.cellIdentifier = String.valueOf(this.numberOfCells) +
+//                "." +
+//                this.numberOfOnAirCells +
+//                "." +
+//                this.numberOfGsmCells +
+//                "." +
+//                this.numberOfDcsCells +
+//                "." +
+//                this.onAir
+//                +
+//                "." +
+//                this.newCellCount +
+//                "." +
+//                this.newOnAirCount+
+//                "." +
+//                this.newDCount;
+//    }
+
 
     @Override
     protected void generateCellIdentifier() {
-        this.cellIdentifier = String.valueOf(this.numberOfCells) +
+        this.cellIdentifier = String.valueOf(this.newCellCount) +
                 "." +
-                this.numberOfOnAirCells +
+                this.newOnAirCount +
                 "." +
-                this.numberOfGsmCells +
+                this.newGCount +
                 "." +
-                this.numberOfDcsCells +
+                this.newDCount +
                 "." +
                 this.onAir;
     }
+
 
     @Override
     protected void generateProperties() {
@@ -137,10 +164,10 @@ public class BCF extends Cabinet {
     @Override
     protected void extractCellsFromIdentifier() {
         String[] parts = cellIdentifier.split("\\.");
-        this.numberOfCells = Integer.valueOf(parts[0]);
-        this.numberOfOnAirCells = Integer.valueOf(parts[1]);
-        this.numberOfGsmCells = Integer.valueOf(parts[2]);
-        this.numberOfDcsCells = Integer.valueOf(parts[3]);
+        this.newCellCount = Integer.valueOf(parts[0]);
+        this.newOnAirCount = Integer.valueOf(parts[1]);
+        this.newGCount = Integer.valueOf(parts[2]);
+        this.newDCount = Integer.valueOf(parts[3]);
         this.onAir = Integer.valueOf(parts[4]);
     }
 
@@ -164,7 +191,7 @@ public class BCF extends Cabinet {
 
 
     public void setOnAir(int onAir) {
-        this.onAir = (onAir != 3) & (this.numberOfOnAirCells > 0) ? 1 : 0;
+        this.onAir = (onAir != 3) & (this.newOnAirCount > 0) ? 1 : 0;
     }
 
     public String getBscId() {
@@ -288,7 +315,32 @@ public class BCF extends Cabinet {
         return numberOfGsmCells;
     }
 
-    public void setNumberOfGsmCells(int numberOfGsmCells) {
-        this.numberOfGsmCells = numberOfGsmCells;
+    public int getNewCellCount() {
+        return newCellCount;
     }
+
+    public void setNewCellCount(int newCellCount) {
+        this.newCellCount = newCellCount;
+    }
+
+    public int getNewOnAirCount() {
+        return newOnAirCount;
+    }
+
+    public void setNewOnAirCount(int newOnAirCount) {
+        this.newOnAirCount = newOnAirCount;
+    }
+
+    public int getNewDCount() {
+        return newDCount;
+    }
+
+    public void setNewDCount(int newDCount) {
+        this.newDCount = newDCount;
+    }
+
+    public int getNewGCount() {
+        return newGCount;
+    }
+
 }
