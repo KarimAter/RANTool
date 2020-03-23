@@ -72,8 +72,8 @@ public class Main extends Application {
         Calendar calendar = Calendar.getInstance();
 //        weekNumber = calendar.get(Calendar.WEEK_OF_YEAR);
 //        weekName = "W" + weekNumber;
-        databasePath = "C:/Ater/D/RAN Tool/NokiaDumpToolHistory.db";
-        serialDatabasePath = "C:/Ater/D/RAN Tool/serials.db";
+        databasePath = "C:/Ater/Development/RAN Tool/NokiaDumpToolHistory.db";
+        serialDatabasePath = "C:/Ater/Development/RAN Tool/serials.db";
         imagePath = "D:/RAN Tool/Databases/";
 
 
@@ -102,21 +102,21 @@ public class Main extends Application {
 
             if (weekName == null)
                 Utils.showErrorMessage("No Week", "Please select week");
-            boolean gCheck = process2GDump();
+//            boolean gCheck = process2GDump();
             boolean uCheck = process3GDump();
-            boolean lCheck = process4GDump();
+//            boolean lCheck = process4GDump();
 
             //creates serial database for the first time..
 
-            if (gCheck || uCheck || lCheck) {
-
-                System.out.println("Inserting serials in serial database. " + Utils.getTime());
-                SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver(serialDatabasePath);
-                serialDatabaseSaver.insertAndRemove(hwHashMap, weekName);
-                serialDatabaseSaver.updateSiteNames(weekName);
-                System.out.println("Done.");
-                System.out.println(Utils.getTime());
-            }
+//            if (gCheck || uCheck || lCheck) {
+//
+//                System.out.println("Inserting serials in serial database. " + Utils.getTime());
+//                SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver(serialDatabasePath);
+//                serialDatabaseSaver.insertAndRemove(hwHashMap, weekName);
+//                serialDatabaseSaver.updateSiteNames(weekName);
+//                System.out.println("Done.");
+//                System.out.println(Utils.getTime());
+//            }
 
         });
 
@@ -607,11 +607,7 @@ public class Main extends Application {
             DatabaseHelper databaseHelper = new DatabaseHelper(databasePath, weekName);
             if (!databaseHelper.isWeekInserted(3))
                 databaseHelper.insertCabinets(nodeBs);
-
-//            if (ran == 1)
-//                uCellsResultSet1 = databaseConnector.getUcellsSheet();
-//            else
-//                uCellsResultSet2 = databaseConnector.getUcellsSheet();
+            else System.out.println("Week already inserted");
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -160,6 +160,16 @@ public class BCF extends Cabinet {
         this.dConf = parts[13];
     }
 
+    @Override
+    public void setConfiguration(NodeConfiguration sectorNodeConfiguration) {
+
+    }
+
+    @Override
+    public String extractConfiguration() {
+        return "";
+    }
+
 
     @Override
     protected void extractCellsFromIdentifier() {

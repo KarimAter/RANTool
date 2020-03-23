@@ -7,9 +7,30 @@ public class Constants {
 
     public enum gTxMode {ATM, PACKET_ABIS}
 
-    public static String rfIdentifier = "0.0.0.0.0.0.0.0.0.0.0.0.0.0.0";
-    public String sMIdentifier = "0.0.0.0.0.0.0.0";
-    public String txIdentifier = "0.0.0.0.0.0";
+
+    public static final LinkedHashMap<String, String> RF_PRODUCT_CODE = new LinkedHashMap<String, String>() {
+        {
+            put("472100B", "FRGP");
+            put("471483A", "FRGF");
+            put("472573A.104", "FXDB");
+            put("472810A.102", "FRGT");
+            put("473440A.101", "FRGX");
+            put("472100A.101", "FRGP");
+            put("472573A.102", "FXDB");
+            put("472573A.103", "FXDB");
+            put("472956A.101", "FRGU");
+            put("472083A.101", "FXDA");
+            put("472083A.203", "FXDA");
+            put("FWGM_FRGM", "FRGM");
+            put("471232A", "FRGD");
+            put("471834A", "FRGL");
+            put("471835A", "FRGM");
+            put("471231A", "FRGC");
+            put("472956A.102", "FRGU");
+        }
+    };
+
+
 
     public static final LinkedHashMap<Integer, String> rfMap = new LinkedHashMap<Integer, String>() {
         {

@@ -5,7 +5,7 @@ import Helpers.Utils;
 public abstract class Cabinet {
 
 
-    public Cabinet() {
+    Cabinet() {
     }
 
     public static Cabinet nodeProvider(int tech) {
@@ -28,10 +28,11 @@ public abstract class Cabinet {
 
     // Todo: seperate package for cabinets
     // Todo:generate uniqueName here
-    protected String uniqueName, code, name, region, controllerId, nodeId, key, properties,
+    protected String uniqueName, code, name, region, key, properties,
             version, cellIdentifier, txMode;
     protected int onAir, numberOfCells, numberOfOnAirCells;
     protected Hardware hardware;
+    protected NodeConfiguration nodeConfiguration;
 
     abstract public int getTechnology();
 
@@ -54,6 +55,12 @@ public abstract class Cabinet {
     public abstract void finishProperties();
 
     abstract protected void extractProperties();
+
+
+    abstract public void setConfiguration(NodeConfiguration sectorNodeConfiguration);
+
+
+    abstract public String extractConfiguration();
 
     abstract protected void generateCellIdentifier();
 

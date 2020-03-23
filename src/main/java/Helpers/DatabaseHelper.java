@@ -24,6 +24,7 @@ public class DatabaseHelper {
     private static final String RF_IDENTIFIER = "rfIdentifier";
     private static final String SM_IDENTIFIER = "smIdentifier";
     private static final String TX_IDENTIFIER = "txIdentifier";
+    private static final String SECTOR_CONFIGURATION = "nodeConfiguration";
     private static final int pastWeeksCount = 7;
 //    private int weeksCount;
 
@@ -39,8 +40,9 @@ public class DatabaseHelper {
         try {
             Statement statement = connection.createStatement();
             String tableCreator = "create table if not exists W" + tableName + " ( " + ID + " text , " + CODE + " text, "
-                    + NAME + " text, " + REGION + " text, " + WEEK + " text NOT NULL , " + TECHNOLOGY + " text, " + CONTROLLER_ID + " text, "
-                    + NODE_ID + " text, " + PROPERTIES + " text, " + RF_IDENTIFIER + " text NOT NULL , " + SM_IDENTIFIER + " text NOT NULL , " + TX_IDENTIFIER + " text NOT NULL  "
+                    + NAME + " text, " + REGION + " text, " + WEEK + " text , " + TECHNOLOGY + " text, " + CONTROLLER_ID + " text, "
+                    + NODE_ID + " text, " + PROPERTIES + " text, " + RF_IDENTIFIER + " text NOT NULL , " + SM_IDENTIFIER + " text NOT NULL , "
+                    + TX_IDENTIFIER + " text NOT NULL , " + SECTOR_CONFIGURATION + " text NOT NULL "
                     + ")";
 
 //            String Identifiers = "create table if not exists " + tableName + " (" + ID + " text ," + CODE + " text, siteName text ,region text,  "
@@ -76,8 +78,9 @@ public class DatabaseHelper {
     public void insertCabinets(ArrayList<Cabinet> cabinets) {
 
         String gsm = "INSERT INTO W" + tableName + " (" + ID + "," + CODE + " ," + NAME + "," + REGION + "," + WEEK + "," + TECHNOLOGY + ","
-                + CONTROLLER_ID + "," + NODE_ID + "," + PROPERTIES + "," + RF_IDENTIFIER + "," + SM_IDENTIFIER + "," + TX_IDENTIFIER + " )"
-                + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
+                + CONTROLLER_ID + "," + NODE_ID + "," + PROPERTIES + "," + RF_IDENTIFIER + "," + SM_IDENTIFIER + "," + TX_IDENTIFIER + ","
+                + SECTOR_CONFIGURATION + " )"
+                + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 //        String gsm = "INSERT INTO " + tableName + " (id, code , siteName ,region,  technology ,bsc, bscId," +
 //                "bcfId,trx,gCell,gTxMode,gE1s,gtrx,gLac,gRac,gProp, gRfModuleIdentifier ,gSystemModuleIdentifier ,"
@@ -100,6 +103,7 @@ public class DatabaseHelper {
                     pr2.setString(10, hardware.getRfIdentifier());
                     pr2.setString(11, hardware.getSmIdentifier());
                     pr2.setString(12, hardware.getTxIdentifier());
+                    pr2.setString(13, cabinet.extractConfiguration());
                     pr2.executeUpdate();
                 } catch (SQLException e) {
                     e.printStackTrace();

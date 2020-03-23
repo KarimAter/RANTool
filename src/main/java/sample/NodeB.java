@@ -157,6 +157,26 @@ public class NodeB extends Cabinet {
     }
 
     @Override
+    public void setConfiguration(NodeConfiguration nodeConfiguration) {
+        analyze(nodeConfiguration);
+    }
+
+    private void analyze(NodeConfiguration nodeConfiguration) {
+        if (nodeConfiguration != null) {
+            nodeConfiguration.extractSectorsMapping();
+            nodeConfiguration.extractLinksMapping();
+            this.nodeConfiguration = nodeConfiguration;
+        }
+    }
+
+    @Override
+    public String extractConfiguration() {
+        if (this.nodeConfiguration != null)
+            return this.nodeConfiguration.toString();
+        else return "";
+    }
+
+    @Override
     protected void generateCellIdentifier() {
         this.cellIdentifier = String.valueOf(this.numberOfFirstCarriersCells) +
                 "." +

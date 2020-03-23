@@ -4,6 +4,7 @@ import sample.*;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class DatabaseConnector {
     private Connection connection;
@@ -478,54 +479,10 @@ public class DatabaseConnector {
 
     public ArrayList<Cabinet> getNodeBs() throws Exception {
 
+        HashMap<String, NodeConfiguration> uSectorsConfiguration = getUSectorsConfiguration();
+
         Statement statement = connection.createStatement();
-        String uQuery, hwQuery;
-//        if (ran == 1) {
-//            uQuery = "Select  BTSAdditionalInfo,RncId,WBTSId,C,O,BTSAdditionalInfo,fC,onFC,sC,onSC,tC,onTC\n" +
-//                    ",uC,onUC,I,V,HD1,HD2,HD3,HU1,R99,P,S,Name,maxFPower,maxUPower," +
-//                    "vamF,vamU,LAC,RAC,IP from (\n" +
-//                    "(Select RncId,WBTSId,COCOId,BTSAdditionalInfo ,IubTransportMedia as I,NESWVersion as V,WBTSName as Name,BTSIPAddress as IP from A_WBTS ) as firstSet \n" +
-//                    "left join\n" +
-//                    "(Select RncId,WBTSId,count(WBTSId) as C,sum(AdminCellState) as O, first(LAC) as LAC ,first(RAC) as RAC from A_WCEL group by RncId,WBTSId) as secondSet \n" +
-//                    "on (firstSet.RncId=secondSet.RncId and firstSet.WBTSId=secondSet.WBTSId) \n" +
-//                    "left join\n" +
-//                    "(Select RncId,WBTSId,count(WBTSId) as fC,sum(AdminCellState) onFC from A_WCEL where UARFCN ='10612' group by RncId,WBTSId ) as thirdSet \n" +
-//                    "on (firstSet.RncId=thirdSet.RncId and firstSet.WBTSId=thirdSet.WBTSId)\n" +
-//                    "left join\n" +
-//                    "(Select RncId,WBTSId,count(WBTSId) as sC,sum(AdminCellState) onSC from A_WCEL where UARFCN ='10637' group by RncId,WBTSId ) as fourthSet \n" +
-//                    "on (firstSet.RncId=fourthSet.RncId and firstSet.WBTSId=fourthSet.WBTSId)\n" +
-//                    "left join\n" +
-//                    "(Select RncId,WBTSId,count(WBTSId) as tC,sum(AdminCellState) onTC from A_WCEL where UARFCN ='10662' group by RncId,WBTSId ) fifthSet \n" +
-//                    "on (firstSet.RncId=fifthSet.RncId and firstSet.WBTSId=fifthSet.WBTSId)\n" +
-//                    "left join\n" +
-//                    "(Select RncId,WBTSId,count(WBTSId) as uC,sum(AdminCellState) onUC from A_WCEL where UARFCN ='2988' or UARFCN='3009' group by RncId,WBTSId ) as sixthSet\n" +
-//                    "on (firstSet.RncId=sixthSet.RncId and firstSet.WBTSId=sixthSet.WBTSId)\n" +
-//                    "left join\n" +
-//                    "(Select RncId,WBTSId,numberOfHSDPASet1 as HD1,numberOfHSDPASet2 as HD2,numberOfHSDPASet3 as HD3,numberOfHSUPASet1 as HU1,numberOfR99ChannelElements \n" +
-//                    "as R99,rfSharingEnabled as S  from A_WBTSF_BTSSCW ) as seventhSet \n" +
-//                    "on (firstSet.RncId=seventhSet.RncId and firstSet.WBTSId=seventhSet.WBTSId)\n" +
-//                    "left join\n" +
-//                    "(Select RncId ,WBTSId,COCOId from A_WBTS ) as twelvthSet\n" +
-//                    "on (firstSet.RncId=twelvthSet.RncId and firstSet.WBTSId=twelvthSet.WBTSId)\n" +
-//                    "left join\n" +
-//                    "(Select RncId ,COCOId,P from\n" +
-//                    "(Select RncId ,COCOId,max(cast (AAL2UPPCR01Egr as int)) as P from A_COCO_AAL2TP  group by RncId,COCOId)) as thirteenthSet\n" +
-//                    "on (firstSet.RncId=thirteenthSet.RncId and firstSet.COCOId=thirteenthSet.COCOId)\n" +
-//                    "left join\n" +
-//                    "(Select RncId,WBTSId,max(MaxDLPowerCapability) as maxFPower from A_WCEL where ( UARFCN ='10612') and ( MaxDLPowerCapability not like '65535' )" +
-//                    "group by RncId,WBTSId ) as fourteenthSet \n" +
-//                    "on (firstSet.RncId=fourteenthSet.RncId and firstSet.WBTSId=fourteenthSet.WBTSId)\n" +
-//                    "left join\n" +
-//                    "(Select RncId,WBTSId,max(MaxDLPowerCapability) as maxUPower from A_WCEL where ( UARFCN ='2988' or UARFCN ='3009') " +
-//                    "and ( MaxDLPowerCapability not like '65535')  group by RncId,WBTSId ) as fifteenthSet \n" +
-//                    "on (firstSet.RncId=fifteenthSet.RncId and firstSet.WBTSId=fifteenthSet.WBTSId)\n" +
-//                    "left join\n" +
-//                    "(Select RncId,WBTSId,sum(vamEnabled) as vamF from A_WBTSF_LCELW where defaultCarrier ='10612' group by RncId,WBTSId ) as sixteenthSet \n" +
-//                    "on (firstSet.RncId=sixteenthSet.RncId and firstSet.WBTSId=sixteenthSet.WBTSId)\n" +
-//                    "left join\n" +
-//                    "(Select RncId,WBTSId,sum(vamEnabled) as vamU from A_WBTSF_LCELW  where defaultCarrier ='2988' or defaultCarrier= '3009' group by RncId,WBTSId ) as seventeenthSet \n" +
-//                    "on (firstSet.RncId=seventeenthSet.RncId and firstSet.WBTSId=seventeenthSet.WBTSId)\n ) where C  != '0'";
-//        } else {
+        String uQuery;
         uQuery = "Select  BTSAdditionalInfo,RncId,WBTSId,C,O,BTSAdditionalInfo,fC,onFC,sC,onSC,tC,onTC\n" +
                 ",uC,onUC,I,V,HD1,HD2,HD3,HU1,R99,P,S,Name,maxFPower,maxUPower," +
                 "vamF,vamU,LAC,RAC,IP,u2C,onU2C,sfp,lcg,noOfChains from (" +
@@ -624,6 +581,8 @@ public class DatabaseConnector {
             nodeB.setNumberOfLCGs(nResultSet.getInt(35));
             nodeB.setNumberOfChains(nResultSet.getInt(36));
             nodeB.finishProperties();
+
+            nodeB.setConfiguration(uSectorsConfiguration.get(nodeB.getKey()));
             nodeBList.add(nodeB);
         }
         System.out.println("Number of NodeBs: " + nodeBList.size());
@@ -708,6 +667,71 @@ public class DatabaseConnector {
 
         return enodeBS;
     }
+
+
+    private HashMap<String, NodeConfiguration> getUSectorsConfiguration() throws SQLException {
+        String uSecConfQuery;
+        Statement statement = connection.createStatement();
+        uSecConfQuery = "Select RncId,WBTSId,lCelwId,group_concat(antId),group_concat(rModId)," +
+                "group_concat(prodCode),group_concat(sModId),group_concat(positionInChain),group_concat(linkId),first(defaultCarrier),first(SectorID) " +
+                "FROM " + " ( " +
+                "(SELECT RncId,WBTSId,lCelwId,antlId FROM A_WBTSF_LCELW_RESOURCELIST) as lCelSet " +
+                "LEFT JOIN" +
+                "(SELECT RncId,WBTSId,antId,antlId,rModId FROM A_WBTSF_RNC_WBTS_MRBTS_ANTL) as antSet " +
+                "on (lCelSet.RncId=antSet.RncId and lCelSet.WBTSId=antSet.WBTSId and lCelSet.antlId=antSet.antlId) " +
+                "left join " +
+                "(SELECT RncId,WBTSId,rModId,linkId,positionInChain,sModId FROM A_WBTSF_RMOD_CONNECTIONLIST) as connectionSet " +
+                "on (antSet.RncId=connectionSet.RncId and antSet.WBTSId=connectionSet.WBTSId and antSet.rModId=connectionSet.rModId) " +
+                "left join " +
+                "(SELECT RncId,WBTSId,rModId,prodCode,serNum FROM A_WBTSF_RNC_WBTS_MRBTS_RMOD) as rModSet " +
+                "on (antSet.RncId=rModSet.RncId and antSet.WBTSId=rModSet.WBTSId and antSet.rModId=rModSet.rModId)" +
+                "left join " +
+                "(SELECT RncId,WBTSId,lCelwId,defaultCarrier FROM A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW) as defaultCarrierSet " +
+                "on (lCelSet.RncId=defaultCarrierSet.RncId and lCelSet.WBTSId=defaultCarrierSet.WBTSId and lCelSet.lCelwId=defaultCarrierSet.lCelwId)" +
+                "left join " +
+                "(SELECT RncId,WBTSId,LcrId,SectorID FROM A_WCEL_AC) as sectorIdSet " +
+                "on (lCelSet.RncId=sectorIdSet.RncId and lCelSet.WBTSId=sectorIdSet.WBTSId and lCelSet.lCelwId=sectorIdSet.LcrId) " +
+                ") " +
+                " group by RncId,WBTSId,lCelwId";
+
+
+        ResultSet nResultSet = statement.executeQuery(uSecConfQuery);
+        HashMap<String, NodeConfiguration> uSectorConfs = new HashMap<>();
+        String previousKey = "";
+        NodeConfiguration recurringNodeConfiguration = null;
+        while (nResultSet.next()) {
+            String rncId = nResultSet.getString(1);
+            String wbtsId = nResultSet.getString(2);
+            String key = rncId + "_" + wbtsId;
+            SectorConfiguration sectorConfiguration = new SectorConfiguration();
+            sectorConfiguration.setlCellId(nResultSet.getString(3));
+            sectorConfiguration.setAntId(nResultSet.getString(4));
+            sectorConfiguration.setrModId(nResultSet.getString(5));
+            sectorConfiguration.setProductCode(nResultSet.getString(6));
+            sectorConfiguration.setsModId(nResultSet.getString(7));
+            sectorConfiguration.setPosInChain(nResultSet.getString(8));
+            sectorConfiguration.setLinkId(nResultSet.getString(9));
+            sectorConfiguration.setDefaultCarrier(nResultSet.getString(10));
+            sectorConfiguration.setSectorId(nResultSet.getString(11));
+            sectorConfiguration.analyzeSector();
+
+            if (!previousKey.equals(key)) {
+                recurringNodeConfiguration = new NodeConfiguration(key);
+                recurringNodeConfiguration.setKey(key);
+                recurringNodeConfiguration.addSectorConfiguration(sectorConfiguration);
+                uSectorConfs.put(key, recurringNodeConfiguration);
+            } else {
+                if (recurringNodeConfiguration != null) {
+                    recurringNodeConfiguration.addSectorConfiguration(sectorConfiguration);
+                }
+            }
+            previousKey = rncId + "_" + wbtsId;
+
+        }
+        System.out.println("Sec Conf " + uSectorConfs.size());
+        return uSectorConfs;
+    }
+
 
     public ResultSet getTRXSheet() throws SQLException {
         Statement statement = connection.createStatement();

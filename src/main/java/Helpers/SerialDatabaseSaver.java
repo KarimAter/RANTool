@@ -46,7 +46,7 @@ public class SerialDatabaseSaver {
 
     public boolean insertAndRemove(HashMap<String, Hardware> xmlHwMap, String weekName) {
 
-        DatabaseHelper databaseHelper = new DatabaseHelper("C:/Ater/D/RAN Tool/NokiaDumpToolHistory.db", weekName);
+        DatabaseHelper databaseHelper = new DatabaseHelper("C:/Ater/Development/RAN Tool/NokiaDumpToolHistory.db", weekName);
         HashMap<String, Hardware> dumpHwMap = databaseHelper.loadDumpHwMap();
 
         // creating a map with all serials in serials database
@@ -323,7 +323,7 @@ public class SerialDatabaseSaver {
     }
 
     public void updateSiteNames(String weekName) {
-        DatabaseHelper databaseHelper = new DatabaseHelper("C:/Ater/D/RAN Tool/NokiaDumpToolHistory.db", weekName);
+        DatabaseHelper databaseHelper = new DatabaseHelper("C:/Ater/Development/RAN Tool/NokiaDumpToolHistory.db", weekName);
         HashMap<String, Hardware> stringHardwareHashMap = databaseHelper.loadDumpHwMap();
         ResultSet resultSet;
         Statement statement;
@@ -396,7 +396,7 @@ public class SerialDatabaseSaver {
             e.printStackTrace();
         }
         hardware = new Hardware(hwItems);
-        DatabaseHelper databaseHelper = new DatabaseHelper("C:/Ater/D/RAN Tool/NokiaDumpToolHistory.db");
+        DatabaseHelper databaseHelper = new DatabaseHelper("C:/Ater/Development/RAN Tool/NokiaDumpToolHistory.db");
         hardware.setWeek(databaseHelper.getMissingHWWeek(uniqueName, weekName));
         return hardware;
     }

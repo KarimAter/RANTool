@@ -80,6 +80,16 @@ public class EnodeB extends Cabinet {
     }
 
     @Override
+    public void setConfiguration(NodeConfiguration sectorNodeConfiguration) {
+
+    }
+
+    @Override
+    public String extractConfiguration() {
+        return "";
+    }
+
+    @Override
     public void finishProperties() {
         this.generateKey();
         this.generateUniqueName();
