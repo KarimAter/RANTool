@@ -78,7 +78,6 @@ public class Utils {
     public static String convertLTEMIMO(int mimo) {
         switch (mimo) {
             case 0:
-
                 return "SISO";
             case 30:
             case 40:
@@ -137,6 +136,14 @@ public class Utils {
         }
         return "";
     }
+
+    public static double convertPower(int dbPower, int vam) {
+        Double powerInWatts = Constants.POWER_MAP.get(dbPower);
+        if (vam == 0)
+            return powerInWatts;
+        else return powerInWatts * 2;
+    }
+
 
     public static String mapToRegion(String controller) {
         String region;

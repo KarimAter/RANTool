@@ -102,21 +102,23 @@ public class Main extends Application {
 
             if (weekName == null)
                 Utils.showErrorMessage("No Week", "Please select week");
-//            boolean gCheck = process2GDump();
-            boolean uCheck = process3GDump();
-//            boolean lCheck = process4GDump();
+            else {
+                boolean gCheck = process2GDump();
+                boolean uCheck = process3GDump();
+                boolean lCheck = process4GDump();
 
-            //creates serial database for the first time..
+                //creates serial database for the first time..
 
-//            if (gCheck || uCheck || lCheck) {
-//
-//                System.out.println("Inserting serials in serial database. " + Utils.getTime());
-//                SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver(serialDatabasePath);
-//                serialDatabaseSaver.insertAndRemove(hwHashMap, weekName);
-//                serialDatabaseSaver.updateSiteNames(weekName);
-//                System.out.println("Done.");
-//                System.out.println(Utils.getTime());
-//            }
+                if (gCheck || uCheck || lCheck) {
+
+                    System.out.println("Inserting serials in serial database. " + Utils.getTime());
+                    SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver(serialDatabasePath);
+                    serialDatabaseSaver.insertAndRemove(hwHashMap, weekName);
+                    serialDatabaseSaver.updateSiteNames(weekName);
+                    System.out.println("Done.");
+                    System.out.println(Utils.getTime());
+                }
+            }
 
         });
 

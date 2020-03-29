@@ -16,7 +16,7 @@ public class NodeB extends Cabinet {
             numberOfHSDPASet1, numberOfHSDPASet2, numberOfHSDPASet3, numberOfHSUPASet1, numberOfChannelElements, numberOfLCGs;
 
     private boolean firstCarrier, u900, thirdCarrier;
-    private double power, u900Power;
+    private String power, u900Power;
     private boolean rfSharing;
     private boolean standAloneU900;
     private String r99Identifier;
@@ -158,14 +158,22 @@ public class NodeB extends Cabinet {
 
     @Override
     public void setConfiguration(NodeConfiguration nodeConfiguration) {
-        analyze(nodeConfiguration);
+        this.nodeConfiguration = nodeConfiguration;
     }
 
-    private void analyze(NodeConfiguration nodeConfiguration) {
+    @Override
+    public NodeConfiguration getNodeConfiguration() {
+        return this.nodeConfiguration;
+    }
+
+    public void analyzeConfiguration() {
         if (nodeConfiguration != null) {
             nodeConfiguration.extractSectorsMapping();
             nodeConfiguration.extractLinksMapping();
-            this.nodeConfiguration = nodeConfiguration;
+            if (!this.u900Power.equals("0"))
+                this.u900Power = nodeConfiguration.checkPower(SectorConfiguration::isU9Sector, u900Power);
+            if (!this.power.equals("0"))
+                this.power = nodeConfiguration.checkPower(sectorConfiguration -> !sectorConfiguration.isU9Sector(), power);
         }
     }
 
@@ -266,66 +274,13 @@ public class NodeB extends Cabinet {
 
     private void extractPowerFromIdentifier() {
         String[] parts = powerIdentifier.split("-");
-        power = Double.valueOf(parts[0]);
-        u900Power = Double.valueOf(parts[1]);
+        power = parts[0];
+        u900Power = parts[1];
     }
-
-    private void setRegion() {
-//        if (nodeBCode != null) {
-//            try {
-//                String region = nodeBCode.substring(nodeBCode.length() - 2);
-//                if (region.equalsIgnoreCase("UP") || region.equalsIgnoreCase("SI") || region.equalsIgnoreCase("RE")
-//                        || region.equalsIgnoreCase("DE") || region.equalsIgnoreCase("AL"))
-//                    this.region = region;
-//                else {
-//                    switch (this.rncId) {
-//                        case "30":
-//                        case "22":
-//                        case "38":
-//                        case "48":
-//                        case "64":
-//                            this.region = "AL";
-//                        case "36":
-//                        case "54":
-//                        case "28":
-//                        case "46":
-//                        case "52":
-//                        case "44":
-//                        case "24":
-//                        case "4":
-//                        case "56":
-//                            this.region = "DE";
-//                        case "26":
-//                        case "18":
-//                            this.region = "RE";
-//                        case "14":
-//                        case "34":
-//                        case "50":
-//                        case "58":
-//                        case "60":
-//                        case "62":
-//                            this.region = "UP";
-//                    }
-//                }
-//            } catch (StringIndexOutOfBoundsException e) {
-//                e.printStackTrace();
-//                System.out.println(this.nodeBCode);
-////                this.nodeBCode = "";
-//            }
-//
-//        }
-    }
-
 
     public void setNodeBName(String name) {
         this.name = name;
     }
-
-//    public void setNodeBCode(String code) {
-//        if (code != null)
-//            this.code = code;
-//        else this.code = Utils.extractSiteCode(this.name);
-//    }
 
     public void setRncId(String rncId) {
         this.rncId = rncId;
@@ -594,7 +549,7 @@ public class NodeB extends Cabinet {
         this.rac = rac;
     }
 
-    double getPower() {
+    String getPower() {
         return power;
     }
 
@@ -603,22 +558,22 @@ public class NodeB extends Cabinet {
         if (vam > 0)
             vamCoeff = 2;
         if (u900Power == 430)
-            this.u900Power = vamCoeff * 20;
+            this.u900Power = String.valueOf(vamCoeff * 20);
         else if (u900Power == 442)
-            this.u900Power = vamCoeff * 26.65;
+            this.u900Power = String.valueOf(vamCoeff * 26.65);
         else if (u900Power == 448 || u900Power == 450)
-            this.u900Power = vamCoeff * 30;
+            this.u900Power = String.valueOf(vamCoeff * 30);
         else if (u900Power == 460)
-            this.u900Power = vamCoeff * 40;
+            this.u900Power = String.valueOf(vamCoeff * 40);
         else if (u900Power == 478)
-            this.u900Power = 60;
+            this.u900Power = String.valueOf(60);
         else if (u900Power == 490)
-            this.u900Power = 80;
+            this.u900Power = String.valueOf(80);
         else if (u900Power == 65535 || u900Power == 0)
-            this.u900Power = 0;
+            this.u900Power = String.valueOf(0);
     }
 
-    double getU900Power() {
+    String getU900Power() {
         return u900Power;
     }
 
@@ -627,27 +582,27 @@ public class NodeB extends Cabinet {
         if (vam > 0)
             vamCoeff = 2;
         if (power == 210)
-            this.power = vamCoeff * .125;
+            this.power = String.valueOf(vamCoeff * .125);
         else if (power == 240)
-            this.power = vamCoeff * 0.25;
+            this.power = String.valueOf(vamCoeff * 0.25);
         else if (power == 400)
-            this.power = vamCoeff * 10;
+            this.power = String.valueOf(vamCoeff * 10);
         else if (power == 418)
-            this.power = vamCoeff * 15;
+            this.power = String.valueOf(vamCoeff * 15);
         else if (power == 430)
-            this.power = vamCoeff * 20;
+            this.power = String.valueOf(vamCoeff * 20);
         else if (power == 442)
-            this.power = vamCoeff * 26.65;
+            this.power = String.valueOf(vamCoeff * 26.65);
         else if (power == 448 || power == 450)
-            this.power = vamCoeff * 30;
+            this.power = String.valueOf(vamCoeff * 30);
         else if (power == 460)
-            this.power = vamCoeff * 40;
+            this.power = String.valueOf(vamCoeff * 40);
         else if (power == 478)
-            this.power = 60;
+            this.power = String.valueOf(60);
         else if (power == 490)
-            this.power = 80;
+            this.power = String.valueOf(80);
         else if (power == 65535 || power == 0)
-            this.power = 0;
+            this.power = String.valueOf(0);
     }
 
 

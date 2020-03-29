@@ -160,7 +160,7 @@ class Exporter {
 
 
     void exportNodeBList(ArrayList<Cabinet> nodeBList) throws IOException {
-        int numOfColumns = 40;
+        int numOfColumns = 42;
         XSSFSheet sheet = wb.getSheet("NodeBs");
         final int[] r = {1};
         nodeBList.forEach(cabinet -> {
@@ -204,8 +204,16 @@ class Exporter {
             cells.get(29).setCellValue(nodeB.getNumberOfCarriers());
             cells.get(30).setCellValue(nodeB.isStandAloneU900());
             cells.get(31).setCellValue(nodeB.isRfSharing());
-            cells.get(32).setCellValue(nodeB.getPower());
-            cells.get(33).setCellValue(nodeB.getU900Power());
+            try {
+                cells.get(32).setCellValue(Double.valueOf(nodeB.getPower()));
+            } catch (Exception e) {
+                cells.get(32).setCellValue(nodeB.getPower());
+            }
+            try {
+                cells.get(33).setCellValue(Double.valueOf(nodeB.getU900Power()));
+            } catch (Exception e) {
+                cells.get(33).setCellValue(nodeB.getU900Power());
+            }
             cells.get(34).setCellValue(Integer.valueOf(nodeB.getLac()));
             cells.get(35).setCellValue(Integer.valueOf(nodeB.getRac()));
             cells.get(36).setCellValue(nodeB.getNodeBIP());
@@ -216,6 +224,11 @@ class Exporter {
             }
             cells.get(38).setCellValue(nodeB.getNumberOfLCGs());
             cells.get(39).setCellValue(nodeB.getNumberOfChains());
+            NodeConfiguration nodeConfiguration = nodeB.getNodeConfiguration();
+            if (nodeConfiguration != null) {
+                cells.get(40).setCellValue(nodeConfiguration.getSectorsMapping());
+                cells.get(41).setCellValue(nodeConfiguration.getLinksMappingString());
+            }
             r[0]++;
         });
 
@@ -1199,7 +1212,7 @@ class Exporter {
         XSSFWorkbook uCellsWb;
         uCellsWb = getUcellsWorkbook();
         sheet1 = uCellsWb.getSheet("Cells");
-        int numOfColumns = 11;
+        int numOfColumns = 12;
         int r = 1;
         while (resultSet.next()) {
             ArrayList<XSSFCell> cells = new ArrayList<>();
@@ -1214,15 +1227,20 @@ class Exporter {
             cells.get(1).setCellValue(resultSet.getString(2));
             cells.get(2).setCellValue(Integer.valueOf(resultSet.getString(3)));
             cells.get(3).setCellValue(Integer.valueOf(resultSet.getString(4)));
+
+            cells.get(4).setCellValue(resultSet.getInt(5));
+            cells.get(5).setCellValue(resultSet.getInt(6));
+            cells.get(6).setCellValue(resultSet.getInt(7));
+            cells.get(7).setCellValue(resultSet.getInt(8));
+            cells.get(8).setCellValue(resultSet.getInt(9));
+            cells.get(9).setCellValue(resultSet.getInt(10));
+
+            cells.get(10).setCellValue(resultSet.getString(11));
             try {
-                cells.get(4).setCellValue(Integer.valueOf(resultSet.getString(5)));
-                cells.get(5).setCellValue(Integer.valueOf(resultSet.getString(6)));
-                cells.get(6).setCellValue(Integer.valueOf(resultSet.getString(7)));
-                cells.get(7).setCellValue(Integer.valueOf(resultSet.getString(8)));
-                cells.get(8).setCellValue(Integer.valueOf(resultSet.getString(9)));
-                cells.get(9).setCellValue(Integer.valueOf(resultSet.getString(10)));
-                cells.get(10).setCellValue(resultSet.getString(11));
+                cells.get(11).setCellValue(resultSet.getInt(12));
             } catch (NumberFormatException e) {
+
+                cells.get(11).setCellValue(0);
             }
 
 

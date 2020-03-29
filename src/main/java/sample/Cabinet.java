@@ -56,9 +56,9 @@ public abstract class Cabinet {
 
     abstract protected void extractProperties();
 
+    abstract public void setConfiguration(NodeConfiguration nodeConfiguration);
 
-    abstract public void setConfiguration(NodeConfiguration sectorNodeConfiguration);
-
+    abstract public NodeConfiguration getNodeConfiguration();
 
     abstract public String extractConfiguration();
 

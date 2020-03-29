@@ -85,6 +85,11 @@ public class EnodeB extends Cabinet {
     }
 
     @Override
+    public NodeConfiguration getNodeConfiguration() {
+        return null;
+    }
+
+    @Override
     public String extractConfiguration() {
         return "";
     }

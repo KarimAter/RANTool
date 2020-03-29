@@ -7,6 +7,26 @@ public class Constants {
 
     public enum gTxMode {ATM, PACKET_ABIS}
 
+    public static final LinkedHashMap<Integer, Double> POWER_MAP = new LinkedHashMap<Integer, Double>() {
+        {
+            put(0, 0.0);
+            put(210, 0.125);
+            put(240, 0.25);
+            put(400, 10.0);
+            put(418, 15.0);
+            put(430, 20.0);
+            put(442, 26.65);
+            put(448, 30.0);
+            put(447, 30.0);
+            put(450, 30.0);
+            put(460, 40.0);
+            put(472, 53.3);
+            put(478, 60.0);
+            put(490, 80.0);
+            put(65535, 0.0);
+        }
+    };
+
 
     public static final LinkedHashMap<String, String> RF_PRODUCT_CODE = new LinkedHashMap<String, String>() {
         {
@@ -29,7 +49,6 @@ public class Constants {
             put("472956A.102", "FRGU");
         }
     };
-
 
 
     public static final LinkedHashMap<Integer, String> rfMap = new LinkedHashMap<Integer, String>() {

@@ -2,48 +2,64 @@ package sample;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+
 public class NodeConfiguration {
 
-    private String key, sectorsMapping, linksMappingString;
+    private String key;
+    private String sectorsMapping = "";
+    private String linksMappingString = "";
     private ArrayList<SectorConfiguration> sectorsConfiguration;
+
+    public NodeConfiguration(String sectorsMapping, String linksMappingString) {
+        this.sectorsMapping = sectorsMapping;
+        this.linksMappingString = linksMappingString;
+    }
 
     public NodeConfiguration(String key) {
         this.key = key;
         sectorsConfiguration = new ArrayList<>();
     }
 
-    // generate the connection type mapping string per sector
-    private static Function<Map.Entry<String, List<SectorConfiguration>>, String> formatConnectionFormat() {
+    String checkPower(Predicate<SectorConfiguration> carrierType, String power) {
+        Map<Double, List<SectorConfiguration>> powerMap = sectorsConfiguration.stream().filter(carrierType)
+                .collect(Collectors.groupingBy(SectorConfiguration::getPower));
+        double sectorsPower;
+        powerMap.remove(0.0);
+        if (powerMap.isEmpty())
+            return power;
 
-        return stringListEntry -> {
-
-            String connectionTypeForAllCarriers = stringListEntry.getValue().stream()
-                    .map(SectorConfiguration::getConnectionType).distinct().collect(Collectors.joining(""));
-
-            String note = stringListEntry.getValue().stream()
-                    .map(SectorConfiguration::getNote).distinct().collect(Collectors.joining(""));
-
-            String finalHardwareStrings = stringListEntry.getValue().stream()
-                    .map(SectorConfiguration::getHardwareConnection).distinct().collect(Collectors.joining("")).replaceAll(" ", "");
-
-            return "S" + stringListEntry.getKey() + ":" + connectionTypeForAllCarriers + note + finalHardwareStrings;
-        };
+        else if (powerMap.size() == 1) {
+            sectorsPower = powerMap.keySet().iterator().next();
+            if (sectorsPower == Double.valueOf(power))
+                return power;
+            else {
+                System.out.println(this.key + " Main and all sectors inconsistency ");
+                return String.valueOf(sectorsPower);
+            }
+        } else {
+            String sectorPowers = powerMap.entrySet().stream().map(doubleListEntry -> doubleListEntry.getKey() + "W "
+                    + "(S" + doubleListEntry.getValue().stream().map(SectorConfiguration::getSectorId).distinct().collect(Collectors.joining(",S")) + ")")
+                    .collect(Collectors.joining(","));
+            System.out.println(this.key + "Inconsistency between all sectors " + sectorPowers);
+            return sectorPowers;
+        }
     }
 
     void extractSectorsMapping() {
 
         String connectionType2100;
-        if (key.equals("28_88") || key.equals("14_175") || key.equals("58_50") || key.equals("62_12") || key.equals("48_289")) {
-            int x = 1;
-        }
+//        if (key.equals("28_88") || key.equals("24_665") || key.equals("14_175")|| key.equals("62_43")|| key.equals("58_32") || key.equals("58_50") || key.equals("62_12") || key.equals("48_289")) {
+//            int x = 1;
+//        }
 
         // extract map of 2100 sectors with sectors id available
         Map<String, List<SectorConfiguration>> sectorsMap2100 = sectorsConfiguration.stream().filter(s -> !s.isU9Sector() && !s.isNoSectorId())
                 .collect(Collectors.groupingBy(SectorConfiguration::getSectorId));
-        connectionType2100 = sectorsMap2100.entrySet().stream().map(formatConnectionFormat()).collect(Collectors.joining(", "));
+        connectionType2100 = sectorsMap2100.entrySet().stream().map(formatConnectionFormat(key)).collect(Collectors.joining(", "));
 
 
         // for missing sector Ids
@@ -97,7 +113,7 @@ public class NodeConfiguration {
                         .map(sectorName -> "S" + sectorName.getSectorId()).collect(Collectors.toList())
                         .stream().distinct().collect(Collectors.joining(","))));
 
-        // TODO: 3/22/2020 check the above i can get all sector as U and first and second
+        // TODO: 3/22/2020 check the above i can get all sector as U and first and second by splitting cellName
 
         // generates the link configuration string
         linksMappingString = linksMap.entrySet().stream().map(stringListEntry -> {
@@ -114,6 +130,34 @@ public class NodeConfiguration {
         int x = 2;
     }
 
+    // generate the connection type mapping string per sector
+    private static Function<Map.Entry<String, List<SectorConfiguration>>, String> formatConnectionFormat(String key) {
+
+
+        return stringListEntry -> {
+
+            String connectionTypeForAllCarriers = stringListEntry.getValue().stream()
+                    .map(SectorConfiguration::getConnectionType).distinct().collect(Collectors.joining(""));
+
+//            String finalcT=stringListEntry.getValue().stream()
+//                    .map(SectorConfiguration::getConnectionType).collect(Collectors.joining(""));
+//            if (finalcT.equals("CCB") ||finalcT.equals("BBC") ||finalcT.equals("CCCB") ||finalcT.equals("CBCBCB")
+//                    ||finalcT.equals("BCC") ||finalcT.equals("CB") ||finalcT.equals("BC") ||finalcT.equals("BCBCBC") ){
+//
+//                System.out.println(key+"   "+finalcT);
+//            }
+
+            String note = stringListEntry.getValue().stream()
+                    .map(SectorConfiguration::getNote).distinct().collect(Collectors.joining(""));
+
+            String finalHardwareStrings = stringListEntry.getValue().stream()
+                    .map(SectorConfiguration::getHardwareConnection).distinct().collect(Collectors.joining("")).replaceAll(" ", "");
+
+            return "S" + stringListEntry.getKey() + ":" + connectionTypeForAllCarriers + note + finalHardwareStrings;
+        };
+    }
+
+
     public void addSectorConfiguration(SectorConfiguration sectorConfiguration) {
         sectorsConfiguration.add(sectorConfiguration);
     }
@@ -124,6 +168,14 @@ public class NodeConfiguration {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public String getSectorsMapping() {
+        return sectorsMapping;
+    }
+
+    public String getLinksMappingString() {
+        return linksMappingString;
     }
 
     @Override

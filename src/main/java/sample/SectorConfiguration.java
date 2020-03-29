@@ -1,6 +1,7 @@
 package sample;
 
 import Helpers.Constants;
+import Helpers.Utils;
 
 import java.util.List;
 import java.util.Objects;
@@ -10,13 +11,14 @@ import java.util.stream.Stream;
 
 public class SectorConfiguration {
 
-    private String lCellId, antId, rModId, productCode, sModId, posInChain, linkId, firstLinkId, sectorNumber, connectionType, firstRfName, firstRfNumber, sectorId;
+    private String lCellId, antId, rModId, productCode, sModId, posInChain, linkId, firstLinkId, sectorNumber, connectionType, firstRfName, firstRfNumber, sectorId, cellName;
     private String defaultCarrier, note, sectorConnectionString, hardwareConnection;
     private String secondRfName, secondRfNumber, secondLinkId;
     private boolean noSectorId;
     private boolean u9Sector;
+    private double power;
 
-    // analyze the sector input to get the needed data
+    // analyzeConfiguration the sector input to get the needed data
     public void analyzeSector() {
         List<String> rMods = Stream.of(rModId.split(",")).sorted().collect(Collectors.toList());
         int count = antId.length();
@@ -161,7 +163,7 @@ public class SectorConfiguration {
     String getSectorConnectionString() {
         return sectorConnectionString;
     }
-    
+
     public void setlCellId(String lCellId) {
         this.lCellId = lCellId;
     }
@@ -242,6 +244,15 @@ public class SectorConfiguration {
         return secondRfName;
     }
 
+    public String getCellName() {
+        return cellName;
+    }
+
+    public void setCellName(String cellName) {
+
+        this.cellName = cellName;
+    }
+
     public void setSectorId(String sectorId) {
 
         if (sectorId != null && !sectorId.equals("0")) {
@@ -252,4 +263,85 @@ public class SectorConfiguration {
             this.noSectorId = true;
         }
     }
+
+    double getPower() {
+        return power;
+    }
+
+    public void setPower(int power, int vam) {
+        try {
+            this.power = Utils.convertPower(power, vam);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.power = 0;
+        }
+    }
+
+    //
+//    public void setSectorId(String sectorId) {
+//
+//
+//
+//        System.out.println(this.cellName);
+//        if (sectorId != null) {
+//
+//            if (!sectorId.equals("0")) {
+//                this.sectorId = sectorId;
+//                this.noSectorId = false;
+//                if (u9Sector) {
+//                    this.sectorId = sectorId + "U";
+//                }
+//
+//            } else if (sectorId.equals("0")) {
+//                if (cellName != null) {
+//                    List<String> collect = Arrays.stream(cellName.split("_")).filter(s -> s.length() == 2 || s.length() == 1).collect(Collectors.toList());
+//                    collect.forEach(s -> {
+//                        if (s.length() == 1 && Character.isDigit(s.charAt(0))) {
+//                            this.sectorId = s;
+//                            System.out.println("Case:1" + this.sectorId);
+//                        } else if (s.length() == 2) {
+//                            if (s.contains("S")) {
+//                                this.sectorId = s.substring(1);
+//                                System.out.println("Case:2S" + this.sectorId);
+//                            }
+//                        } else if (s.matches("\\d+")) {
+//                            this.sectorId = s;
+//                            System.out.println("Case:2-2digit" + this.sectorId);
+//                        }
+//                    });
+//                    this.noSectorId = false;
+//                    if (u9Sector) {
+//                        this.sectorId = sectorId + "U";
+//                        System.out.println("CaseU9" + this.sectorId);
+//                    }
+//                }
+//            }
+//        } else {
+//            this.sectorId = lCellId;
+//            this.noSectorId = true;
+//        }
+//
+//    }
+
 }
+//else if (this.cellName != null) {
+//            List<String> collect = Stream.of(cellName).filter(s -> s.length() == 2 || s.length() == 1).collect(Collectors.toList());
+//            collect.forEach(s -> {
+//                if (s.length() == 1 && Character.isDigit(s.charAt(0))) {
+//                    this.sectorId = s;
+//                    System.out.println("Case:1" + this.sectorId);
+//                } else if (s.length() == 2) {
+//                    if (s.contains("S")) {
+//                        this.sectorId = s.substring(1);
+//                        System.out.println("Case:2S" + this.sectorId);
+//                    }
+//                } else if (s.matches("\\d+")) {
+//                    this.sectorId = s;
+//                    System.out.println("Case:2-2digit" + this.sectorId);
+//                }
+//            });
+//            if (u9Sector) {
+//                this.sectorId = sectorId + "U";
+//                System.out.println("CaseU9" + this.sectorId);
+//            }
+//        } else this.sectorId = lCellId;

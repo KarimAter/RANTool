@@ -546,6 +546,7 @@ public class DatabaseConnector {
         ArrayList<Cabinet> nodeBList = new ArrayList<>();
         while (nResultSet.next()) {
             NodeB nodeB = new NodeB();
+            String key = nResultSet.getString(2) + "_" + nResultSet.getString(3);
             nodeB.setName(nResultSet.getString(24));
             nodeB.setCode(nResultSet.getString(1));
             nodeB.setRncId(nResultSet.getString(2));
@@ -580,9 +581,9 @@ public class DatabaseConnector {
             nodeB.setSfp(nResultSet.getString(34));
             nodeB.setNumberOfLCGs(nResultSet.getInt(35));
             nodeB.setNumberOfChains(nResultSet.getInt(36));
+            nodeB.setConfiguration(uSectorsConfiguration.get(key));
+            nodeB.analyzeConfiguration();
             nodeB.finishProperties();
-
-            nodeB.setConfiguration(uSectorsConfiguration.get(nodeB.getKey()));
             nodeBList.add(nodeB);
         }
         System.out.println("Number of NodeBs: " + nodeBList.size());
@@ -673,12 +674,16 @@ public class DatabaseConnector {
         String uSecConfQuery;
         Statement statement = connection.createStatement();
         uSecConfQuery = "Select RncId,WBTSId,lCelwId,group_concat(antId),group_concat(rModId)," +
-                "group_concat(prodCode),group_concat(sModId),group_concat(positionInChain),group_concat(linkId),first(defaultCarrier),first(SectorID) " +
+                "group_concat(prodCode),group_concat(sModId),group_concat(positionInChain),group_concat(linkId),first(defaultCarrier),first(SectorID),first(name)," +
+                "first(vamEnabled),first(MaxDLPowerCapability) " +
                 "FROM " + " ( " +
                 "(SELECT RncId,WBTSId,lCelwId,antlId FROM A_WBTSF_LCELW_RESOURCELIST) as lCelSet " +
                 "LEFT JOIN" +
                 "(SELECT RncId,WBTSId,antId,antlId,rModId FROM A_WBTSF_RNC_WBTS_MRBTS_ANTL) as antSet " +
                 "on (lCelSet.RncId=antSet.RncId and lCelSet.WBTSId=antSet.WBTSId and lCelSet.antlId=antSet.antlId) " +
+                "left join " +
+                "(SELECT RncId,WBTSId,lcrId,name,MaxDLPowerCapability FROM A_WCEL) as cellNameSet " +
+                "on (lCelSet.RncId=cellNameSet.RncId and lCelSet.WBTSId=cellNameSet.WBTSId and lCelSet.lCelwId=cellNameSet.lcrId) " +
                 "left join " +
                 "(SELECT RncId,WBTSId,rModId,linkId,positionInChain,sModId FROM A_WBTSF_RMOD_CONNECTIONLIST) as connectionSet " +
                 "on (antSet.RncId=connectionSet.RncId and antSet.WBTSId=connectionSet.WBTSId and antSet.rModId=connectionSet.rModId) " +
@@ -686,7 +691,7 @@ public class DatabaseConnector {
                 "(SELECT RncId,WBTSId,rModId,prodCode,serNum FROM A_WBTSF_RNC_WBTS_MRBTS_RMOD) as rModSet " +
                 "on (antSet.RncId=rModSet.RncId and antSet.WBTSId=rModSet.WBTSId and antSet.rModId=rModSet.rModId)" +
                 "left join " +
-                "(SELECT RncId,WBTSId,lCelwId,defaultCarrier FROM A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW) as defaultCarrierSet " +
+                "(SELECT RncId,WBTSId,lCelwId,defaultCarrier,vamEnabled FROM A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW) as defaultCarrierSet " +
                 "on (lCelSet.RncId=defaultCarrierSet.RncId and lCelSet.WBTSId=defaultCarrierSet.WBTSId and lCelSet.lCelwId=defaultCarrierSet.lCelwId)" +
                 "left join " +
                 "(SELECT RncId,WBTSId,LcrId,SectorID FROM A_WCEL_AC) as sectorIdSet " +
@@ -712,7 +717,10 @@ public class DatabaseConnector {
             sectorConfiguration.setPosInChain(nResultSet.getString(8));
             sectorConfiguration.setLinkId(nResultSet.getString(9));
             sectorConfiguration.setDefaultCarrier(nResultSet.getString(10));
+            sectorConfiguration.setCellName(nResultSet.getString(12));
             sectorConfiguration.setSectorId(nResultSet.getString(11));
+            sectorConfiguration.setPower(nResultSet.getInt(14), nResultSet.getInt(13));
+
             sectorConfiguration.analyzeSector();
 
             if (!previousKey.equals(key)) {
@@ -765,11 +773,14 @@ public class DatabaseConnector {
     public ResultSet getUcellsSheet() throws SQLException {
         Statement statement = connection.createStatement();
         String query = "Select BTSAdditionalInfo,name,RncId,WBTSId,AdminCellState,CId,LAC,MaxDLPowerCapability,RAC," +
-                "UARFCN,cName from " +
-                "(Select RncId,WBTSId,AdminCellState,CId,LAC,MaxDLPowerCapability,RAC,UARFCN,name as cName from A_WCEL ) as firstSet "
+                "UARFCN,cName,vamEnabled from " +
+                "(Select RncId,WBTSId,LcrId,AdminCellState,CId,LAC,MaxDLPowerCapability,RAC,UARFCN,name as cName from A_WCEL ) as firstSet "
                 + "left join "
                 + "(Select RncId,WBTSId,BTSAdditionalInfo,name from A_WBTS )as secondSet "
-                + "on (firstSet.RncId=secondSet.RncId and firstSet.WBTSId=secondSet.WBTSId)";
+                + "on (firstSet.RncId=secondSet.RncId and firstSet.WBTSId=secondSet.WBTSId)"
+                + "left join "
+                + "(SELECT RncId,WBTSId,lCelwId,vamEnabled FROM A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW )as thirdSet "
+                + "on (firstSet.RncId=thirdSet.RncId and firstSet.WBTSId=thirdSet.WBTSId and firstSet.LcrId=thirdSet.lcelwId)";
         return statement.executeQuery(query);
     }
 

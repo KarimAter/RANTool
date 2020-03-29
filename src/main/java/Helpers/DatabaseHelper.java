@@ -1,9 +1,6 @@
 package Helpers;
 
-import sample.Cabinet;
-import sample.Hardware;
-import sample.LHardware;
-import sample.UHardware;
+import sample.*;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -24,7 +21,7 @@ public class DatabaseHelper {
     private static final String RF_IDENTIFIER = "rfIdentifier";
     private static final String SM_IDENTIFIER = "smIdentifier";
     private static final String TX_IDENTIFIER = "txIdentifier";
-    private static final String SECTOR_CONFIGURATION = "nodeConfiguration";
+    private static final String NODE_CONFIGURATION = "nodeConfiguration";
     private static final int pastWeeksCount = 7;
 //    private int weeksCount;
 
@@ -42,7 +39,7 @@ public class DatabaseHelper {
             String tableCreator = "create table if not exists W" + tableName + " ( " + ID + " text , " + CODE + " text, "
                     + NAME + " text, " + REGION + " text, " + WEEK + " text , " + TECHNOLOGY + " text, " + CONTROLLER_ID + " text, "
                     + NODE_ID + " text, " + PROPERTIES + " text, " + RF_IDENTIFIER + " text NOT NULL , " + SM_IDENTIFIER + " text NOT NULL , "
-                    + TX_IDENTIFIER + " text NOT NULL , " + SECTOR_CONFIGURATION + " text NOT NULL "
+                    + TX_IDENTIFIER + " text NOT NULL , " + NODE_CONFIGURATION + " text NOT NULL "
                     + ")";
 
 //            String Identifiers = "create table if not exists " + tableName + " (" + ID + " text ," + CODE + " text, siteName text ,region text,  "
@@ -79,7 +76,7 @@ public class DatabaseHelper {
 
         String gsm = "INSERT INTO W" + tableName + " (" + ID + "," + CODE + " ," + NAME + "," + REGION + "," + WEEK + "," + TECHNOLOGY + ","
                 + CONTROLLER_ID + "," + NODE_ID + "," + PROPERTIES + "," + RF_IDENTIFIER + "," + SM_IDENTIFIER + "," + TX_IDENTIFIER + ","
-                + SECTOR_CONFIGURATION + " )"
+                + NODE_CONFIGURATION + " )"
                 + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 //        String gsm = "INSERT INTO " + tableName + " (id, code , siteName ,region,  technology ,bsc, bscId," +
@@ -584,6 +581,12 @@ public class DatabaseHelper {
             hardware.setWeek(resultSet.getString(WEEK));
             hardware.setTech(resultSet.getInt(TECHNOLOGY));
             cabinet.setHardware(hardware);
+
+
+            String[] split = resultSet.getString(NODE_CONFIGURATION).split("___");
+            if (split.length == 2)
+                cabinet.setConfiguration(new NodeConfiguration(split[0], split[1]));
+
             cabinet.finishProperties();
             cabinets.add(cabinet);
         }
