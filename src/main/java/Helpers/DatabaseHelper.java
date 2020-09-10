@@ -581,40 +581,59 @@ public class DatabaseHelper {
             hardware.setWeek(resultSet.getString(WEEK));
             hardware.setTech(resultSet.getInt(TECHNOLOGY));
             cabinet.setHardware(hardware);
-
-
             String[] split = resultSet.getString(NODE_CONFIGURATION).split("___");
             if (split.length == 2)
                 cabinet.setConfiguration(new NodeConfiguration(split[0], split[1]));
-
             cabinet.finishProperties();
             cabinets.add(cabinet);
         }
         System.out.println("Number of " + technology + "G Cabinets: " + cabinets.size());
         return cabinets;
     }
-//    public HashMap<String, String[]> loadNames() {
-//        HashMap<String, String[]> nodeNames=new HashMap<>();
-//        ResultSet resultSet;
-//        Statement statement;
-//        try {
-//            statement = connection.createStatement();
-//            String nodeBQuery = "Select " + ID + "," + CODE + "," + NAME + "," + WEEK + " from " + tableName;
-//            resultSet = statement.executeQuery(nodeBQuery);
-//
-//
-//            while (resultSet.next()) {
-//                String key = resultSet.getString(ID);
-//                Hardware hardware = new Hardware(resultSet.getString(WEEK));
-//                hardware.setCode(resultSet.getString(CODE));
-//                hardware.setName(resultSet.getString(NAME));
-//                dumpHwMap.put(key, hardware);
-//
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//    }
+
+    public ArrayList<Cabinet> loadSite(String searchKey, String columnName) throws SQLException {
+
+        ArrayList<String> tableNames = getTableNames();
+        int max = tableNames.stream().filter(s -> s.contains("2020"))
+                .map(s -> s.replace("_2020", ""))
+                .mapToInt(st -> Integer.parseInt(st.replace("W", ""))).max().getAsInt();
+        String tableName = max + "_2020";
+//        String tableName = "08_2020";
+        //todo:redo
+        ArrayList<Cabinet> cabinets = new ArrayList<>();
+        ResultSet resultSet;
+        Statement statement = connection.createStatement();
+        String bcfQuery = "Select * from W" + tableName + " where " + columnName + " = '" + searchKey + "'";
+        resultSet = statement.executeQuery(bcfQuery);
+        while (resultSet.next()) {
+            int technology = resultSet.getInt(TECHNOLOGY);
+            Cabinet cabinet = Cabinet.nodeProvider(technology);
+            cabinet.setUniqueName(resultSet.getString(ID));
+            cabinet.setCode(resultSet.getString(CODE));
+            cabinet.setName(resultSet.getString(NAME));
+            cabinet.setRegion(resultSet.getString(REGION));
+            cabinet.setControllerId(resultSet.getString(CONTROLLER_ID));
+            cabinet.setNodeId(resultSet.getString(NODE_ID));
+            cabinet.setProperties(resultSet.getString(PROPERTIES));
+            Hardware hardware = new Hardware(resultSet.getString(RF_IDENTIFIER),
+                    resultSet.getString(SM_IDENTIFIER), resultSet.getString(TX_IDENTIFIER));
+            hardware.setWeek(resultSet.getString(WEEK));
+            hardware.setTech(technology);
+            cabinet.setHardware(hardware);
+            try {
+                String[] split = resultSet.getString(NODE_CONFIGURATION).split("___");
+                if (split.length == 2)
+                    cabinet.setConfiguration(new NodeConfiguration(split[0], split[1]));
+            } catch (SQLException e) {
+                System.out.println("Old Week No Node Configuration");
+            }
+
+            cabinet.finishProperties();
+            cabinets.add(cabinet);
+        }
+        System.out.println("Number of Cabinets: " + cabinets.size());
+        return cabinets;
+    }
 
     public HashMap<String, Hardware> loadDumpHwMap() {
         ResultSet resultSet;
@@ -624,8 +643,6 @@ public class DatabaseHelper {
             statement = connection.createStatement();
             String nodeBQuery = "Select " + ID + "," + CODE + "," + NAME + "," + WEEK + " from W" + tableName;
             resultSet = statement.executeQuery(nodeBQuery);
-
-
             while (resultSet.next()) {
                 String key = resultSet.getString(ID);
                 Hardware hardware = new Hardware(resultSet.getString(WEEK));
@@ -647,34 +664,5 @@ public class DatabaseHelper {
         resultSet = statement.executeQuery(query);
         return resultSet.next();
     }
-
-
-//    public ArrayList<Cabinet> loadData() {
-//        ResultSet resultSet;
-//        Statement statement;
-//        ArrayList<Cabinet> cabinets = new ArrayList<>();
-//        try {
-//            statement = connection.createStatement();
-//            String nodeBQuery = "Select " + ID + "," + CODE + "," + NAME + "," + WEEK + ","+ TECHNOLOGY + ","  + RF_IDENTIFIER + "," + SM_IDENTIFIER + " from " + tableName;
-//            resultSet = statement.executeQuery(nodeBQuery);
-//
-//
-//            while (resultSet.next()) {
-//                String key = resultSet.getString(ID);
-//                BCF bcf=new BCF();
-//                bcf.setUniqueName(key);
-//                bcf.setCode(resultSet.getString(NAME));
-//                bcf.setCode(resultSet.getString(CODE));
-//                bcf.setT(resultSet.getString(CODE));
-//                bcf.setUniqueName(key);
-//
-//                cabinets.add(key, hardware);
-//
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//        return cabinets;
-//    }
 
 }

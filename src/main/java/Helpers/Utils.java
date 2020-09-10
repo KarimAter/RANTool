@@ -14,6 +14,17 @@ public class Utils {
     private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static File defaultPath = new File(System.getProperty("user.home"));
 
+
+    public static String loadExcelFile(Stage stage) {
+        FileChooser fileChooser = getFileChooser("*.xlsx");
+        configureFileChooser("Load Excel File..", fileChooser);
+        File file = fileChooser.showOpenDialog(stage);
+        if (file != null) {
+            defaultPath = new File(file.getParentFile().getPath());
+            return file.getPath();
+        }
+        return null;
+    }
     public static ArrayList<File> loadXMLsFromMachine(Stage stage) {
         ArrayList<File> fileList = new ArrayList<>();
         FileChooser fileChooser = new FileChooser();
@@ -139,9 +150,10 @@ public class Utils {
 
     public static double convertPower(int dbPower, int vam) {
         Double powerInWatts = Constants.POWER_MAP.get(dbPower);
-        if (vam == 0)
-            return powerInWatts;
-        else return powerInWatts * 2;
+        return vam == 0 ? powerInWatts : 2 * powerInWatts;
+//        if (vam == 0)
+//            return powerInWatts;
+//        else return powerInWatts * 2;
     }
 
 

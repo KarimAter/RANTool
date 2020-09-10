@@ -75,11 +75,13 @@ class SiteMapper {
             ArrayList<Integer> params = new ArrayList<>();
             params.add(cabinet.getNumberOfCells());
             params.add(cabinet.getNumberOfOnAirCells());
-            params.add(((NodeB) cabinet).getNumberOfHSDPASet1());
-            params.add(((NodeB) cabinet).getNumberOfHSDPASet2());
-            params.add(((NodeB) cabinet).getNumberOfHSDPASet3());
-            params.add(((NodeB) cabinet).getNumberOfHSUPASet1());
-            params.add(((NodeB) cabinet).getNumberOfChannelElements());
+            Map<String, Integer> r99CountMap = ((NodeB) cabinet).getR99CountMap();
+            r99CountMap.forEach((key, value) -> params.add(value));
+//            params.add(((NodeB) cabinet).getNumberOfHSDPASet1());
+//            params.add(((NodeB) cabinet).getNumberOfHSDPASet2());
+//            params.add(((NodeB) cabinet).getNumberOfHSDPASet3());
+//            params.add(((NodeB) cabinet).getNumberOfHSUPASet1());
+//            params.add(((NodeB) cabinet).getNumberOfChannelElements());
             statBox.setParam(params);
             return statBox;
         }).collect(Collectors.groupingBy(StatBox::getControllerId));
@@ -113,6 +115,7 @@ class SiteMapper {
             params.add(((NodeB) cabinet).isThirdCarrier() ? 1 : 0);
             params.add(cabinet.getNumberOfOnAirCells() > 0 &&
                     cabinet.getTxMode().equalsIgnoreCase("FULL IP") ? 1 : 0);
+            params.add(((NodeB) cabinet).isRfSharing() ? 1 : 0);
             statBox.setParam(params);
             return statBox;
         }).collect(Collectors.toList());
@@ -128,6 +131,7 @@ class SiteMapper {
             counts.add(statBoxes.stream().filter(statBox -> statBox.getParam().get(0) == 1).distinct().collect(Collectors.toList()).size());
             counts.add(statBoxes.stream().filter(statBox -> statBox.getParam().get(1) == 1).distinct().collect(Collectors.toList()).size());
             counts.add(statBoxes.stream().filter(statBox -> statBox.getParam().get(2) == 1).distinct().collect(Collectors.toList()).size());
+            counts.add(statBoxes.stream().filter(statBox -> statBox.getParam().get(3) == 1).distinct().collect(Collectors.toList()).size());
             uSitesTable.put(s, counts);
         });
         return uSitesTable;
@@ -148,6 +152,7 @@ class SiteMapper {
             params.add(values.stream().filter(cabinet -> ((EnodeB) cabinet).getBw() == 50).collect(Collectors.toList()).size());
             params.add(values.stream().filter(cabinet -> ((EnodeB) cabinet).getBw() == 100).collect(Collectors.toList()).size());
             params.add(values.stream().filter(cabinet -> ((EnodeB) cabinet).getBw() == 150).collect(Collectors.toList()).size());
+            params.add(values.stream().filter(cabinet -> ((EnodeB) cabinet).isCarrierAggregation()).collect(Collectors.toList()).size());
             statBox.setParam(params);
             return statBox;
         }).collect(Collectors.toList());

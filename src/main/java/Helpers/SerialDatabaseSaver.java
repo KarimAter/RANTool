@@ -362,13 +362,13 @@ public class SerialDatabaseSaver {
         }
     }
 
-    public ResultSet load(int tech) {
+    public ResultSet load(String tech) {
 
         ResultSet resultSet = null;
         Statement statement;
         try {
             statement = connection.createStatement();
-            String bcfQuery = "Select * from " + TABLE_NAME + " where " + ID + " like '%" + tech + "G%'";
+            String bcfQuery = "Select * from " + TABLE_NAME + " where " + ID + " like '%" + tech + "%'";
 
             resultSet = statement.executeQuery(bcfQuery);
         } catch (SQLException e) {

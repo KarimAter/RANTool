@@ -1,29 +1,67 @@
 package sample;
 
+import Helpers.Utils;
+
+import java.util.IntSummaryStatistics;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+
 public class NodeB extends Cabinet {
-
     private static final int TECHNOLOGY = 3;
-    private String rncId;
-    private String wbtsId;
-    private String nodeBIP;
-    private String lac;
-    private String rac;
-    private String sfp;
-    private int sectors, numberOfCells, numberOfFirstCarriersCells, numberOfOnAirFirstCarriersCells,
-            numberOfSecondCarriersCells, numberOfOnAirSecondCarriersCells, numberOfThirdCarriersCells, numberOfOnAirThirdCarriersCells,
-            numberOfFirstU900Cells, numberOfSecondU900Cells, numberOfOnAirFirstU900Cells, numberOfOnAirSecondU900Cells,
-            numberOfCarriers, numberOfE1s, numberOfOnAirCells,
-            numberOfHSDPASet1, numberOfHSDPASet2, numberOfHSDPASet3, numberOfHSUPASet1, numberOfChannelElements, numberOfLCGs;
-
-    private boolean firstCarrier, u900, thirdCarrier;
+    private String rncId, wbtsId, nodeBIP, lac, rac, sfp;
+    private int numberOfCarriers, numberOfLCGs, numberOfChains;
+    private boolean firstCarrier, u900, thirdCarrier, rfSharing, standAloneU900;
     private String power, u900Power;
-    private boolean rfSharing;
-    private boolean standAloneU900;
     private String r99Identifier;
     private String u9Identifier;
     private String powerIdentifier;
-    private int numberOfChains;
 
+    public static final String[] cellsCountNames = {"numberOfFirstCarriersCells", "numberOfOnAirFirstCarriersCells", "numberOfSecondCarriersCells",
+            "numberOfOnAirSecondCarriersCells", "numberOfThirdCarriersCells", "numberOfOnAirThirdCarriersCells",
+            "numberOfFirstU900Cells", "numberOfOnAirFirstU900Cells", "numberOfSecondU900Cells", "numberOfOnAirSecondU900Cells"};
+    public static final String[] r99ParametersNames = {"numberOfHSDPASet1", "numberOfHSDPASet2", "numberOfHSDPASet3", "numberOfHSUPASet1", "numberOfChannelElements"};
+
+    private Map<String, Integer> cellsCountMap = new LinkedHashMap<>();
+    private Map<String, Integer> r99CountMap = new LinkedHashMap<>();
+    private Map<String, Integer> powerValueMap = new LinkedHashMap<>();
+
+    private void setCellsCountMap(Map<String, Integer> cellsCountMap) {
+        this.cellsCountMap = cellsCountMap;
+        setNumberOfCells(cellsCountMap.entrySet().stream().filter(stringIntegerEntry ->
+                !stringIntegerEntry.getKey().contains("OnAir")).mapToInt(Map.Entry::getValue).sum());
+        IntSummaryStatistics onAirSummary = cellsCountMap.entrySet().stream().filter(stringIntegerEntry ->
+                stringIntegerEntry.getKey().contains("OnAir"))
+                .mapToInt(Map.Entry::getValue)
+                .filter(value -> value > 0)
+                .summaryStatistics();
+        setNumberOfOnAirCells((int) onAirSummary.getSum());
+        numberOfCarriers = (int) onAirSummary.getCount();
+        firstCarrier = carrierTest(1);
+        u900 = carrierTest(7) || carrierTest(9);
+        thirdCarrier = carrierTest(5);
+        this.setNumberOfSectors();
+    }
+
+    public Map<String, Integer> createCellsCountMap(String[] keys, int[] values) {
+        LinkedHashMap<String, Integer> cellMap = mapCreator(keys, values);
+        this.setCellsCountMap(cellMap);
+        return cellMap;
+    }
+
+    private LinkedHashMap<String, Integer> mapCreator(String[] keys, int[] values) {
+        return IntStream.range(0, keys.length)
+                .boxed().collect(Collectors.toMap(i -> keys[i], i -> values[i], (x, y) -> y, LinkedHashMap::new));
+    }
+
+    public Map<String, Integer> createR99CountMap(String[] keys, int[] values) {
+        LinkedHashMap<String, Integer> r99Map = mapCreator(keys, values);
+        this.setR99CountMap(r99Map);
+        return r99CountMap;
+    }
 
     @Override
     public int getTechnology() {
@@ -60,6 +98,7 @@ public class NodeB extends Cabinet {
                     break;
                 case "38":
                 case "DUAL_STACK":
+                case "DUAL STACK":
                     txMode = "DUAL STACK";
                     break;
                 case "70":
@@ -88,32 +127,9 @@ public class NodeB extends Cabinet {
 
     @Override
     protected void generateProperties() {
-        this.properties =
-                this.cellIdentifier +
-                        "__" +
-                        this.r99Identifier +
-                        "__" +
-                        this.u9Identifier +
-                        "__" +
-                        this.powerIdentifier +
-                        "__" +
-                        this.txMode +
-                        "__" +
-                        this.numberOfE1s +
-                        "__" +
-                        this.lac +
-                        "__" +
-                        this.rac +
-                        "__" +
-                        this.version.replace("_I", "-I") +
-                        "__" +
-                        this.nodeBIP +
-                        "__" +
-                        this.sfp +
-                        "__" +
-                        this.numberOfLCGs +
-                        "__" +
-                        this.numberOfChains;
+        this.properties = Stream.of(cellIdentifier, r99Identifier, u9Identifier, powerIdentifier, txMode,
+                numberOfE1s, lac, rac, version, nodeBIP, sfp, numberOfLCGs, numberOfChains)
+                .map(String::valueOf).collect(Collectors.joining("__"));
     }
 
     @Override
@@ -121,7 +137,7 @@ public class NodeB extends Cabinet {
         this.generateKey();
         this.generateUniqueName();
         this.findCodeAndRegion();
-        this.setNumberOfSectors();
+//        this.setNumberOfSectors();
         this.setStandAloneU900();
         this.generateCellIdentifier();
         this.generateR99Identifier();
@@ -138,7 +154,7 @@ public class NodeB extends Cabinet {
         this.setU9Identifier(parts[2]);
         this.setPowerIdentifier(parts[3]);
         this.setTxMode(parts[4]);
-        this.setNumberOfE1s(Integer.parseInt(parts[5]));
+        setNumberOfE1s(Integer.parseInt(parts[5]));
         this.setLac(parts[6]);
         this.setRac(parts[7]);
         this.setVersion(parts[8]);
@@ -186,50 +202,27 @@ public class NodeB extends Cabinet {
 
     @Override
     protected void generateCellIdentifier() {
-        this.cellIdentifier = String.valueOf(this.numberOfFirstCarriersCells) +
-                "." +
-                this.numberOfSecondCarriersCells +
-                "." +
-                this.numberOfThirdCarriersCells +
-                "." +
-                this.numberOfFirstU900Cells +
-                "." +
-                this.numberOfSecondU900Cells +
-                "." +
-                this.numberOfOnAirFirstCarriersCells +
-                "." +
-                this.numberOfOnAirSecondCarriersCells +
-                "." +
-                this.numberOfOnAirThirdCarriersCells +
-                "." +
-                this.numberOfOnAirFirstU900Cells +
-                "." +
-                this.numberOfOnAirSecondU900Cells;
+        this.cellIdentifier = cellsCountMap.values().stream().map(String::valueOf).collect(Collectors.joining("."));
     }
 
+    public void setR99CountMap(Map<String, Integer> r99CountMap) {
+        this.r99CountMap = r99CountMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+                entry -> {
+                    int value = entry.getValue();
+                    return value < 0 ? 0 : value;
+                }, (x, y) -> y, LinkedHashMap::new));
+    }
 
     private void generateR99Identifier() {
-        this.r99Identifier = String.valueOf(this.numberOfHSDPASet1) +
-                "." +
-                this.numberOfHSDPASet2 +
-                "." +
-                this.numberOfHSDPASet3 +
-                "." +
-                this.numberOfHSUPASet1 +
-                "." +
-                this.numberOfChannelElements;
+        this.r99Identifier = r99CountMap.values().stream().map(String::valueOf).collect(Collectors.joining("."));
     }
 
     private void generateU9Identifier() {
-        this.u9Identifier = String.valueOf(this.standAloneU900) +
-                "." +
-                this.rfSharing;
+        this.u9Identifier = this.standAloneU900 + "." + this.rfSharing;
     }
 
     private void generatePowerIdentifier() {
-        this.powerIdentifier = String.valueOf(this.power) +
-                "-" +
-                this.u900Power;
+        this.powerIdentifier = this.power + "-" + this.u900Power;
     }
 
     public void setProperties(String properties) {
@@ -238,30 +231,30 @@ public class NodeB extends Cabinet {
     }
 
     public void extractCellsFromIdentifier() {
-        String[] parts = cellIdentifier.split("\\.");
-        numberOfFirstCarriersCells = Integer.valueOf(parts[0]);
-        numberOfSecondCarriersCells = Integer.valueOf(parts[1]);
-        numberOfThirdCarriersCells = Integer.valueOf(parts[2]);
-        numberOfFirstU900Cells = Integer.valueOf(parts[3]);
-        numberOfSecondU900Cells = Integer.valueOf(parts[4]);
-        this.setNumberOfOnAirFirstCarriersCells(Integer.valueOf(parts[5]));
-        this.setNumberOfOnAirSecondCarriersCells(Integer.valueOf(parts[6]));
-        this.setNumberOfOnAirThirdCarriersCells(Integer.valueOf(parts[7]));
-        this.setNumberOfOnAirFirstU900Cells(Integer.valueOf(parts[8]));
-        this.setNumberOfOnAirSecondU900Cells(Integer.valueOf(parts[9]));
-        numberOfCells = numberOfFirstCarriersCells + numberOfSecondCarriersCells + numberOfThirdCarriersCells + numberOfFirstU900Cells + numberOfSecondU900Cells;
-        numberOfOnAirCells = numberOfOnAirFirstCarriersCells + numberOfOnAirSecondCarriersCells + numberOfOnAirThirdCarriersCells + numberOfOnAirFirstU900Cells + numberOfOnAirSecondU900Cells;
-        this.setNumberOfSectors();
+        int[] ints = Stream.of(cellIdentifier.split("\\.")).mapToInt(Integer::valueOf).toArray();
+        setCellsCountMap(createCellsCountMap(cellsCountNames, ints));
+    }
+
+    @Override
+    protected void setNumberOfSectors() {
+        if (firstCarrier)
+            numberOfSectors = this.cellsCountMap.get(cellsCountNames[1]);
+        else if (u900) {
+            numberOfSectors = this.cellsCountMap.get(cellsCountNames[7]);
+            if (numberOfSectors == 0)
+                numberOfSectors = this.cellsCountMap.get(cellsCountNames[9]);
+        }
+    }
+
+    private boolean carrierTest(int cellMapIndex) {
+        return cellsCountMap.entrySet().stream().filter(stringIntegerEntry -> stringIntegerEntry.getKey().contains(cellsCountNames[cellMapIndex]))
+                .anyMatch(stringIntegerEntry -> stringIntegerEntry.getValue() > 0);
     }
 
 
     private void extractR99FromIdentifier() {
-        String[] parts = r99Identifier.split("\\.");
-        numberOfHSDPASet1 = Integer.valueOf(parts[0]);
-        numberOfHSDPASet2 = Integer.valueOf(parts[1]);
-        numberOfHSDPASet3 = Integer.valueOf(parts[2]);
-        numberOfHSUPASet1 = Integer.valueOf(parts[3]);
-        numberOfChannelElements = Integer.valueOf(parts[4]);
+        int[] ints = Stream.of(r99Identifier.split("\\.")).mapToInt(Integer::valueOf).toArray();
+        this.r99CountMap = createR99CountMap(r99ParametersNames, ints);
     }
 
 
@@ -278,10 +271,6 @@ public class NodeB extends Cabinet {
         u900Power = parts[1];
     }
 
-    public void setNodeBName(String name) {
-        this.name = name;
-    }
-
     public void setRncId(String rncId) {
         this.rncId = rncId;
     }
@@ -290,86 +279,7 @@ public class NodeB extends Cabinet {
         this.wbtsId = wbtsId;
     }
 
-
-    public void setNumberOfCells(int numberOfCells) {
-        this.numberOfCells = numberOfCells;
-    }
-
-    public void setNumberOfFirstCarriersCells(int numberOfFirstCarriersCells) {
-
-        this.numberOfFirstCarriersCells = numberOfFirstCarriersCells;
-    }
-
-    public void setNumberOfSecondCarriersCells(int numberOfSecondCarriersCells) {
-        this.numberOfSecondCarriersCells = numberOfSecondCarriersCells;
-    }
-
-    public void setNumberOfThirdCarriersCells(int numberOfThirdCarriersCells) {
-        this.numberOfThirdCarriersCells = numberOfThirdCarriersCells;
-    }
-
-
-    public void setNumberOfE1s(int numberOfE1s) {
-        this.numberOfE1s = numberOfE1s;
-    }
-
-    public void setNumberOfHSDPASet1(int numberOfHSDPASet1) {
-        if (numberOfHSDPASet1 < 0)
-            this.numberOfHSDPASet1 = 0;
-        else
-            this.numberOfHSDPASet1 = numberOfHSDPASet1;
-    }
-
-    public void setNumberOfHSDPASet2(int numberOfHSDPASet2) {
-        if (numberOfHSDPASet2 < 0)
-            this.numberOfHSDPASet2 = 0;
-        else
-            this.numberOfHSDPASet2 = numberOfHSDPASet2;
-    }
-
-    public void setNumberOfHSDPASet3(int numberOfHSDPASet3) {
-        if (numberOfHSDPASet3 < 0)
-            this.numberOfHSDPASet3 = 0;
-        else
-            this.numberOfHSDPASet3 = numberOfHSDPASet3;
-    }
-
-    public void setNumberOfHSUPASet1(int numberOfHSUPASet1) {
-        if (numberOfHSUPASet1 < 0)
-            this.numberOfHSUPASet1 = 0;
-        else
-            this.numberOfHSUPASet1 = numberOfHSUPASet1;
-    }
-
-    public void setNumberOfChannelElements(int numberOfChannelElements) {
-        this.numberOfChannelElements = numberOfChannelElements;
-    }
-
-    public void setNumberOfOnAirFirstCarriersCells(int numberOfOnAirFirstCarriersCells) {
-        if (numberOfOnAirFirstCarriersCells > 0) {
-            this.firstCarrier = true;
-            this.numberOfCarriers++;
-        }
-        this.numberOfOnAirFirstCarriersCells = numberOfOnAirFirstCarriersCells;
-    }
-
-    public void setNumberOfOnAirSecondCarriersCells(int numberOfOnAirSecondCarriersCells) {
-        if (numberOfOnAirSecondCarriersCells > 0) {
-            this.numberOfCarriers++;
-        }
-        this.numberOfOnAirSecondCarriersCells = numberOfOnAirSecondCarriersCells;
-    }
-
-    public void setNumberOfOnAirThirdCarriersCells(int numberOfOnAirThirdCarriersCells) {
-        if (numberOfOnAirThirdCarriersCells > 0) {
-            this.thirdCarrier = true;
-            this.numberOfCarriers++;
-        }
-        this.numberOfOnAirThirdCarriersCells = numberOfOnAirThirdCarriersCells;
-    }
-
-
-    public int getNumberOfCarriers() {
+    int getNumberOfCarriers() {
         return numberOfCarriers;
     }
 
@@ -395,21 +305,6 @@ public class NodeB extends Cabinet {
         this.region = region;
     }
 
-    public int getNumberOfFirstU900Cells() {
-        return numberOfFirstU900Cells;
-    }
-
-    public int getNumberOfSecondU900Cells() {
-        return numberOfSecondU900Cells;
-    }
-
-    public int getNumberOfOnAirFirstU900Cells() {
-        return numberOfOnAirFirstU900Cells;
-    }
-
-    public int getNumberOfOnAirSecondU900Cells() {
-        return numberOfOnAirSecondU900Cells;
-    }
 
     public void setHardware(Hardware hardware) {
         this.hardware = hardware;
@@ -428,58 +323,22 @@ public class NodeB extends Cabinet {
         this.sfp = sfp;
     }
 
-    public void setNumberOfFirstU900Cells(int numberOfFirstU900Cells) {
-        this.numberOfFirstU900Cells = numberOfFirstU900Cells;
-    }
-
-    public void setNumberOfSecondU900Cells(int numberOfSecondU900Cells) {
-        this.numberOfSecondU900Cells = numberOfSecondU900Cells;
-    }
-
-    public void setNumberOfOnAirFirstU900Cells(int numberOfOnAirFirstU900Cells) {
-        if (numberOfOnAirFirstU900Cells > 0) {
-            this.u900 = true;
-            this.numberOfCarriers++;
-        }
-        this.numberOfOnAirFirstU900Cells = numberOfOnAirFirstU900Cells;
-    }
-
-    public void setNumberOfOnAirSecondU900Cells(int numberOfOnAirSecondU900Cells) {
-        if (numberOfOnAirSecondU900Cells > 0) {
-            this.u900 = true;
-            this.numberOfCarriers++;
-        }
-        this.numberOfOnAirSecondU900Cells = numberOfOnAirSecondU900Cells;
-    }
-
-    public String getR99Identifier() {
-        return r99Identifier;
-    }
-
-    public void setR99Identifier(String r99Identifier) {
+    private void setR99Identifier(String r99Identifier) {
         this.r99Identifier = r99Identifier;
         extractR99FromIdentifier();
     }
 
-    public String getU9Identifier() {
-        return u9Identifier;
-    }
-
-    public void setU9Identifier(String u9Identifier) {
+    private void setU9Identifier(String u9Identifier) {
         this.u9Identifier = u9Identifier;
         extractU9FromIdentifier();
     }
 
-    public String getPowerIdentifier() {
-        return powerIdentifier;
-    }
-
-    public void setPowerIdentifier(String powerIdentifier) {
+    private void setPowerIdentifier(String powerIdentifier) {
         this.powerIdentifier = powerIdentifier;
         extractPowerFromIdentifier();
     }
 
-    public String getNodeBIP() {
+    String getNodeBIP() {
         return nodeBIP;
     }
 
@@ -487,7 +346,7 @@ public class NodeB extends Cabinet {
         this.nodeBIP = nodeBIP;
     }
 
-    public int getNumberOfLCGs() {
+    int getNumberOfLCGs() {
         return numberOfLCGs;
     }
 
@@ -499,7 +358,7 @@ public class NodeB extends Cabinet {
         this.numberOfChains = numberOfChains;
     }
 
-    public int getNumberOfChains() {
+    int getNumberOfChains() {
         return numberOfChains;
     }
 
@@ -507,13 +366,6 @@ public class NodeB extends Cabinet {
         return region;
     }
 
-    private void setNumberOfSectors() {
-        if (firstCarrier)
-            this.sectors = this.numberOfOnAirFirstCarriersCells;
-        else if (u900) {
-            this.sectors = this.numberOfOnAirFirstU900Cells;
-        }
-    }
 
     boolean isStandAloneU900() {
         return standAloneU900;
@@ -529,11 +381,10 @@ public class NodeB extends Cabinet {
     }
 
     public void setRfSharing(int cSharing) {
-        if (cSharing > 0)
-            this.rfSharing = true;
+        this.rfSharing = cSharing == 1;
     }
 
-    public String getLac() {
+    String getLac() {
         return lac;
     }
 
@@ -541,7 +392,7 @@ public class NodeB extends Cabinet {
         this.lac = lac;
     }
 
-    public String getRac() {
+    String getRac() {
         return rac;
     }
 
@@ -554,23 +405,12 @@ public class NodeB extends Cabinet {
     }
 
     public void setU900Power(int u900Power, int vam) {
-        int vamCoeff = 1;
-        if (vam > 0)
-            vamCoeff = 2;
-        if (u900Power == 430)
-            this.u900Power = String.valueOf(vamCoeff * 20);
-        else if (u900Power == 442)
-            this.u900Power = String.valueOf(vamCoeff * 26.65);
-        else if (u900Power == 448 || u900Power == 450)
-            this.u900Power = String.valueOf(vamCoeff * 30);
-        else if (u900Power == 460)
-            this.u900Power = String.valueOf(vamCoeff * 40);
-        else if (u900Power == 478)
-            this.u900Power = String.valueOf(60);
-        else if (u900Power == 490)
-            this.u900Power = String.valueOf(80);
-        else if (u900Power == 65535 || u900Power == 0)
-            this.u900Power = String.valueOf(0);
+        try {
+            this.u900Power = String.valueOf(Utils.convertPower(u900Power, vam));
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.u900Power = "0";
+        }
     }
 
     String getU900Power() {
@@ -578,31 +418,12 @@ public class NodeB extends Cabinet {
     }
 
     public void setPower(int power, int vam) {
-        int vamCoeff = 1;
-        if (vam > 0)
-            vamCoeff = 2;
-        if (power == 210)
-            this.power = String.valueOf(vamCoeff * .125);
-        else if (power == 240)
-            this.power = String.valueOf(vamCoeff * 0.25);
-        else if (power == 400)
-            this.power = String.valueOf(vamCoeff * 10);
-        else if (power == 418)
-            this.power = String.valueOf(vamCoeff * 15);
-        else if (power == 430)
-            this.power = String.valueOf(vamCoeff * 20);
-        else if (power == 442)
-            this.power = String.valueOf(vamCoeff * 26.65);
-        else if (power == 448 || power == 450)
-            this.power = String.valueOf(vamCoeff * 30);
-        else if (power == 460)
-            this.power = String.valueOf(vamCoeff * 40);
-        else if (power == 478)
-            this.power = String.valueOf(60);
-        else if (power == 490)
-            this.power = String.valueOf(80);
-        else if (power == 65535 || power == 0)
-            this.power = String.valueOf(0);
+        try {
+            this.power = String.valueOf(Utils.convertPower(power, vam));
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.power = "0";
+        }
     }
 
 
@@ -614,81 +435,21 @@ public class NodeB extends Cabinet {
         return wbtsId;
     }
 
-    public int getSectors() {
-        return sectors;
-    }
-
-    public int getNumberOfCells() {
-        return numberOfCells;
-    }
-
-    public int getNumberOfOnAirCells() {
-        return numberOfOnAirCells;
-    }
-
-    public int getNumberOfFirstCarriersCells() {
-        return numberOfFirstCarriersCells;
-    }
-
-    public int getNumberOfSecondCarriersCells() {
-        return numberOfSecondCarriersCells;
-    }
-
-    public int getNumberOfThirdCarriersCells() {
-        return numberOfThirdCarriersCells;
-    }
-
-    public int getNumberOfOnAirFirstCarriersCells() {
-        return numberOfOnAirFirstCarriersCells;
-    }
-
-    public int getNumberOfOnAirSecondCarriersCells() {
-        return numberOfOnAirSecondCarriersCells;
-    }
-
-    public int getNumberOfOnAirThirdCarriersCells() {
-        return numberOfOnAirThirdCarriersCells;
-    }
-
-    public int getNumberOfHSDPASet1() {
-        return numberOfHSDPASet1;
-    }
-
-    public int getNumberOfHSDPASet2() {
-        return numberOfHSDPASet2;
-    }
-
-    public int getNumberOfHSDPASet3() {
-        return numberOfHSDPASet3;
-    }
-
-    public int getNumberOfHSUPASet1() {
-        return numberOfHSUPASet1;
-    }
-
-    public int getNumberOfChannelElements() {
-        return numberOfChannelElements;
-    }
-
-    public int getNumberOfE1s() {
-        return numberOfE1s;
-    }
-
     public boolean isU900() {
         return u900;
     }
 
-    public void setU900(boolean u900) {
-        this.u900 = u900;
-    }
 
     public boolean isThirdCarrier() {
         return thirdCarrier;
     }
 
-    public void setThirdCarrier(boolean thirdCarrier) {
-        this.thirdCarrier = thirdCarrier;
+    Map<String, Integer> getCellsCountMap() {
+        return cellsCountMap;
     }
 
+    public Map<String, Integer> getR99CountMap() {
+        return r99CountMap;
+    }
 
 }

@@ -11,7 +11,8 @@ import java.util.stream.Stream;
 
 public class SectorConfiguration {
 
-    private String lCellId, antId, rModId, productCode, sModId, posInChain, linkId, firstLinkId, sectorNumber, connectionType, firstRfName, firstRfNumber, sectorId, cellName;
+    private String lCellId, antId, rModId, productCode, sModId, posInChain, linkId, firstLinkId,
+            sectorNumber, connectionType, firstRfName, firstRfNumber, sectorId, cellName;
     private String defaultCarrier, note, sectorConnectionString, hardwareConnection;
     private String secondRfName, secondRfNumber, secondLinkId;
     private boolean noSectorId;
@@ -19,7 +20,8 @@ public class SectorConfiguration {
     private double power;
 
     // analyzeConfiguration the sector input to get the needed data
-    public void analyzeSector() {
+    public void analyzeSector() throws NullPointerException {
+//        try {
         List<String> rMods = Stream.of(rModId.split(",")).sorted().collect(Collectors.toList());
         int count = antId.length();
         String[] productsCode = productCode.split(",");
@@ -75,6 +77,12 @@ public class SectorConfiguration {
         }
         hardwareConnection = " {" + firstRfName + firstRfNumber + secondRfName + secondRfNumber + "}";
         sectorConnectionString = sectorNumber + ":" + connectionType + note + hardwareConnection;
+//        } catch (NullPointerException e) {
+//            System.out.println(cellName);
+//            linkId = "";
+//            hardwareConnection="";
+//            sectorConnectionString="";
+//        }
 
     }
 
@@ -86,7 +94,8 @@ public class SectorConfiguration {
     private void highAntCount(String[] productsCode) {
         int firstIndex = sModId.indexOf("1");
         int lastIndex = sModId.lastIndexOf("1");
-        connectionType = connnectionTypeGetter(new String[]{String.valueOf(rModId.charAt(firstIndex)), String.valueOf(rModId.charAt(lastIndex))},
+        connectionType = connnectionTypeGetter(new String[]{String.valueOf(rModId.charAt(firstIndex)),
+                        String.valueOf(rModId.charAt(lastIndex))},
                 new String[]{String.valueOf(antId.charAt(firstIndex)), String.valueOf(antId.charAt(lastIndex))});
         firstRfName = Constants.RF_PRODUCT_CODE.get(productsCode[firstIndex / 2]);
         firstLinkId = String.valueOf(linkId.charAt(firstIndex / 2));
@@ -96,7 +105,7 @@ public class SectorConfiguration {
         secondLinkId = "";
         if (connectionType.equals("C")) {
             secondRfName = "-" + Constants.RF_PRODUCT_CODE.get(productsCode[lastIndex / 2]);
-            secondLinkId = String.valueOf(linkId.charAt(lastIndex / 2));
+            secondLinkId = String.valueOf(linkId.charAt(lastIndex));
             secondRfNumber = "1." + secondLinkId + "." + posInChain.charAt(lastIndex);
         }
     }
@@ -115,7 +124,8 @@ public class SectorConfiguration {
     // checks if specific link id exists in sector
     static Predicate<SectorConfiguration> isPresentOnLink(String linkId) {
 
-        return sectorConfiguration -> sectorConfiguration.getFirstLinkId().equals(linkId) || sectorConfiguration.getSecondLinkId().equals(linkId);
+        return sectorConfiguration -> sectorConfiguration.getFirstLinkId().equals(linkId)
+                || sectorConfiguration.getSecondLinkId().equals(linkId);
     }
 
 

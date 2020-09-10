@@ -14,10 +14,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -31,9 +28,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 
 public class Main extends Application {
@@ -41,17 +36,13 @@ public class Main extends Application {
     private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private ArrayList<EnodeB> lSitesList;
-    private ArrayList<USite> thirdCarrierList;
-    private ArrayList<USite> u900List;
     private HashMap<String, Hardware> hwHashMap;
     private HashMap<String, Hardware> btsHwHashMap;
     private HashMap<String, Hardware> nodeBHWHashMap;
     private HashMap<String, Hardware> lteHwMap;
-
-
+    private HashMap<String, Hardware> sbtsHwMap;
     private Button exportDashboardBu, load2R1DumpBu, load2R2DumpBu, load3R2DumpBu, load4R2DumpBu,
-            loadXMls, saveSummary, exportChangesBu, exportDumpsheetsBu, load2GXMLs, export2GHardware, load4GXMLs, export4GHardware,
-            load3GXMLs, export3GHardware, processBu, pickDateBu;
+            loadXMls, saveSummary, exportChangesBu, exportDumpsheetsBu, loadExcelSheet, processBu, pickDateBu;
     private String currentTable, oldTable;
     private String databasePath;
     private String serialDatabasePath;
@@ -69,9 +60,6 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
         initializeButtonsAndArrays(scene);
-        Calendar calendar = Calendar.getInstance();
-//        weekNumber = calendar.get(Calendar.WEEK_OF_YEAR);
-//        weekName = "W" + weekNumber;
         databasePath = "C:/Ater/Development/RAN Tool/NokiaDumpToolHistory.db";
         serialDatabasePath = "C:/Ater/Development/RAN Tool/serials.db";
         imagePath = "D:/RAN Tool/Databases/";
@@ -144,9 +132,9 @@ public class Main extends Application {
                 // Exporting 3G configuration..
                 exporter.exportConfPivot(SiteMapper.getUConfigMap(uCabinets), 9, "NodeBs");
                 // Exporting UMTS sites map..
-                exporter.exportSitesPivot(SiteMapper.getUSitesMap(uCabinets), 6, "3G Sites");
+                exporter.exportSitesPivot(SiteMapper.getUSitesMap(uCabinets), 7, "3G Sites");
                 // Exporting 4G configuration..
-                exporter.exportConfPivot(SiteMapper.getLConfigMap(lCabinets), 8, "LTE");
+                exporter.exportConfPivot(SiteMapper.getLConfigMap(lCabinets), 9, "LTE");
                 //Exporting U900 list
                 exporter.exportCarr(SiteMapper.getCarriersMap(uCabinets, cabinet -> ((NodeB) cabinet).isU900()), "U900 Sites");
                 //Exporting 3rd Carrier list
@@ -158,24 +146,6 @@ public class Main extends Application {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-
-
-            String techs = "2__3__4";
-            String hardwares = "0.1.0.0.0.0.0.0.0.0.0.0.0.0.0__0.1.0.0.0.0.0.0.0.0.0.2.0.0.0__0.0.0.0.0.1.0.0.0.0.0.0.0.0.0";
-            Pattern pattern = Pattern.compile("__");
-            int[] ints = pattern.splitAsStream(techs).mapToInt(Integer::parseInt).toArray();
-
-
-//            String[] strings = pattern.splitAsStream(hardwares).toArray(String[]::new);
-            List<String> strings = pattern.splitAsStream(hardwares).collect(Collectors.toList());
-
-            List<String> gCollects = IntStream.range(0, ints.length)
-                    .filter(i -> i == 0)
-                    .mapToObj(strings::get)
-                    .collect(Collectors.toList());
-
-            int xqq = 1;
-
         });
 
         exportChangesBu.setOnAction(event ->
@@ -199,6 +169,7 @@ public class Main extends Application {
                     export2G();
                     export3G();
                     export4G();
+                    exportSBTS();
                     Exporter exporter = new Exporter(weekName);
                     exporter.exportHwFromDatabase();
                     System.out.println("Done..." + Utils.getTime());
@@ -230,7 +201,6 @@ public class Main extends Application {
         });
 
         loadXMls.setOnAction(event ->
-
         {
             System.out.println(Utils.getTime());
             ArrayList<File> xmlFiles = Utils.loadXMLsFromMachine(primaryStage);
@@ -241,6 +211,10 @@ public class Main extends Application {
                         Hardware hardware = parse3GHardwareXML(xmlFile);
                         nodeBHWHashMap.put(hardware.getUniqueName(), hardware);
                         hwHashMap.putAll(nodeBHWHashMap);
+                    } else if (fileName.contains("SRAN")) {
+                        Hardware hardware = parseSBTSHardwareXML(xmlFile);
+                        sbtsHwMap.put(hardware.getUniqueName(), hardware);
+                        hwHashMap.putAll(sbtsHwMap);
                     } else if (fileName.contains("MRBTS")) {
                         Hardware hardware = parse4GHardwareXML(xmlFile);
                         lteHwMap.put(hardware.getUniqueName(), hardware);
@@ -259,159 +233,18 @@ public class Main extends Application {
             System.out.println("Number of 2G XML files: " + btsHwHashMap.size());
             System.out.println("Number of 3G XML files: " + nodeBHWHashMap.size());
             System.out.println("Number of 4G XML files: " + lteHwMap.size());
+            System.out.println("Number of SBTS XML files: " + sbtsHwMap.size());
             System.out.println("Total number of XML files: " + hwHashMap.size());
             System.out.println(Utils.getTime());
         });
 
 
-        load2GXMLs.setOnAction(event ->
+        loadExcelSheet.setOnAction(event ->
 
         {
-            ArrayList<File> xmlFiles = Utils.loadXMLsFromMachine(primaryStage);
-            for (File xmlFile : xmlFiles) {
-                try {
-                    Hardware hardware = parse2GHardwareXML(xmlFile);
-                    btsHwHashMap.put(hardware.getUniqueName(), hardware);
 
-                } catch (ParserConfigurationException | SAXException | IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            System.out.println("Number of 2G XML files: " + btsHwHashMap.size());
         });
 
-        export2GHardware.setOnAction(event ->
-
-        {
-            try {
-                DatabaseHelper databaseHelper = new DatabaseHelper(databasePath, weekName);
-                ArrayList<Cabinet> bcfs = databaseHelper.loadCabinets(2);
-                addHWtoCabinets(bcfs, btsHwHashMap);
-                Exporter exporter = new Exporter();
-                exporter.export2GHWfromXML(bcfs, weekName);
-
-                Map<String, List<Hardware>> collect = bcfs.parallelStream().
-                        filter(cabinet -> cabinet.getOnAir() == 1).
-                        map(Cabinet::getHardware).
-                        collect(Collectors.groupingBy(Hardware::getCode));
-
-
-                Map<String, Map<String, Long>> collect1 = bcfs.parallelStream().
-                        filter(cabinet -> cabinet.getOnAir() == 1).
-                        map(Cabinet::getHardware).
-
-                        collect(Collectors.toMap(Hardware::getCode, Hardware::getModules));
-
-                Map<String, Map<String, Long>> collect2 = collect1.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, stringMapEntry ->
-
-                        stringMapEntry.getValue().entrySet().stream().collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.summingLong(Map.Entry::getValue)))));
-
-                ;
-//                collect1.entrySet()
-//                        .stream().collect(Collectors.toMap(Map.Entry::getKey, e->e.getValue().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,l -> l.getValue()
-//                        .stream().sum()))
-//
-//                collect1.entrySet().stream().
-//                        collect(Collectors.groupingBy(entry->entry.getValue().entrySet().stream().collect(Collectors.groupingBy(entry.getKey()))));
-
-//                .entrySet().stream()
-//                        .collect(HashMap::new,
-//                                (map, e) -> map.put(e.getKey(), e.getValue().
-//                                        stream().
-//                                        map(Hardware::getModules).
-//                                        collect(Collectors.toList())), Map::putAll);
-
-//
-//                        .map(stringListEntry -> {
-//                            stringListEntry.getValue().stream().collect(Collectors.toList());
-//
-//                        })
-
-//
-//                Map<String, Integer> output = input.entrySet().stream().collect(
-//                        HashMap::new,
-//                        (map,e)->{ int i=Integer.parseInt(e.getValue()); if(i%2==0) map.put(e.getKey(), i); },
-//                        Map::putAll);
-//
-//                collect.entrySet().parallelStream()
-//                        .collect(Collectors.groupingBy(Hardware::))
-
-
-//                Map<String, Hardware> collect1 = bcfs.parallelStream().collect(Collectors.toMap(Cabinet::getCode, Cabinet::getHardware));
-//                collect1.entrySet().parallelStream()
-//                        .map(stringListEntry ->)
-
-
-            } catch (IOException | SQLException e) {
-                e.printStackTrace();
-            }
-        });
-
-
-        load3GXMLs.setOnAction(event ->
-
-        {
-            ArrayList<File> xmlFiles = Utils.loadXMLsFromMachine(primaryStage);
-            for (File xmlFile : xmlFiles) {
-                try {
-                    Hardware hardware = parse3GHardwareXML(xmlFile);
-
-                    nodeBHWHashMap.put(hardware.getUniqueName(), hardware);
-
-                } catch (ParserConfigurationException | SAXException | IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            System.out.println("Number of 3G XML files: " + nodeBHWHashMap.size());
-        });
-
-
-        export3GHardware.setOnAction(event ->
-
-        {
-//            try {
-            DatabaseHelper databaseHelper = new DatabaseHelper(databasePath, weekName);
-//                ArrayList<Cabinet> nodeBs = databaseHelper.loadCabinets(3);
-//                addHWtoNodeBs(nodeBs);
-//                Exporter exporter = new Exporter();
-//                exporter.export3GHWfromXML(nodeBs, weekName);
-//            } catch (IOException | SQLException e) {
-//                e.printStackTrace();
-//            }
-        });
-
-        load4GXMLs.setOnAction(event ->
-
-        {
-            ArrayList<File> xmlFiles = Utils.loadXMLsFromMachine(primaryStage);
-
-
-            for (File xmlFile : xmlFiles) {
-                try {
-                    Hardware hardware = parse4GHardwareXML(xmlFile);
-                    lteHwMap.put(hardware.getUniqueName(), hardware);
-
-                } catch (ParserConfigurationException | SAXException | IOException e) {
-                    e.printStackTrace();
-                }
-
-            }
-            System.out.println("Number of 4G XML files: " + lteHwMap.size());
-        });
-
-        export4GHardware.setOnAction(event ->
-
-        {
-//            try {
-//                DatabaseHelper databaseHelper = new DatabaseHelper(databasePath, weekName);
-//                ArrayList<Cabinet> eNodeBs = databaseHelper.loadCabinets(4);
-//                addHWtoCabinets(eNodeBs,lteHwMap);
-//                Exporter exporter = new Exporter();
-//                exporter.export4GHWfromXML(eNodeBs, weekName);
-//            } catch (IOException | SQLException e) {
-//                e.printStackTrace();
-//            }
-        });
 
         pickDateBu.setOnAction(event ->
 
@@ -419,6 +252,7 @@ public class Main extends Application {
             showCalendar();
         });
     }
+
 
     private Map<String, List<Hardware>> getHwMap() throws SQLException {
         DatabaseHelper databaseHelper = new DatabaseHelper(databasePath, weekName);
@@ -431,9 +265,9 @@ public class Main extends Application {
         Map<String, List<Cabinet>> lHardware = databaseHelper.loadCabinets(4).stream().
                 collect(Collectors.groupingBy(Cabinet::getCode));
 
-        List<Hardware> gSites = gHardware.entrySet().stream().map(getHwItemsMapper(2)).collect(Collectors.toList());
-        List<Hardware> uSites = uHardware.entrySet().stream().map(getHwItemsMapper(3)).collect(Collectors.toList());
-        List<Hardware> lSites = lHardware.entrySet().stream().map(getHwItemsMapper(4)).collect(Collectors.toList());
+        List<Hardware> gSites = gHardware.entrySet().stream().map(Hardware.HwItemsAdder(2)).collect(Collectors.toList());
+        List<Hardware> uSites = uHardware.entrySet().stream().map(Hardware.HwItemsAdder(3)).collect(Collectors.toList());
+        List<Hardware> lSites = lHardware.entrySet().stream().map(Hardware.HwItemsAdder(4)).collect(Collectors.toList());
 
         List<Hardware> hardwareList = new ArrayList<>();
         hardwareList.addAll(gSites);
@@ -444,20 +278,6 @@ public class Main extends Application {
                 .collect(Collectors.groupingBy(Hardware::getCode));
     }
 
-
-    private Function<Map.Entry<String, List<Cabinet>>, Hardware> getHwItemsMapper(int tech) {
-        return cabins -> {
-            ArrayList<HwItem> hwItems = new ArrayList<>();
-            cabins.getValue().forEach(cabinet -> {
-                hwItems.addAll(cabinet.getHardware().getHwItems());
-            });
-            Hardware hardware = new Hardware(hwItems);
-            hardware.setCode(cabins.getKey());
-            hardware.setName(cabins.getValue().get(0).getName());
-            hardware.setTech(tech);
-            return hardware;
-        };
-    }
 
     private Function<Map.Entry<String, HashMap<String, List<Cabinet>>>, StatBox> getCellsMapper() {
         return cabin -> {
@@ -504,10 +324,6 @@ public class Main extends Application {
             exporter.exportNodeBList(nodeBList);
             System.out.println("Exporting NodeBs Hardware..." + Utils.getTime());
             exporter.exportNodeBHardWare(nodeBList);
-//            System.out.println("Exporting 3rd Carrier..." + Utils.getTime());
-//            exporter.exportCarrierList(dumpR1Path, dump3R2Path, "3rd Carrier");
-//            System.out.println("Exporting U900..." + Utils.getTime());
-//            exporter.exportCarrierList(dumpR1Path, dump3R2Path, "U900");
             System.out.println("3G Dashboard is ready.." + Utils.getTime());
         } catch (SQLException e) {
             e.printStackTrace();
@@ -538,19 +354,25 @@ public class Main extends Application {
         System.out.println("4G Dashboard is ready.." + Utils.getTime());
     }
 
+    private void exportSBTS() throws IOException {
 
-//    private ArrayList<Cabinet> get(DatabaseConnector databaseConnector1, DatabaseConnector databaseConnector2) {
-//        ArrayList<Cabinet> cabinets = databaseConnector1.get2GBCFs(weekName);
-//        cabinets.addAll(databaseConnector2.get2GBCFs(weekName));
-//        addHWtoCabinets(cabinets);
-//        return cabinets;
-//    }
-//
-//    private void insertAndRemove(ArrayList<Cabinet> cabinets) throws SQLException {
-//        DatabaseHelper databaseHelper = new DatabaseHelper(databasePath, weekName);
-//        if (databaseHelper.isWeekInserted(cabinets.get(0).getTechnology()))
-//            databaseHelper.insertAndRemove(cabinets);
-//    }
+        System.out.println("Exporting SBTS..." + Utils.getTime());
+        DatabaseHelper databaseHelper = new DatabaseHelper(databasePath, weekName);
+        try {
+            ArrayList<Cabinet> sbtsList = databaseHelper.loadCabinets(1);
+            Exporter exporter = new Exporter();
+            System.out.println("Exporting SBTS..." + Utils.getTime());
+            exporter.exportSBTSList(sbtsList);
+            System.out.println("Exporting SBTS hardware..." + Utils.getTime());
+            exporter.exportSBTSHardWare(sbtsList);
+            System.out.println("SRAN Dashboard is ready.." + Utils.getTime());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+        System.out.println("4G Dashboard is ready.." + Utils.getTime());
+    }
 
     private boolean process2GDump() {
         if (dumpR1Path == null || dump2R2Path == null) {
@@ -621,21 +443,30 @@ public class Main extends Application {
             DatabaseConnector databaseConnector1 = new DatabaseConnector(dumpR1Path);
             DatabaseConnector databaseConnector2 = new DatabaseConnector(dump4R2Path);
             ArrayList<Cabinet> eNodeBs = databaseConnector1.getEnodeBs();
+            ArrayList<Cabinet> sBtsList = databaseConnector1.getSBTSs();
             if (eNodeBs.size() == 0) {
                 Utils.showErrorMessage("Empty dump", "Please check 4G RAN1 dump");
                 return false;
             }
             ArrayList<Cabinet> eNodeBs2 = databaseConnector2.getEnodeBs();
+            ArrayList<Cabinet> sBts2 = databaseConnector2.getSBTSs();
             if (eNodeBs2.size() == 0) {
                 Utils.showErrorMessage("Empty dump", "Please check 4G RAN2 dump");
                 return false;
             }
             eNodeBs.addAll(eNodeBs2);
+            sBtsList.addAll(sBts2);
             addHWtoCabinets(eNodeBs, lteHwMap);
+            addHWtoCabinets(sBtsList, sbtsHwMap);
             DatabaseHelper databaseHelper = new DatabaseHelper(databasePath, weekName);
-            if (!databaseHelper.isWeekInserted(4))
+            if (!databaseHelper.isWeekInserted(4)) {
                 databaseHelper.insertCabinets(eNodeBs);
-            System.out.println(eNodeBs.size());
+                System.out.println("Total Number of eNodeBs: " + eNodeBs.size());
+            }
+            if (!databaseHelper.isWeekInserted(1)) {
+                databaseHelper.insertCabinets(sBtsList);
+                System.out.println("Total Number of SBTSs: " + sBtsList.size());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -664,54 +495,6 @@ public class Main extends Application {
         });
         System.out.println(cabinets.size());
     }
-
-    private void addHWtoNodeBs(ArrayList<NodeB> nodeBList) {
-        for (int i = 0; i < nodeBList.size(); i++) {
-            NodeB nodeB = nodeBList.get(i);
-//            String key = nodeB.getRncId() + "_" + nodeB.getWbtsId();
-            String uniqueName = nodeB.getUniqueName();
-            Hardware hardware = nodeBHWHashMap.get(uniqueName);
-            if (hardware != null)
-//                ArrayList<HwItem> hwItems = enodeBHW.getHwItems();
-//                if (hwItems.size() != 0)
-//                    lSite.setLHardware(enodeBHW, weekName);
-                nodeB.setHardware(hardware);
-//                else {
-//                    DatabaseHelper databaseHelper = new DatabaseHelper(databasePath);
-//                    databaseHelper.isDatabaseEmpty(lSite, weekNumber - 1);
-//                }
-            else {
-                DatabaseHelper databaseHelper = new DatabaseHelper(databasePath);
-                nodeB.setHardware(databaseHelper.getMissingHW(uniqueName, ToolCalendar.getPreviousWeek(weekName)));
-            }
-            nodeBList.set(i, nodeB);
-        }
-        System.out.println(nodeBList.size());
-    }
-
-    private void addHWto4GSites(ArrayList<EnodeB> enodeBS) {
-        for (int i = 0; i < enodeBS.size(); i++) {
-            EnodeB enodeB = enodeBS.get(i);
-            String uniqueName = enodeB.getUniqueName();
-            Hardware hardware = lteHwMap.get(uniqueName);
-            if (hardware != null)
-//                ArrayList<HwItem> hwItems = enodeBHW.getHwItems();
-//                if (hwItems.size() != 0)
-//                    enodeB.setLHardware(enodeBHW, weekName);
-                enodeB.setHardware(hardware);
-//                else {
-//                    DatabaseHelper databaseHelper = new DatabaseHelper(databasePath);
-//                    databaseHelper.isDatabaseEmpty(enodeB, weekNumber - 1);
-//                }
-            else {
-                DatabaseHelper databaseHelper = new DatabaseHelper(databasePath);
-                enodeB.setHardware(databaseHelper.getMissingHW(uniqueName, ToolCalendar.getPreviousWeek(weekName)));
-            }
-            enodeBS.set(i, enodeB);
-        }
-        System.out.println(enodeBS.size());
-    }
-
 
     private Hardware parse2GHardwareXML(File xmlFile) throws ParserConfigurationException, SAXException, IOException {
         ArrayList<HwItem> hwItems = new ArrayList<>();
@@ -837,7 +620,6 @@ public class Main extends Application {
     }
 
     private Hardware parse4GHardwareXML(File xmlFile) throws ParserConfigurationException, SAXException, IOException {
-//        ENodeBHW eNodeBHW = new ENodeBHW();
         ArrayList<HwItem> hwItems = new ArrayList<>();
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
@@ -905,13 +687,80 @@ public class Main extends Application {
         return hardware;
     }
 
+    private Hardware parseSBTSHardwareXML(File xmlFile) throws ParserConfigurationException, SAXException, IOException {
+        ArrayList<HwItem> hwItems = new ArrayList<>();
+        String sbtsId = "";
+        boolean sbtsIdExtracted = false;
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setValidating(false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(xmlFile);
+        document.getDocumentElement().normalize();
+
+        NodeList nList = document.getElementsByTagName("raml");
+        Node hwData = nList.item(0);
+
+        NodeList hwList = hwData.getChildNodes();
+
+        Node cmdata = hwList.item(1);
+        NodeList childNodes = cmdata.getChildNodes();
+        int managedObjectsSize = childNodes.getLength();
+        int w = 0;
+
+        for (int i = 0; i < managedObjectsSize; i++) {
+            Node item = childNodes.item(i);
+            if (item.getNodeName().equals("managedObject")) {
+                NamedNodeMap attributes = item.getAttributes();
+                String className = attributes.getNamedItem("class").getNodeValue();
+                if (!sbtsIdExtracted) {
+                    String mrbtsLongName = attributes.getNamedItem("distName").getNodeValue();
+                    int lastIndex = mrbtsLongName.lastIndexOf("MRBTS-");
+                    sbtsId = mrbtsLongName.substring(lastIndex + 6, lastIndex + 11);
+                    sbtsIdExtracted = true;
+                }
+                if (!className.equalsIgnoreCase("SMOD_CORE") && className.contains("MOD")) {
+                    HashMap<String, String> kvalue = new HashMap<>();
+                    w++;
+                    NodeList childNodes1 = item.getChildNodes();
+                    int length = childNodes1.getLength();
+                    for (int j = 0; j < length; j++) {
+                        Node item1 = childNodes1.item(j);
+                        if (item1 != null) {
+                            NamedNodeMap attributes1 = item1.getAttributes();
+                            if (attributes1 != null) {
+                                for (int k = 0; k < attributes1.getLength(); k++) {
+                                    Node item2 = attributes1.item(k);
+                                    kvalue.put(item2.getNodeValue(), item1.getFirstChild().getNodeValue());
+                                }
+                            }
+                        }
+                    }
+
+                    HwItem hwItem = new HwItem();
+                    String userLabel = kvalue.get("inventoryUnitType");
+                    try {
+                        hwItem.setUserLabel(userLabel.substring(userLabel.length() - 4));
+                        hwItem.setSerialNumber(kvalue.get("serialNumber"));
+                        hwItem.setIdentificationCode(kvalue.get("vendorUnitTypeNumber"));
+                        hwItems.add(hwItem);
+                    } catch (Exception e) {
+                        System.out.println("Exception at " + sbtsId + " " + className);
+                    }
+                }
+            }
+        }
+        Hardware hardware = new Hardware(hwItems);
+        hardware.setUniqueName("SBTS_" + sbtsId);
+        hardware.setWeek('W' + weekName);
+        return hardware;
+    }
+
 
     private void clearLists() {
 //        gSitesList = new ArrayList<>();
 //        uSitesList = new ArrayList<>();
         lSitesList = new ArrayList<>();
-        u900List = new ArrayList<>();
-        thirdCarrierList = new ArrayList<>();
     }
 
     private void createDumpsSelector(ArrayList<String> tableNames) {
@@ -1000,60 +849,23 @@ public class Main extends Application {
         exportDashboardBu = (Button) scene.lookup("#exportDashboardBu");
         load2R1DumpBu = (Button) scene.lookup("#load2R1DumpBu");
         load2R2DumpBu = (Button) scene.lookup("#load2R2DumpBu");
-//        load3R1DumpBu = (Button) scene.lookup("#load3R1DumpBu");
         load3R2DumpBu = (Button) scene.lookup("#load3R2DumpBu");
-//        load4R1DumpBu = (Button) scene.lookup("#load4R1DumpBu");
         load4R2DumpBu = (Button) scene.lookup("#load4R2DumpBu");
         loadXMls = (Button) scene.lookup("#loadXMLs");
         saveSummary = (Button) scene.lookup("#saveSummary");
         exportChangesBu = (Button) scene.lookup("#exportChangesBu");
         exportDumpsheetsBu = (Button) scene.lookup("#exportDumpsheetsBu");
-        load2GXMLs = (Button) scene.lookup("#load2GXMLs");
-        load3GXMLs = (Button) scene.lookup("#load3GXMLs");
-        load4GXMLs = (Button) scene.lookup("#load4GXMLs");
-        export2GHardware = (Button) scene.lookup("#export2GHardware");
-        export3GHardware = (Button) scene.lookup("#export3GHardware");
-        export4GHardware = (Button) scene.lookup("#export4GHardware");
+        loadExcelSheet = (Button) scene.lookup("#loadExcelSheet");
         processBu = (Button) scene.lookup("#processBu");
         pickDateBu = (Button) scene.lookup("#pickDateBu");
-        thirdCarrierList = new ArrayList<>();
-        u900List = new ArrayList<>();
         btsHwHashMap = new HashMap<>();
         nodeBHWHashMap = new HashMap<>();
         lteHwMap = new HashMap<>();
+        sbtsHwMap = new HashMap<>();
         hwHashMap = new HashMap<>();
-//        bcfs = new HashMap<>();
-
     }
-
 
     public static void main(String[] args) {
         launch(args);
     }
-
 }
-
-//            Pattern pattern2 = Pattern.compile("\\.");
-//            strings.forEach(x -> {
-//                List<Integer> collect = pattern2.splitAsStream(x).mapToInt(Integer::parseInt).boxed().collect(Collectors.toList());
-//            });
-
-
-//            TextField textField = new TextField();
-//            Button button = new Button();
-//            VBox vBox = new VBox();
-//            vBox.getChildren().add(textField);
-//            vBox.getChildren().add(button);
-//            vBox.setSpacing(10);
-//            Scene scene2 = new Scene(vBox, 300, 200);
-//            Stage stage2 = new Stage();
-//            stage2.setScene(scene2);
-//            stage2.show();
-//            button.setOnAction(event1 -> {
-////                String tableName = textField.getText();
-//                String databaseName = Utils.loadDatabaseFromMachine(stage2);
-//                String tableName = databaseName.replace(".db", "");
-////              String [] parts = dbPath.split("/");
-////              String tableName=
-//            });
-

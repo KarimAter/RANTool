@@ -7,7 +7,7 @@ public class Constants {
 
     public enum gTxMode {ATM, PACKET_ABIS}
 
-    public static final LinkedHashMap<Integer, Double> POWER_MAP = new LinkedHashMap<Integer, Double>() {
+    static final LinkedHashMap<Integer, Double> POWER_MAP = new LinkedHashMap<Integer, Double>() {
         {
             put(0, 0.0);
             put(210, 0.125);

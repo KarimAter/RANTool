@@ -1,5 +1,16 @@
 package sample;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -15,52 +26,93 @@ public class Tester {
     private static String x1, y1;
 
     public static void main(String[] args) {
-        int tech;
-        ArrayList<HwItem> hwItems = new ArrayList<>();
-        Map<String, Long> modules = new LinkedHashMap<>();
-        String uniqueName;
 
-        hwItems.add(new HwItem("FXDA"));
-        hwItems.add(new HwItem("FXDA"));
-        hwItems.add(new HwItem("FXDB"));
-        hwItems.add(new HwItem("FXDB"));
-        hwItems.add(new HwItem("FRGT"));
-        hwItems.add(new HwItem("FRGT"));
-        hwItems.add(new HwItem("FRGT"));
-        hwItems.add(new HwItem("FTIF"));
-        hwItems.add(new HwItem("FSMF"));
-
-
-        String string = "2.1.0.0.0.0.0.0.0.0.0.0.1.0.0.";
-        // Generate count of each module
-        modules = countModules(hwItems);
-        modules.entrySet().forEach(System.out::println);
-//        // generate hardware String
-//        String rfString = Hardware.concatenateHwString(Hardware.filterHw(modules, "FR", "FX"));
-//        String smString = Hardware.concatenateHwString(Hardware.filterHw(modules, "ES", "FS"));
-//        String txString = Hardware.concatenateHwString(Hardware.filterHw(modules, "FT", "FI"));
-//        ;
-//////        // generate Identifier
-//        String rfIdentifier = Hardware.generateIdentifier(modules, Constants.rfMap);
-//        String smIdentifier = Hardware.generateIdentifier(modules, Constants.smMap);
-//        String txIdentifier = Hardware.generateIdentifier(modules, Constants.txMap);
-
-
-//        System.out.println(rfString);
-//        System.out.println(smString);
-//        System.out.println(txString);
-//        System.out.println(rfIdentifier);
-//        System.out.println(smIdentifier);
-//        System.out.println(txIdentifier);
-////
-//        Hardware hardware = new Hardware(rfIdentifier, smIdentifier, txIdentifier);
-//        hardware.getHwItems().forEach(x -> System.out.println(x.getUserLabel()));
-//        System.out.println(hardware.getRfString());
-//        System.out.println(hardware.getSmString());
-//        System.out.println(hardware.getTxString());
-
+        File xmlFile = new File("C:\\Ater\\dumps\\2020\\W36\\hw_xmls\\PLMN-PLMN_MRBTS-20346_SRAN_HW.xml");
+//        File xmlFile = new File("C:\\Ater\\dumps\\2020\\W23\\home\\omc\\CustomizedScripts\\hw-data\\UPLOAD" +
+//                "\\MRBTS20001_lteHw_973657_22836_UL.xml");
+        try {
+            parseSBTSHardwareXML(xmlFile);
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            e.printStackTrace();
+        }
     }
 
+
+    static Hardware parseSBTSHardwareXML(File xmlFile) throws ParserConfigurationException, SAXException, IOException {
+        ArrayList<HwItem> hwItems = new ArrayList<>();
+        String sbtsId = "";
+        boolean sbtsIdextracted = false;
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setValidating(false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(xmlFile);
+        document.getDocumentElement().normalize();
+
+        NodeList nList = document.getElementsByTagName("raml");
+        Node hwData = nList.item(0);
+
+        NodeList hwList = hwData.getChildNodes();
+
+        Node cmdata = hwList.item(1);
+        NodeList childNodes = cmdata.getChildNodes();
+        int managedObjectsSize = childNodes.getLength();
+        int w = 0;
+
+        for (int i = 0; i < managedObjectsSize; i++) {
+            Node item = childNodes.item(i);
+            if (item.getNodeName().equals("managedObject")) {
+                NamedNodeMap attributes = item.getAttributes();
+                String className = attributes.getNamedItem("class").getNodeValue();
+                System.out.println(className);
+                if (!sbtsIdextracted) {
+                    String mrbtsLongName = attributes.getNamedItem("distName").getNodeValue();
+                    int lastIndex = mrbtsLongName.lastIndexOf("MRBTS-");
+                    sbtsId = mrbtsLongName.substring(lastIndex + 6, lastIndex + 11);
+                    sbtsIdextracted = true;
+                    System.out.println(sbtsId);
+                }
+                if (!className.equalsIgnoreCase("SMOD_CORE") && className.contains("MOD")) {
+                    HashMap<String, String> kvalue = new HashMap<>();
+                    w++;
+                    NodeList childNodes1 = item.getChildNodes();
+                    int length = childNodes1.getLength();
+                    for (int j = 0; j < length; j++) {
+                        Node item1 = childNodes1.item(j);
+                        if (item1 != null) {
+                            NamedNodeMap attributes1 = item1.getAttributes();
+                            if (attributes1 != null) {
+                                for (int k = 0; k < attributes1.getLength(); k++) {
+                                    Node item2 = attributes1.item(k);
+                                    kvalue.put(item2.getNodeValue(), item1.getFirstChild().getNodeValue());
+                                    int x = 1;
+                                }
+                            }
+                            int x = 9;
+                        }
+                    }
+
+                    HwItem hwItem = new HwItem();
+//                    eNobeBSerials.add(unitSerial);
+                    String userLabel = kvalue.get("inventoryUnitType");
+                    hwItem.setUserLabel(userLabel.substring(userLabel.length() - 4));
+                    hwItem.setSerialNumber(kvalue.get("serialNumber"));
+                    hwItem.setIdentificationCode(kvalue.get("vendorUnitTypeNumber"));
+//                                eNodeBHW.addHwItem(hwItem);
+                    hwItems.add(hwItem);
+                    int x = 1;
+                }
+
+            }
+
+        }
+
+//        System.out.println(w);
+        Hardware hardware = new Hardware(hwItems);
+        hardware.setUniqueName("4G_" + sbtsId);
+//        hardware.setWeek('W' + weekName);
+        return hardware;
+    }
 
     private static Map<String, Long> countModules(ArrayList<HwItem> hwItems) {
 //        Map<String, Integer> modules = new Lin<>();
@@ -105,7 +157,8 @@ public class Tester {
         return Concatenater.apply(filteredHw);
     }
 
-    private static String generateIdentifier(HashMap<String, Integer> siteHwMap, LinkedHashMap<Integer, String> hwTypeMap) {
+    private static String generateIdentifier
+            (HashMap<String, Integer> siteHwMap, LinkedHashMap<Integer, String> hwTypeMap) {
         BiFunction<HashMap<String, Integer>, LinkedHashMap<Integer, String>, String> identifierGenerator = (siteMap, hwMap) -> {
             StringBuilder identifierString = new StringBuilder();
             hwMap.forEach((moduleCount, moduleName) -> {

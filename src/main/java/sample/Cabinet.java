@@ -11,6 +11,9 @@ public abstract class Cabinet {
     public static Cabinet nodeProvider(int tech) {
         Cabinet cabinet = null;
         switch (tech) {
+            case 1:
+                cabinet = new SBTS();
+                break;
             case 2:
                 cabinet = new BCF();
                 break;
@@ -30,7 +33,7 @@ public abstract class Cabinet {
     // Todo:generate uniqueName here
     protected String uniqueName, code, name, region, key, properties,
             version, cellIdentifier, txMode;
-    protected int onAir, numberOfCells, numberOfOnAirCells;
+    protected int onAir, numberOfCells, numberOfOnAirCells, numberOfE1s, numberOfSectors;
     protected Hardware hardware;
     protected NodeConfiguration nodeConfiguration;
 
@@ -65,6 +68,8 @@ public abstract class Cabinet {
     abstract protected void generateCellIdentifier();
 
     abstract protected void extractCellsFromIdentifier();
+
+    abstract protected void setNumberOfSectors();
 
     protected void findCodeAndRegion() {
         this.code = Utils.extractSiteCode(this.name);
@@ -160,6 +165,14 @@ public abstract class Cabinet {
         this.hardware = hardware;
     }
 
+    public int getNumberOfE1s() {
+        return numberOfE1s;
+    }
+
+    public void setNumberOfE1s(int numberOfE1s) {
+        this.numberOfE1s = numberOfE1s;
+    }
+
     public String getCellIdentifier() {
         return cellIdentifier;
     }
@@ -173,4 +186,7 @@ public abstract class Cabinet {
         return txMode;
     }
 
+    public int getNumberOfSectors() {
+        return numberOfSectors;
+    }
 }

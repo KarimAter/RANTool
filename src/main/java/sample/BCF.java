@@ -11,14 +11,11 @@ public class BCF extends Cabinet {
     private String dConf;
     private int numberOfTRXs;
     private String BSCName;
-    private int numberOfE1s;
     private int numberOfGTRXs;
-    private int numberOfDcsCells;
-    private int numberOfGsmCells;
     private int newCellCount;
     private int newOnAirCount;
-    private int newDCount;
-    private int newGCount;
+    private int numberOfDCSCells;
+    private int numberOfGSMCells;
 
     @Override
     public void finishProperties() {
@@ -69,30 +66,8 @@ public class BCF extends Cabinet {
 
 
     private void setNumberOfGsmCells() {
-//        this.numberOfGsmCells = numberOfCells - numberOfDcsCells;
-        this.newGCount = newCellCount - newDCount;
+        this.numberOfGSMCells = newCellCount - numberOfDCSCells;
     }
-
-//    @Override
-//    protected void generateCellIdentifier() {
-//        this.cellIdentifier = String.valueOf(this.numberOfCells) +
-//                "." +
-//                this.numberOfOnAirCells +
-//                "." +
-//                this.numberOfGsmCells +
-//                "." +
-//                this.numberOfDcsCells +
-//                "." +
-//                this.onAir
-//                +
-//                "." +
-//                this.newCellCount +
-//                "." +
-//                this.newOnAirCount+
-//                "." +
-//                this.newDCount;
-//    }
-
 
     @Override
     protected void generateCellIdentifier() {
@@ -100,9 +75,9 @@ public class BCF extends Cabinet {
                 "." +
                 this.newOnAirCount +
                 "." +
-                this.newGCount +
+                this.numberOfGSMCells +
                 "." +
-                this.newDCount +
+                this.numberOfDCSCells +
                 "." +
                 this.onAir;
     }
@@ -119,7 +94,7 @@ public class BCF extends Cabinet {
                         "_" +
                         this.txMode +
                         "_" +
-                        this.numberOfE1s +
+                        numberOfE1s +
                         "_" +
                         this.numberOfGTRXs +
                         "_" +
@@ -148,7 +123,7 @@ public class BCF extends Cabinet {
         this.setNumberOfTRXs(Integer.parseInt(parts[1]));
         this.setCellIdentifier(parts[2]);
         this.setTxMode(parts[3]);
-        this.setNumberOfE1s(Integer.parseInt(parts[4]));
+        setNumberOfE1s(Integer.parseInt(parts[4]));
         this.setNumberOfGTRXs(Integer.parseInt(parts[5]));
         this.setLac(parts[6]);
         this.setRac(parts[7]);
@@ -181,9 +156,15 @@ public class BCF extends Cabinet {
         String[] parts = cellIdentifier.split("\\.");
         this.newCellCount = Integer.valueOf(parts[0]);
         this.newOnAirCount = Integer.valueOf(parts[1]);
-        this.newGCount = Integer.valueOf(parts[2]);
-        this.newDCount = Integer.valueOf(parts[3]);
+        this.numberOfGSMCells = Integer.valueOf(parts[2]);
+        this.numberOfDCSCells = Integer.valueOf(parts[3]);
         this.onAir = Integer.valueOf(parts[4]);
+
+    }
+
+    @Override
+    protected void setNumberOfSectors() {
+        numberOfSectors = numberOfGSMCells == 0 ? numberOfDCSCells : numberOfGSMCells;
     }
 
 
@@ -226,15 +207,6 @@ public class BCF extends Cabinet {
 
     }
 
-
-    public void setNumberOfE1s(int numberOfE1s) {
-        this.numberOfE1s = numberOfE1s;
-    }
-
-    int getNumberOfE1s() {
-        return numberOfE1s;
-    }
-
     public void setNumberOfGTRXs(int numberOfGTRXs) {
         this.numberOfGTRXs = numberOfGTRXs;
     }
@@ -243,13 +215,6 @@ public class BCF extends Cabinet {
         return numberOfGTRXs;
     }
 
-    public void setNumberOfDcsCells(int numberOfDcsCells) {
-        this.numberOfDcsCells = numberOfDcsCells;
-    }
-
-    int getNumberOfDcsCells() {
-        return numberOfDcsCells;
-    }
 
     public void setLac(String lac) {
         this.lac = lac;
@@ -326,10 +291,6 @@ public class BCF extends Cabinet {
         return BSCName;
     }
 
-    public int getNumberOfGsmCells() {
-        return numberOfGsmCells;
-    }
-
     public int getNewCellCount() {
         return newCellCount;
     }
@@ -346,16 +307,16 @@ public class BCF extends Cabinet {
         this.newOnAirCount = newOnAirCount;
     }
 
-    public int getNewDCount() {
-        return newDCount;
+    public int getNumberOfDCSCells() {
+        return numberOfDCSCells;
     }
 
-    public void setNewDCount(int newDCount) {
-        this.newDCount = newDCount;
+    public void setNumberOfDCSCells(int numberOfDCSCells) {
+        this.numberOfDCSCells = numberOfDCSCells;
     }
 
-    public int getNewGCount() {
-        return newGCount;
+    public int getNumberOfGSMCells() {
+        return numberOfGSMCells;
     }
 
 }

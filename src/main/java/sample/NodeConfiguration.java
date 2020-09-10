@@ -89,7 +89,8 @@ public class NodeConfiguration {
         // getting all sectors having the link Id
 
         linkNumbers.forEach(linkId -> {
-            linksMap.put(linkId, sectorsConfiguration.stream().filter(SectorConfiguration.isPresentOnLink(linkId))
+            linksMap.put(linkId, sectorsConfiguration.stream()
+                    .filter(SectorConfiguration.isPresentOnLink(linkId))
                     .collect(Collectors.toList()));
         });
 

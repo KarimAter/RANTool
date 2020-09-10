@@ -4,12 +4,6 @@
 <?import javafx.scene.layout.*?>
 <GridPane alignment="center" hgap="10" prefHeight="449.0" prefWidth="428.0" vgap="10" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
     <children>
-        <!--<Button fx:id="sitesBu" mnemonicParsing="false" text="Sites" textAlignment="CENTER" GridPane.rowIndex="2" />-->
-        <!--<Button fx:id="nodesBu" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" text="NodeBs"-->
-        <!--GridPane.rowIndex="4" />-->
-        <!--<Button fx:id="thirdCarrierBu" mnemonicParsing="false" text="ThirdCarrier" GridPane.rowIndex="5" />-->
-        <!--<Button fx:id="u900Bu" contentDisplay="CENTER" mnemonicParsing="false" text="U900" textAlignment="CENTER"-->
-        <!--GridPane.rowIndex="6" />-->
 
         <Button fx:id="load2R1DumpBu" mnemonicParsing="false" text="Load 2G RAN1 Dump" GridPane.rowIndex="0" />
         <Button fx:id="load2R2DumpBu" mnemonicParsing="false" text="Load 2G RAN2 Dump" GridPane.rowIndex="1" />
@@ -26,18 +20,10 @@
         <Button fx:id="exportChangesBu" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0"
                 text="Export Changes" GridPane.rowIndex="11"/>
 
-        <Button fx:id="load2GXMLs" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="load 2G XMLs"
+        <Button fx:id="loadExcelSheet" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0"
+                text="load Excel Sheet"
                 GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-        <Button fx:id="export2GHardware" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0"
-                text="Export 2G Hardware" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
-        <Button fx:id="load3GXMLs" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="load 3G XMLs"
-                GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-        <Button fx:id="export3GHardware" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0"
-                text="Export 3G Hardware" GridPane.columnIndex="2" GridPane.rowIndex="3"/>
-        <Button fx:id="load4GXMLs" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="load 4G XMLs"
-                GridPane.columnIndex="1" GridPane.rowIndex="5"/>
-        <Button fx:id="export4GHardware" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0"
-                text="Export 4G Hardware" GridPane.columnIndex="2" GridPane.rowIndex="5"/>
+
         <Button fx:id="processBu" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="Process"
                 GridPane.rowIndex="6"/>
         <Button fx:id="pickDateBu" mnemonicParsing="false" prefHeight="25.0" prefWidth="132.0" text="Pick Date"

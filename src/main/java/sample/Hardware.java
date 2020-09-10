@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -133,6 +134,23 @@ public class Hardware {
                 .map(stringLongEntry -> stringLongEntry.getValue() + stringLongEntry.getKey())
                 .collect(joining(" "));
     }
+
+
+    public static Function<Map.Entry<String, List<Cabinet>>, Hardware> HwItemsAdder(int tech) {
+        return cabins -> {
+            ArrayList<HwItem> hwItems = new ArrayList<>();
+            cabins.getValue().forEach(cabinet -> {
+                hwItems.addAll(cabinet.getHardware().getHwItems());
+            });
+            Hardware hardware = new Hardware(hwItems);
+            hardware.setCode(cabins.getKey());
+            hardware.setName(cabins.getValue().get(0).getName());
+            hardware.setTech(tech);
+            return hardware;
+        };
+    }
+
+
 
 
     void addHwItem(HwItem hwItem) {
