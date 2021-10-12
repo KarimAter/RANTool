@@ -4,6 +4,7 @@ public class BCF extends Cabinet {
     private static final int TECHNOLOGY = 2;
     private String bscId;
     private String bcfId;
+    private String sbtsId;
     private String ctrlIp, manIp, usedETP;
     private String lac;
     private String rac;
@@ -112,7 +113,10 @@ public class BCF extends Cabinet {
                         "_" +
                         this.gConf +
                         "_" +
-                        this.dConf;
+                        this.dConf
+                        +
+                        "_" +
+                        this.sbtsId;
     }
 
 
@@ -133,6 +137,8 @@ public class BCF extends Cabinet {
         this.usedETP = parts[11];
         this.gConf = parts[12];
         this.dConf = parts[13];
+        this.sbtsId = parts[14];
+        
     }
 
     @Override
@@ -317,6 +323,15 @@ public class BCF extends Cabinet {
 
     public int getNumberOfGSMCells() {
         return numberOfGSMCells;
+    }
+
+
+    public String getSbtsId() {
+        return sbtsId;
+    }
+
+    public void setSbtsId(String sbtsId) {
+        this.sbtsId = sbtsId;
     }
 
 }

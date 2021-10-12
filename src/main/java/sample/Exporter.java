@@ -20,13 +20,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+
 class Exporter {
 
     static String[] carrierHeader = {"Code", "Name", "Rnc"};
     static String orginalFileName = "C:/Ater/Development/RAN Tool/Dashboard.xlsx";
     static String updatedFileName = "";
     static String updatedSiteMapName = "";
+    static String updatedTxSheetName = "";
     static String originalSiteMapName = "C:/Ater/Development/RAN Tool/SitesMap.xlsx";
+    static String originalTxSheetName = "C:/Ater/Development/RAN Tool/TxData.xlsx";
     private static String TRX1FileName, gCells1FileName, uCells1FileName, uCells2FileName, lCells1FileName, lCells2FileName;
     private static String TRX2FileName, gCells2FileName;
     static String changesFileName = "C:\\Ater\\NetworkChanges.xlsx";
@@ -43,7 +46,9 @@ class Exporter {
         wb = prepareWorkbooks(orginalFileName);
         updatedFileName = prepareDashboardName(weekName);
         updatedSiteMapName = prepareSiteMapName(weekName);
+        updatedTxSheetName = prepareTxSheetName(weekName);
     }
+
 
     Exporter() {
         wb = prepareWorkbooks(updatedFileName);
@@ -51,7 +56,7 @@ class Exporter {
 
     void exportBcfList(ArrayList<Cabinet> bcfList) throws IOException {
         ZipSecureFile.setMinInflateRatio(0);
-        int numOfColumns = 26;
+        int numOfColumns = 27;
         XSSFSheet sheet = wb.getSheet("BCFs");
         final int[] r = {1};
 
@@ -72,8 +77,16 @@ class Exporter {
             cells.get(4).setCellValue(Integer.valueOf(bcf.getBscId()));
             cells.get(5).setCellValue(Integer.valueOf(bcf.getBcfId()));
             cells.get(6).setCellValue(bcf.getKey());
-            cells.get(7).setCellValue(bcf.getHardware().getRfString());
-            cells.get(8).setCellValue(bcf.getHardware().getSmString());
+            try {
+                cells.get(26).setCellValue(Integer.valueOf(bcf.getSbtsId()));
+                cells.get(7).setCellValue("");
+                cells.get(8).setCellValue("");
+            } catch (NumberFormatException e) {
+                cells.get(26).setCellValue(bcf.getSbtsId());
+                cells.get(7).setCellValue(bcf.getHardware().getRfString());
+                cells.get(8).setCellValue(bcf.getHardware().getSmString());
+            }
+
             cells.get(9).setCellValue(value.getOnAir() == 1);
             cells.get(10).setCellValue(bcf.getNumberOfTRXs());
             cells.get(11).setCellValue(bcf.getNewCellCount());
@@ -103,6 +116,7 @@ class Exporter {
             } catch (Exception e) {
                 cells.get(25).setCellValue(bcf.getdConf());
             }
+
             r[0]++;
         });
 
@@ -133,24 +147,27 @@ class Exporter {
             cells.get(3).setCellValue(Integer.valueOf(bcf.getBscId()));
             cells.get(4).setCellValue(Integer.valueOf(bcf.getBcfId()));
             cells.get(5).setCellValue(bcf.getKey());
-            Hardware gHardware = bcf.getHardware();
-            cells.get(6).setCellValue(gHardware.getRfString());
-            cells.get(7).setCellValue(gHardware.getSmString());
-            cells.get(8).setCellValue(gHardware.getTxString());
-            cells.get(9).setCellValue(gHardware.getWeek());
 
-            cells.get(10).setCellValue(gHardware.getModuleValue("ESMB"));
-            cells.get(11).setCellValue(gHardware.getModuleValue("ESMC"));
-            cells.get(12).setCellValue(gHardware.getModuleValue("FIQA"));
-            cells.get(13).setCellValue(gHardware.getModuleValue("FIQB"));
-            cells.get(14).setCellValue(gHardware.getModuleValue("FSMF"));
-            cells.get(15).setCellValue(gHardware.getModuleValue("FTIF"));
-            cells.get(16).setCellValue(gHardware.getModuleValue("FXDA"));
-            cells.get(17).setCellValue(gHardware.getModuleValue("FXDB"));
-            cells.get(18).setCellValue(gHardware.getModuleValue("FXEA"));
-            cells.get(19).setCellValue(gHardware.getModuleValue("FXEB"));
-            cells.get(20).setCellValue(gHardware.getModuleValue("FXX"));
-            cells.get(21).setCellValue(gHardware.getModuleValue("FXED"));
+            if (!bcf.getSbtsId().equals("null")) {
+                Hardware gHardware = bcf.getHardware();
+                cells.get(6).setCellValue(gHardware.getRfString());
+                cells.get(7).setCellValue(gHardware.getSmString());
+                cells.get(8).setCellValue(gHardware.getTxString());
+                cells.get(9).setCellValue(gHardware.getWeek());
+                cells.get(10).setCellValue(gHardware.getModuleValue("ESMB"));
+                cells.get(11).setCellValue(gHardware.getModuleValue("ESMC"));
+                cells.get(12).setCellValue(gHardware.getModuleValue("FIQA"));
+                cells.get(13).setCellValue(gHardware.getModuleValue("FIQB"));
+                cells.get(14).setCellValue(gHardware.getModuleValue("FSMF"));
+                cells.get(15).setCellValue(gHardware.getModuleValue("FTIF"));
+                cells.get(16).setCellValue(gHardware.getModuleValue("FXDA"));
+                cells.get(17).setCellValue(gHardware.getModuleValue("FXDB"));
+                cells.get(18).setCellValue(gHardware.getModuleValue("FXEA"));
+                cells.get(19).setCellValue(gHardware.getModuleValue("FXEB"));
+                cells.get(20).setCellValue(gHardware.getModuleValue("FXX")
+                        + gHardware.getModuleValue("FXEF"));
+                cells.get(21).setCellValue(gHardware.getModuleValue("FXED"));
+            }
             r[0]++;
         });
 
@@ -163,7 +180,7 @@ class Exporter {
 
 
     void exportNodeBList(ArrayList<Cabinet> nodeBList) throws IOException {
-        int numOfColumns = 42;
+        int numOfColumns = 44;
         XSSFSheet sheet = wb.getSheet("NodeBs");
         final int[] r = {1};
         nodeBList.forEach(cabinet -> {
@@ -181,8 +198,15 @@ class Exporter {
             cells.get(3).setCellValue(Integer.valueOf(nodeB.getRncId()));
             cells.get(4).setCellValue(Integer.valueOf(nodeB.getWbtsId()));
             cells.get(5).setCellValue(nodeB.getKey());
-            cells.get(6).setCellValue(nodeB.getHardware().getRfString());
-            cells.get(7).setCellValue(nodeB.getHardware().getSmString());
+            try {
+                cells.get(40).setCellValue(Integer.valueOf(nodeB.getSbtsId()));
+                cells.get(6).setCellValue("");
+                cells.get(7).setCellValue("");
+            } catch (NumberFormatException e) {
+                cells.get(40).setCellValue(nodeB.getSbtsId());
+                cells.get(6).setCellValue(nodeB.getHardware().getRfString());
+                cells.get(7).setCellValue(nodeB.getHardware().getSmString());
+            }
             cells.get(8).setCellValue(nodeB.getNumberOfCells());
             cells.get(9).setCellValue(nodeB.getNumberOfOnAirCells());
             Map<String, Integer> cellsCountMap = nodeB.getCellsCountMap();
@@ -191,11 +215,6 @@ class Exporter {
             cells.get(21).setCellValue(nodeB.getTxMode());
             Map<String, Integer> r99Map = nodeB.getR99CountMap();
             IntStream.range(22, 27).forEach(i -> cells.get(i).setCellValue(r99Map.get(NodeB.r99ParametersNames[i - 22])));
-//            cells.get(22).setCellValue(nodeB.getNumberOfHSDPASet1());
-//            cells.get(23).setCellValue(nodeB.getNumberOfHSDPASet2());
-//            cells.get(24).setCellValue(nodeB.getNumberOfHSDPASet3());
-//            cells.get(25).setCellValue(nodeB.getNumberOfHSUPASet1());
-//            cells.get(26).setCellValue(nodeB.getNumberOfChannelElements());
             cells.get(27).setCellValue(nodeB.getNumberOfE1s());
             cells.get(28).setCellValue(nodeB.getNumberOfSectors());
             cells.get(29).setCellValue(nodeB.getNumberOfCarriers());
@@ -221,14 +240,21 @@ class Exporter {
             }
             cells.get(38).setCellValue(nodeB.getNumberOfLCGs());
             cells.get(39).setCellValue(nodeB.getNumberOfChains());
+
             NodeConfiguration nodeConfiguration = nodeB.getNodeConfiguration();
             if (nodeConfiguration != null) {
-                cells.get(40).setCellValue(nodeConfiguration.getSectorsMapping());
-                cells.get(41).setCellValue(nodeConfiguration.getLinksMappingString());
+                cells.get(42).setCellValue(nodeConfiguration.getSectorsMapping());
+                cells.get(43).setCellValue(nodeConfiguration.getLinksMappingString());
             }
+
+            try {
+                cells.get(41).setCellValue(Integer.valueOf(nodeB.getSctpPort()));
+            } catch (NumberFormatException e) {
+                cells.get(41).setCellValue(nodeB.getSctpPort());
+            }
+
             r[0]++;
         });
-
 
         FileOutputStream fileOut = new FileOutputStream(updatedFileName);
         //write this workbook to an Outputstream.
@@ -238,6 +264,7 @@ class Exporter {
         System.out.println("NodeB list done..");
 
     }
+
 
     void exportNodeBHardWare(ArrayList<Cabinet> nodeBList) throws IOException {
         int numOfColumns = 30;
@@ -261,30 +288,34 @@ class Exporter {
             cells.get(3).setCellValue(Integer.valueOf(nodeB.getRncId()));
             cells.get(4).setCellValue(Integer.valueOf(nodeB.getWbtsId()));
             cells.get(5).setCellValue(nodeB.getKey());
-            cells.get(6).setCellValue(nHardware.getWeek());
-            cells.get(7).setCellValue(nHardware.getRfString());
-            cells.get(8).setCellValue(nHardware.getSmString());
-            cells.get(9).setCellValue(nHardware.getTxString());
-            cells.get(10).setCellValue(nHardware.getModuleValue("FBBA"));
-            cells.get(11).setCellValue(nHardware.getModuleValue("FRGC"));
-            cells.get(12).setCellValue(nHardware.getModuleValue("FRGD"));
-            cells.get(13).setCellValue(nHardware.getModuleValue("FRGF"));
-            cells.get(14).setCellValue(nHardware.getModuleValue("FRGL"));
-            cells.get(15).setCellValue(nHardware.getModuleValue("FRGM"));
-            cells.get(16).setCellValue(nHardware.getModuleValue("FRGP"));
-            cells.get(17).setCellValue(nHardware.getModuleValue("FRGT"));
-            cells.get(18).setCellValue(nHardware.getModuleValue("FRGU"));
-            cells.get(19).setCellValue(nHardware.getModuleValue("FRGX"));
-            cells.get(20).setCellValue(nHardware.getModuleValue("FSMB"));
-            cells.get(21).setCellValue(nHardware.getModuleValue("FSMD"));
-            cells.get(22).setCellValue(nHardware.getModuleValue("FSME"));
-            cells.get(23).setCellValue(nHardware.getModuleValue("FSMF"));
-            cells.get(24).setCellValue(nHardware.getModuleValue("FTIA"));
-            cells.get(25).setCellValue(nHardware.getModuleValue("FTIB"));
-            cells.get(26).setCellValue(nHardware.getModuleValue("FTIF"));
-            cells.get(27).setCellValue(nHardware.getModuleValue("FTPB"));
-            cells.get(28).setCellValue(nHardware.getModuleValue("FXDA"));
-            cells.get(29).setCellValue(nHardware.getModuleValue("FXDB"));
+            if (!nodeB.getSbtsId().equals("null")) {
+                cells.get(6).setCellValue(nHardware.getWeek());
+                cells.get(7).setCellValue(nHardware.getRfString());
+                cells.get(8).setCellValue(nHardware.getSmString());
+                cells.get(9).setCellValue(nHardware.getTxString());
+                cells.get(10).setCellValue(nHardware.getModuleValue("FBBA"));
+                cells.get(11).setCellValue(nHardware.getModuleValue("FRGC"));
+                cells.get(12).setCellValue(nHardware.getModuleValue("FRGD"));
+                cells.get(13).setCellValue(nHardware.getModuleValue("FRGF"));
+                cells.get(14).setCellValue(nHardware.getModuleValue("FRGL"));
+                cells.get(15).setCellValue(nHardware.getModuleValue("FRGM"));
+                cells.get(16).setCellValue(nHardware.getModuleValue("FRGP"));
+                cells.get(17).setCellValue(nHardware.getModuleValue("FRGT"));
+                cells.get(18).setCellValue(nHardware.getModuleValue("FRGU"));
+                cells.get(19).setCellValue(nHardware.getModuleValue("FRGX"));
+                cells.get(20).setCellValue(nHardware.getModuleValue("FSMB"));
+                cells.get(21).setCellValue(nHardware.getModuleValue("FSMD"));
+                cells.get(22).setCellValue(nHardware.getModuleValue("FSME"));
+                cells.get(23).setCellValue(nHardware.getModuleValue("FSMF"));
+                cells.get(24).setCellValue(nHardware.getModuleValue("FTIA"));
+                cells.get(25).setCellValue(nHardware.getModuleValue("FTIB"));
+                cells.get(26).setCellValue(nHardware.getModuleValue("FTIF"));
+                cells.get(27).setCellValue(nHardware.getModuleValue("FTPB"));
+                cells.get(28).setCellValue(nHardware.getModuleValue("FXDA"));
+                cells.get(29).setCellValue(nHardware.getModuleValue("FXDB"));
+            }
+
+
             r[0]++;
         });
         FileOutputStream fileOut = new FileOutputStream(updatedFileName);
@@ -296,7 +327,7 @@ class Exporter {
 
     void exportEnodeBList(ArrayList<Cabinet> eNodeBList) throws IOException {
 
-        int numOfColumns = 17;
+        int numOfColumns = 20;
         XSSFSheet sheet = wb.getSheet("LTE");
         final int[] r = {1};
         eNodeBList.forEach(cabinet -> {
@@ -312,18 +343,23 @@ class Exporter {
             cells.get(1).setCellValue(enodeB.getName());
             cells.get(2).setCellValue(Integer.valueOf(enodeB.getNodeId()));
             cells.get(3).setCellValue(enodeB.getRegion());
-            cells.get(4).setCellValue(enodeB.getHardware().getRfString());
-            cells.get(5).setCellValue(enodeB.getHardware().getSmString());
+            boolean sRAN = enodeB.isSran();
+            if (sRAN) {
+                cells.get(4).setCellValue("");
+                cells.get(5).setCellValue("");
+            } else {
+                cells.get(4).setCellValue(enodeB.getHardware().getRfString());
+                cells.get(5).setCellValue(enodeB.getHardware().getSmString());
+            }
+            cells.get(13).setCellValue(sRAN);
             cells.get(6).setCellValue(enodeB.getNumberOfCells());
             cells.get(7).setCellValue(enodeB.getNumberOfOnAirCells());
             cells.get(8).setCellValue(enodeB.getVersion());
             cells.get(9).setCellValue(Utils.convertLTEBW(enodeB.getBw()));
             cells.get(10).setCellValue(Utils.convertLTEMIMO(enodeB.getMimo()));
             cells.get(12).setCellValue(enodeB.isCarrierAggregation());
-            cells.get(13).setCellValue(enodeB.getManIp());
-            cells.get(14).setCellValue(enodeB.getS1Ip());
-            cells.get(15).setCellValue(enodeB.getSecIp());
-            cells.get(16).setCellValue(enodeB.getSecGw());
+
+
             try {
                 cells.get(11).setCellValue(Integer.valueOf(enodeB.getTac()));
             } catch (NumberFormatException e) {
@@ -342,7 +378,7 @@ class Exporter {
     }
 
     void exportSBTSList(ArrayList<Cabinet> sBtsList) throws IOException {
-        int numOfColumns = 17;
+        int numOfColumns = 20;
         XSSFSheet sheet = wb.getSheet("SBTS");
         final int[] r = {1};
         sBtsList.forEach(cabinet -> {
@@ -361,9 +397,38 @@ class Exporter {
             cells.get(3).setCellValue(sbts.getRegion());
             cells.get(4).setCellValue(sbts.getHardware().getRfString());
             cells.get(5).setCellValue(sbts.getHardware().getSmString());
-//            cells.get(6).setCellValue(enodeB.getNumberOfCells());
-//            cells.get(7).setCellValue(enodeB.getNumberOfOnAirCells());
+            cells.get(6).setCellValue(sbts.getNumberOfLTECells());
+            cells.get(7).setCellValue(sbts.getNumberOfOnAirLTECells());
             cells.get(8).setCellValue(sbts.getVersion());
+            cells.get(9).setCellValue(sbts.getBscName());
+            try {
+                cells.get(10).setCellValue(Integer.valueOf(sbts.getBscId()));
+                cells.get(11).setCellValue(Integer.valueOf(sbts.getBcfId()));
+            } catch (NumberFormatException e) {
+                cells.get(10).setCellValue("");
+            }
+
+            try {
+                cells.get(12).setCellValue(Integer.valueOf(sbts.getRncId()));
+                cells.get(13).setCellValue(Integer.valueOf(sbts.getWbtsId()));
+
+            } catch (Exception e) {
+                System.out.println("No 3G for SBTS " + sbts.getNodeId());
+            }
+            cells.get(14).setCellValue(sbts.getNumberOfR99());
+            cells.get(15).setCellValue(sbts.getNumberOfCCCHs());
+            cells.get(18).setCellValue(sbts.getNumberOfLCGs());
+
+            try {
+                cells.get(16).setCellValue(Double.valueOf(sbts.getuPower()));
+            } catch (NumberFormatException e) {
+                cells.get(16).setCellValue(sbts.getuPower());
+            }
+            try {
+                cells.get(17).setCellValue(Double.valueOf(sbts.getU9Power()));
+            } catch (NumberFormatException e) {
+                cells.get(17).setCellValue(sbts.getU9Power());
+            }
 //            cells.get(9).setCellValue(Utils.convertLTEBW(enodeB.getBw()));
 //            cells.get(10).setCellValue(Utils.convertLTEMIMO(enodeB.getMimo()));
 //            cells.get(12).setCellValue(enodeB.isCarrierAggregation());
@@ -389,9 +454,6 @@ class Exporter {
     }
 
 
-
-
-
     void exportEnodeBHardWare(ArrayList<Cabinet> eNodeBList) throws IOException {
         int numOfColumns = 16;
         XSSFSheet sheet = wb.getSheet("4G HW");
@@ -405,25 +467,26 @@ class Exporter {
                 XSSFCell cell = row.createCell(i);
                 cells.add(i, cell);
             }
-
             EnodeB enodeB = (EnodeB) cabinet;
             Hardware lHardware = enodeB.getHardware();
             cells.get(0).setCellValue(enodeB.getCode());
             cells.get(1).setCellValue(enodeB.getName());
             cells.get(2).setCellValue(Integer.valueOf(enodeB.getMrbtsId()));
             cells.get(3).setCellValue(enodeB.getRegion());
-            cells.get(4).setCellValue(lHardware.getRfString());
-            cells.get(5).setCellValue(lHardware.getSmString());
-            cells.get(6).setCellValue(lHardware.getTxString());
-            cells.get(7).setCellValue(lHardware.getWeek());
-            cells.get(8).setCellValue(lHardware.getModuleValue("FBBA"));
-            cells.get(9).setCellValue(lHardware.getModuleValue("FBBC"));
-            cells.get(10).setCellValue(lHardware.getModuleValue("FRGT"));
-            cells.get(11).setCellValue(lHardware.getModuleValue("FRGU"));
-            cells.get(12).setCellValue(lHardware.getModuleValue("FSMF"));
-            cells.get(13).setCellValue(lHardware.getModuleValue("FTIF"));
-            cells.get(14).setCellValue(lHardware.getModuleValue("FXEB"));
-            cells.get(15).setCellValue(lHardware.getModuleValue("FXED"));
+            if (!enodeB.isSran()) {
+                cells.get(4).setCellValue(lHardware.getRfString());
+                cells.get(5).setCellValue(lHardware.getSmString());
+                cells.get(6).setCellValue(lHardware.getTxString());
+                cells.get(7).setCellValue(lHardware.getWeek());
+                cells.get(8).setCellValue(lHardware.getModuleValue("FBBA"));
+                cells.get(9).setCellValue(lHardware.getModuleValue("FBBC"));
+                cells.get(10).setCellValue(lHardware.getModuleValue("FRGT"));
+                cells.get(11).setCellValue(lHardware.getModuleValue("FRGU"));
+                cells.get(12).setCellValue(lHardware.getModuleValue("FSMF"));
+                cells.get(13).setCellValue(lHardware.getModuleValue("FTIF"));
+                cells.get(14).setCellValue(lHardware.getModuleValue("FXEB"));
+                cells.get(15).setCellValue(lHardware.getModuleValue("FXED"));
+            }
             r[0]++;
         });
         FileOutputStream fileOut = new FileOutputStream(updatedFileName);
@@ -436,7 +499,7 @@ class Exporter {
 
     public void exportSBTSHardWare(ArrayList<Cabinet> sbtsList) throws IOException {
 
-        int numOfColumns = 16;
+        int numOfColumns = 21;
         XSSFSheet sheet = wb.getSheet("SBTS HW");
         final int[] r = {1};
 
@@ -462,11 +525,16 @@ class Exporter {
             cells.get(8).setCellValue(lHardware.getModuleValue("FBBA"));
             cells.get(9).setCellValue(lHardware.getModuleValue("FBBC"));
             cells.get(10).setCellValue(lHardware.getModuleValue("FRGT"));
-            cells.get(11).setCellValue(lHardware.getModuleValue("FRGU"));
-            cells.get(12).setCellValue(lHardware.getModuleValue("FSMF"));
-            cells.get(13).setCellValue(lHardware.getModuleValue("FTIF"));
-            cells.get(14).setCellValue(lHardware.getModuleValue("FXEB"));
-            cells.get(15).setCellValue(lHardware.getModuleValue("FXED"));
+            cells.get(11).setCellValue(lHardware.getModuleValue("FRGX"));
+            cells.get(12).setCellValue(lHardware.getModuleValue("FRGP"));
+            cells.get(13).setCellValue(lHardware.getModuleValue("FRGU"));
+            cells.get(14).setCellValue(lHardware.getModuleValue("FSMF"));
+            cells.get(15).setCellValue(lHardware.getModuleValue("FTIF"));
+            cells.get(16).setCellValue(lHardware.getModuleValue("FXX"));
+            cells.get(17).setCellValue(lHardware.getModuleValue("FXEB"));
+            cells.get(18).setCellValue(lHardware.getModuleValue("FXED"));
+            cells.get(19).setCellValue(lHardware.getModuleValue("FXDB"));
+            cells.get(20).setCellValue(lHardware.getModuleValue("FXDA"));
             // TODO: Resume
             r[0]++;
         });
@@ -732,6 +800,207 @@ class Exporter {
         }
     }
 
+    void exportNodeBTx(List<Cabinet> uCabinets) throws IOException {
+        System.out.println("Exporting 3G TX.. " + Utils.getTime());
+        XSSFSheet sheet2;
+        XSSFWorkbook txWb;
+        int numOfColumns = 13;
+        try {
+            txWb = lambda.prepareWB(updatedTxSheetName, originalTxSheetName);
+            sheet2 = txWb.getSheet("3G TX");
+//            int numOfColumns = 4;
+            final int[] r = {1};
+            uCabinets.forEach(cabinet -> {
+                ArrayList<XSSFCell> cells = new ArrayList<>();
+                XSSFRow row = sheet2.createRow(r[0]);
+                //iterating c number of columns
+                for (int i = 0; i < numOfColumns; i++) {
+                    XSSFCell cell = row.createCell(i);
+                    cells.add(i, cell);
+                }
+                NodeB nodeB = (NodeB) cabinet;
+                cells.get(0).setCellValue(nodeB.getCode());
+                cells.get(1).setCellValue(nodeB.getName());
+                cells.get(2).setCellValue(nodeB.getRegion());
+                cells.get(3).setCellValue(Integer.valueOf(nodeB.getRncId()));
+                cells.get(4).setCellValue(Integer.valueOf(nodeB.getWbtsId()));
+                cells.get(5).setCellValue(nodeB.getKey());
+                cells.get(6).setCellValue(nodeB.getNodeBIP());
+                String dataIp = nodeB.getDataIp();
+                String dataVlan = nodeB.getDataVlan();
+                String sigVoiceIp = nodeB.getSigVoiceIp();
+                String sigVoiceVlan = nodeB.getSigVoiceVlan();
+                String manIp = nodeB.getManIp();
+                String manVlan = nodeB.getManVlan();
+
+                cells.get(7).setCellValue(dataIp);
+                try {
+                    cells.get(8).setCellValue(Integer.valueOf(dataVlan));
+                } catch (NumberFormatException e) {
+                    cells.get(8).setCellValue("");
+                }
+                cells.get(9).setCellValue(sigVoiceIp);
+                try {
+                    cells.get(10).setCellValue(Integer.valueOf(sigVoiceVlan));
+                } catch (NumberFormatException e) {
+                    cells.get(10).setCellValue("");
+                }
+                cells.get(11).setCellValue(manIp);
+                try {
+                    cells.get(12).setCellValue(Integer.valueOf(manVlan));
+                } catch (NumberFormatException e) {
+                    cells.get(12).setCellValue("");
+                }
+
+
+                r[0]++;
+            });
+
+            FileOutputStream fileOut;
+            fileOut = new FileOutputStream(updatedTxSheetName);
+            txWb.write(fileOut);
+            fileOut.flush();
+            fileOut.close();
+            txWb.close();
+//            System.out.println(sheetName + "pivots done.. " + Utils.getTime());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    void exportEnodeBTx(List<Cabinet> sRanBcfs, List<Cabinet> sRanNodeBs, ArrayList<Cabinet> lCabinets) throws IOException {
+        System.out.println("Exporting 4G TX.. " + Utils.getTime());
+        XSSFSheet sheet2;
+        XSSFWorkbook txWb;
+        int numOfColumns = 11;
+        try {
+
+            txWb = lambda.prepareWB(updatedTxSheetName, originalTxSheetName);
+            sheet2 = txWb.getSheet("4G TX");
+//            int numOfColumns = 4;
+            final int[] r = {1};
+            lCabinets.forEach(cabinet -> {
+                if (!((EnodeB) cabinet).getIpIdentifier().contains("null")) {
+                    String bcfCtrlIP = "";
+                    String nodeBdataIp = "";
+                    String nodeBctrlIp = "";
+                    String nodeBdataVlan = "";
+                    String nodeBctrlVlan = "";
+                    String s1ipAddress;
+                    String s1Vlan;
+                    String secIpAddress = "";
+                    String secVlan = "";
+                    String remoteSec = "";
+                    String managementIp = "";
+                    String managementVlan = "";
+                    NodeB sRanNodeB = null;
+                    BCF sRanBcf = null;
+
+                    EnodeB enodeB = (EnodeB) cabinet;
+                    List<NodeB> nodeBsCollect = sRanNodeBs.stream().
+                            map(cabinet1 -> ((NodeB) cabinet1)).filter(nodeB -> nodeB.getSbtsId().equals(enodeB.getMrbtsId()))
+                            .filter(nodeB -> nodeB.numberOfOnAirCells > 0).collect(Collectors.toList());
+                    if (nodeBsCollect.size() > 0) {
+                        sRanNodeB = nodeBsCollect.get(0);
+                    }
+
+                    List<BCF> bcfsCollect = sRanBcfs.stream().
+                            map(cabinet1 -> ((BCF) cabinet1)).filter(bcf -> bcf.getSbtsId().equals(enodeB.getMrbtsId()))
+                            .filter(bcf -> bcf.getOnAir() == 1).collect(Collectors.toList());
+
+                    if (bcfsCollect.size() > 0) {
+                        sRanBcf = bcfsCollect.get(0);
+                    }
+
+                    LteIps lteIps = new LteIps(enodeB.getIpIdentifier());
+
+                    Map<String, SingeLteIpData> map = lteIps.getMap();
+
+                    Map<String, SingeLteIpData> remainingIpsMap = map.entrySet().stream().filter(stringSingeLteIpDataEntry ->
+
+                            stringSingeLteIpDataEntry.getValue().getService().equals("other")
+                    ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+                    s1ipAddress = map.get(lteIps.getS1If()).getIpAddress();
+                    s1Vlan = map.get(lteIps.getS1If()).getvLanId();
+                    try {
+                        secIpAddress = map.get(lteIps.getSecIf()).getIpAddress();
+                        secVlan = map.get(lteIps.getSecIf()).getvLanId();
+                        remoteSec = lteIps.getRemoteSec();
+
+
+                        if (sRanBcf != null)
+                            bcfCtrlIP = sRanBcf.getCtrlIp();
+                        if (sRanNodeB != null) {
+                            nodeBdataIp = sRanNodeB.getDataIp();
+                            nodeBctrlIp = sRanNodeB.getSigVoiceIp();
+                            nodeBdataVlan = sRanNodeB.getDataVlan();
+                            nodeBctrlVlan = sRanNodeB.getSigVoiceVlan();
+                        }
+
+                        String finalNodeBdataIp = nodeBdataIp;
+                        String finalNodeBctrlIp = nodeBctrlIp;
+                        String finalBcfCtrlIP = bcfCtrlIP;
+
+                        List<SingeLteIpData> managementData = remainingIpsMap.entrySet().stream().filter(stringSingeLteIpDataEntry ->
+                                !(stringSingeLteIpDataEntry.getValue().getIpAddress().equals(finalNodeBdataIp) ||
+                                        stringSingeLteIpDataEntry.getValue().getIpAddress().equals(finalNodeBctrlIp) ||
+                                        stringSingeLteIpDataEntry.getValue().getIpAddress().equals(finalBcfCtrlIP))
+                        ).map(Map.Entry::getValue).collect(Collectors.toList());
+
+
+                        managementIp = managementData.get(0).getIpAddress();
+                        managementVlan = managementData.get(0).getvLanId();
+                        int x = 2;
+                    } catch (Exception e) {
+
+                        System.out.println("Not 27 prefix length");
+                    }
+
+
+                    ArrayList<XSSFCell> cells = new ArrayList<>();
+                    XSSFRow row = sheet2.createRow(r[0]);
+                    //iterating c number of columns
+                    for (int i = 0; i < numOfColumns; i++) {
+                        XSSFCell cell = row.createCell(i);
+                        cells.add(i, cell);
+                    }
+                    cells.get(0).setCellValue(enodeB.getCode());
+                    cells.get(1).setCellValue(enodeB.getName());
+                    cells.get(2).setCellValue(enodeB.getRegion());
+                    cells.get(3).setCellValue(Integer.valueOf(enodeB.getMrbtsId()));
+                    cells.get(4).setCellValue(managementIp);
+
+                    cells.get(6).setCellValue(s1ipAddress);
+                    cells.get(7).setCellValue(s1Vlan);
+                    cells.get(8).setCellValue(secIpAddress);
+                    try {
+                        cells.get(5).setCellValue(Integer.valueOf(managementVlan));
+                        cells.get(9).setCellValue(Integer.valueOf(secVlan));
+                    } catch (NumberFormatException e) {
+
+                    }
+                    cells.get(10).setCellValue(remoteSec);
+                    r[0]++;
+                }
+
+            });
+            FileOutputStream fileOut;
+            fileOut = new FileOutputStream(updatedTxSheetName);
+            txWb.write(fileOut);
+            fileOut.flush();
+            fileOut.close();
+            txWb.close();
+//            System.out.println(sheetName + "pivots done.. " + Utils.getTime());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void exportBcfTx(ArrayList<Cabinet> gCabinets) {
+    }
+
 
     private XSSFWorkbook prepareWorkbooks(String path) {
         File file = new File(path);
@@ -783,6 +1052,10 @@ class Exporter {
 
     private String prepareSitesMapName(String weekName) {
         return "C:\\Ater\\SitesMap W" + weekName + ".xlsx";
+    }
+
+    private String prepareTxSheetName(String weekName) {
+        return "C:\\Ater\\TxData W" + weekName + ".xlsx";
     }
 
     private XSSFWorkbook get2GHWWorkbook() throws IOException {
@@ -880,7 +1153,7 @@ class Exporter {
 //        trxWb = getTRXWorkbook();
         trxWb = lambda.prepareWB(TRX1FileName, "C:/Ater/Development/RAN Tool/Dashboard_TRX1.xlsx");
         sheet1 = trxWb.getSheet("TRX");
-        int numOfColumns = 14;
+        int numOfColumns = 15;
         int r = 1;
         while (resultSet.next()) {
             ArrayList<XSSFCell> cells = new ArrayList<>();
@@ -934,7 +1207,7 @@ class Exporter {
                 cells.get(13).setCellValue("GSM");
             else cells.get(13).setCellValue("DCS");
 
-
+            cells.get(14).setCellValue(resultSet.getInt(14));
             r++;
         }
         FileOutputStream fileOut;
@@ -1033,7 +1306,7 @@ class Exporter {
         XSSFWorkbook lCellsWb;
         lCellsWb = getLcellsWorkbook();
         sheet1 = lCellsWb.getSheet("Cells");
-        int numOfColumns = 10;
+        int numOfColumns = 12;
         int r = 1;
         while (resultSet.next()) {
             ArrayList<XSSFCell> cells = new ArrayList<>();
@@ -1054,6 +1327,8 @@ class Exporter {
             cells.get(7).setCellValue(resultSet.getInt(7));
             cells.get(8).setCellValue(resultSet.getInt(8));
             cells.get(9).setCellValue(resultSet.getString(9));
+            cells.get(10).setCellValue(Utils.getLTEBand(resultSet.getInt(10)));
+            cells.get(11).setCellValue(resultSet.getInt(11));
             r++;
         }
         FileOutputStream fileOut;
@@ -1097,7 +1372,7 @@ class Exporter {
             int vamEnabled;
             try {
                 vamEnabled = resultSet.getInt(12);
-            } catch (NumberFormatException e) {
+            } catch (Exception e) {
                 vamEnabled = 0;
             }
             cells.get(11).setCellValue(vamEnabled);
@@ -1490,41 +1765,42 @@ class Exporter {
 
                 Hardware hardware = dumpHwMap.get(key);
                 if (hardware != null) {
-                    cells.get(6).setCellValue(hardware.getWeek());
+                    cells.get(7).setCellValue(hardware.getWeek());
                     String[] parts = key.split("_");
                     cells.get(2).setCellValue(Integer.valueOf(parts[1]));
                 }
                 cells.get(3).setCellValue(resultSet.getString(4));
                 cells.get(4).setCellValue(resultSet.getString(5));
                 cells.get(5).setCellValue(resultSet.getString(6));
+                cells.get(6).setCellValue(resultSet.getString(4));//put long name
                 r[0]++;
             }
         }
 
-        // filter hwMap to export empty hw sites
-        Map<String, Hardware> missingKeys = dumpHwMap.entrySet().stream().
-                filter(x -> !foundKeys.contains(x.getKey()) && x.getKey().contains("SBTS")).
-                collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        // printing empty hw sites
-        missingKeys.forEach((s, hardware) -> {
-            ArrayList<XSSFCell> cells = new ArrayList<>();
-            XSSFRow row = sheet.createRow(r[0]);
-            //iterating c number of columns
-            for (int i = 0; i < numOfColumns; i++) {
-                XSSFCell cell = row.createCell(i);
-                cells.add(i, cell);
-            }
-            cells.get(0).setCellValue(hardware.getCode());
-            cells.get(1).setCellValue(hardware.getName());
-//            System.out.println(hardware.getCode() + hardware.getCode());
-            String[] parts = s.split("_");
-            cells.get(2).setCellValue(Integer.valueOf(parts[1]));
-            cells.get(6).setCellValue(hardware.getWeek());
-            r[0]++;
-
-
-        });
+//        // filter hwMap to export empty hw sites
+//        Map<String, Hardware> missingKeys = dumpHwMap.entrySet().stream().
+//                filter(x -> !foundKeys.contains(x.getKey()) && x.getKey().contains("SBTS")).
+//                collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+//
+//        // printing empty hw sites
+//        missingKeys.forEach((s, hardware) -> {
+//            ArrayList<XSSFCell> cells = new ArrayList<>();
+//            XSSFRow row = sheet.createRow(r[0]);
+//            //iterating c number of columns
+//            for (int i = 0; i < numOfColumns; i++) {
+//                XSSFCell cell = row.createCell(i);
+//                cells.add(i, cell);
+//            }
+//            cells.get(0).setCellValue(hardware.getCode());
+//            cells.get(1).setCellValue(hardware.getName());
+////            System.out.println(hardware.getCode() + hardware.getCode());
+//            String[] parts = s.split("_");
+//            cells.get(2).setCellValue(Integer.valueOf(parts[1]));
+//            cells.get(6).setCellValue(hardware.getWeek());
+//            r[0]++;
+//
+//
+//        });
 
         sbtsHardwareFileName = sbtsHardwareFileName + weekName + ".xlsx";
         FileOutputStream fileOut = new FileOutputStream(sbtsHardwareFileName);
@@ -1571,30 +1847,28 @@ class Exporter {
             }
         }
 
-        // filter hwMap to export empty hw sites
-        Map<String, Hardware> missingKeys = dumpHwMap.entrySet().stream().
-                filter(x -> !foundKeys.contains(x.getKey()) && x.getKey().contains("4G")).
-                collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        // printing empty hw sites
-        missingKeys.forEach((s, hardware) -> {
-            ArrayList<XSSFCell> cells = new ArrayList<>();
-            XSSFRow row = sheet.createRow(r[0]);
-            //iterating c number of columns
-            for (int i = 0; i < numOfColumns; i++) {
-                XSSFCell cell = row.createCell(i);
-                cells.add(i, cell);
-            }
-            cells.get(0).setCellValue(hardware.getCode());
-            cells.get(1).setCellValue(hardware.getName());
-//            System.out.println(hardware.getCode() + hardware.getCode());
-            String[] parts = s.split("_");
-            cells.get(2).setCellValue(Integer.valueOf(parts[1]));
-            cells.get(6).setCellValue(hardware.getWeek());
-            r[0]++;
-
-
-        });
+//        // filter hwMap to export empty hw sites
+//        Map<String, Hardware> missingKeys = dumpHwMap.entrySet().stream().
+//                filter(x -> !foundKeys.contains(x.getKey()) && x.getKey().contains("4G")).
+//                collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+//
+//        // printing empty hw sites
+//        missingKeys.forEach((s, hardware) -> {
+//            ArrayList<XSSFCell> cells = new ArrayList<>();
+//            XSSFRow row = sheet.createRow(r[0]);
+//            //iterating c number of columns
+//            for (int i = 0; i < numOfColumns; i++) {
+//                XSSFCell cell = row.createCell(i);
+//                cells.add(i, cell);
+//            }
+//            cells.get(0).setCellValue(hardware.getCode());
+//            cells.get(1).setCellValue(hardware.getName());
+////            System.out.println(hardware.getCode() + hardware.getCode());
+//            String[] parts = s.split("_");
+//            cells.get(2).setCellValue(Integer.valueOf(parts[1]));
+//            cells.get(6).setCellValue(hardware.getWeek());
+//            r[0]++;
+//            });
 
         lHardwareFileName = lHardwareFileName + weekName + ".xlsx";
         FileOutputStream fileOut = new FileOutputStream(lHardwareFileName);
@@ -1644,32 +1918,6 @@ class Exporter {
                 r[0]++;
             }
         }
-        // filter hwMap to export empty hw sites
-        Map<String, Hardware> missingKeys = dumpHwMap.entrySet().stream().
-                filter(x -> !foundKeys.contains(x.getKey()) && x.getKey().contains(tech + "G")).
-                collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        // printing empty hw sites
-        missingKeys.forEach((s, hardware) -> {
-            ArrayList<XSSFCell> cells = new ArrayList<>();
-            XSSFRow row = sheet.createRow(r[0]);
-            //iterating c number of columns
-            for (int i = 0; i < numOfColumns; i++) {
-                XSSFCell cell = row.createCell(i);
-                cells.add(i, cell);
-            }
-            cells.get(0).setCellValue(hardware.getCode());
-            cells.get(1).setCellValue(hardware.getName());
-//                System.out.println(hardware.getCode() + hardware.getCode());
-            String[] parts = s.split("_");
-            cells.get(2).setCellValue(Integer.valueOf(parts[1]));
-            cells.get(3).setCellValue(Integer.valueOf(parts[2]));
-            cells.get(7).setCellValue(hardware.getWeek());
-            r[0]++;
-
-
-        });
-
 
         optFileName = optFileName + weekName + ".xlsx";
         FileOutputStream fileOut = new FileOutputStream(optFileName);

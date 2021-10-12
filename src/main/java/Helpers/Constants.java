@@ -12,22 +12,46 @@ public class Constants {
             put(0, 0.0);
             put(210, 0.125);
             put(240, 0.25);
+            put(390, 9.0);
             put(400, 10.0);
             put(418, 15.0);
             put(430, 20.0);
+            put(431, 20.0);
+            put(435, 22.3);
+            put(436, 22.3);
             put(442, 26.65);
+            put(444, 26.65);
             put(448, 30.0);
             put(447, 30.0);
+            put(449, 30.0);
             put(450, 30.0);
+            put(451, 30.0);
+            put(457, 37.0);
             put(460, 40.0);
+            put(461, 40.0);
+            put(462, 40.0);
+            put(463, 42.6);
+            put(464, 43.6);
+            put(471, 53.3);
             put(472, 53.3);
+            put(473, 53.3);
+            put(477, 60.0);
             put(478, 60.0);
+            put(486, 72.4);
             put(490, 80.0);
             put(65535, 0.0);
         }
     };
 
-
+    static final LinkedHashMap<Integer, String> ARFCN_MAP = new LinkedHashMap<Integer, String>() {
+        {
+            put(1634, "L1800");
+            put(1635, "L1800");
+            put(3622, "L900");
+            put(224, "L2100-5M");
+            put(199, "L2100-10M");
+        }
+    };
     public static final LinkedHashMap<String, String> RF_PRODUCT_CODE = new LinkedHashMap<String, String>() {
         {
             put("472100B", "FRGP");
@@ -68,6 +92,7 @@ public class Constants {
             put(12, "FRGT");
             put(13, "FRGU");
             put(14, "FRGX");
+            put(15, "FXEF");
         }
     };
 
@@ -92,6 +117,41 @@ public class Constants {
             put(3, "FTIA");
             put(4, "FTIB");
             put(5, "FTPB");
+        }
+    };
+
+
+    public static final LinkedHashMap<String, String> hwShortNameConversionMap = new LinkedHashMap<String, String>() {
+        {
+            put("FPFD-ODM", "FPFD");
+            put("BB Extension Outdoor Sub-Module FBBA", "FBBA");
+            put("FXDB", "FXDB");
+            put("FXED", "FXED");
+            put("FXEB", "FXEB");
+            put("FTIF", "FTIF");
+            put("FPFD", "FPFD");
+            put("Flexi Baseband Sub-Module FBBC", "FBBC");
+            put("Flexi System Module Outdoor FSMF", "FSMF");
+            put("FRGT", "FRGT");
+            put("RET", "RET");
+            put("SingleAntennaDevice", "SAD");
+            put("FRGP", "FRGP");
+            put("FRGX", "FRGX");
+            put("FXEA", "FXEA");
+            put("AREA", "AREA");
+            put("FRGU", "FRGU");
+            put("LNA", "LNA");
+            put("FXEF", "FXEF");
+            put("ARGA", "ARGA");
+            put("CABINET", "CABINET");
+            put("ABIA AirScale Capacity", "ABIA");
+            put("WMHD", "WMHD");
+            put("Other", "Other");
+            put("MultiAntennaDevice", "MAD");
+            put("ASIA AirScale Common", "ASIA");
+            put("FXDA", "FXDA");
+            put("AMIA AirScale Indoor Subrack", "AMIA");
+            put("AMOB AirScale Outdoor Subrack", "AMOB");
         }
     };
 }

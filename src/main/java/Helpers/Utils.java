@@ -25,6 +25,7 @@ public class Utils {
         }
         return null;
     }
+
     public static ArrayList<File> loadXMLsFromMachine(Stage stage) {
         ArrayList<File> fileList = new ArrayList<>();
         FileChooser fileChooser = new FileChooser();
@@ -148,9 +149,18 @@ public class Utils {
         return "";
     }
 
+    public static String getLTEBand(int arfcn) {
+        return Constants.ARFCN_MAP.get(arfcn);
+    }
+
     public static double convertPower(int dbPower, int vam) {
-        Double powerInWatts = Constants.POWER_MAP.get(dbPower);
-        return vam == 0 ? powerInWatts : 2 * powerInWatts;
+        try {
+            Double powerInWatts = Constants.POWER_MAP.get(dbPower);
+            return vam == 0 ? powerInWatts : 2 * powerInWatts;
+        } catch (Exception e) {
+            System.out.println("Problem in power converstion for value: " + dbPower);
+            return 0;
+        }
 //        if (vam == 0)
 //            return powerInWatts;
 //        else return powerInWatts * 2;
@@ -189,6 +199,7 @@ public class Utils {
             case "52":
             case "44":
             case "56":
+            case "66":
             case "Banha mcBSC":
             case "BANHA01":
             case "DAMANHOUR01":

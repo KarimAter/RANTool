@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 public class NodeB extends Cabinet {
     private static final int TECHNOLOGY = 3;
-    private String rncId, wbtsId, nodeBIP, lac, rac, sfp;
+    private String rncId, wbtsId, nodeBIP, manIp, dataIp, sigVoiceIp, manVlan, dataVlan, sigVoiceVlan, lac, rac, sfp, sbtsId, sctpPort;
     private int numberOfCarriers, numberOfLCGs, numberOfChains;
     private boolean firstCarrier, u900, thirdCarrier, rfSharing, standAloneU900;
     private String power, u900Power;
@@ -92,16 +92,16 @@ public class NodeB extends Cabinet {
     public void setTxMode(String mode) {
         try {
             switch (mode) {
-                case "0":
+                case "0.0":
                 case "ATM":
                     txMode = "ATM";
                     break;
-                case "38":
+                case "38.0":
                 case "DUAL_STACK":
-                case "DUAL STACK":
                     txMode = "DUAL STACK";
                     break;
                 case "70":
+                case "1.0":
                 case "FULL_IP":
                     txMode = "FULL IP";
                     break;
@@ -128,7 +128,7 @@ public class NodeB extends Cabinet {
     @Override
     protected void generateProperties() {
         this.properties = Stream.of(cellIdentifier, r99Identifier, u9Identifier, powerIdentifier, txMode,
-                numberOfE1s, lac, rac, version, nodeBIP, sfp, numberOfLCGs, numberOfChains)
+                numberOfE1s, lac, rac, version, nodeBIP, sfp, numberOfLCGs, numberOfChains, sbtsId, manIp, dataIp, sigVoiceIp, manVlan, dataVlan, sigVoiceVlan, sctpPort)
                 .map(String::valueOf).collect(Collectors.joining("__"));
     }
 
@@ -170,6 +170,14 @@ public class NodeB extends Cabinet {
         } catch (NumberFormatException e) {
             this.setNumberOfChains(0);
         }
+        this.setSbtsId(parts[13]);
+        this.setManIp(parts[14]);
+        this.setDataIp(parts[15]);
+        this.setSigVoiceIp(parts[16]);
+        this.setManVlan(parts[17]);
+        this.setDataVlan(parts[18]);
+        this.setSigVoiceVlan(parts[19]);
+        this.setSctpPort(parts[20]);
     }
 
     @Override
@@ -346,6 +354,54 @@ public class NodeB extends Cabinet {
         this.nodeBIP = nodeBIP;
     }
 
+    public String getManIp() {
+        return manIp;
+    }
+
+    public void setManIp(String manIp) {
+        this.manIp = manIp;
+    }
+
+    public String getDataIp() {
+        return dataIp;
+    }
+
+    public void setDataIp(String dataIp) {
+        this.dataIp = dataIp;
+    }
+
+    public String getSigVoiceIp() {
+        return sigVoiceIp;
+    }
+
+    public void setSigVoiceIp(String sigVoiceIp) {
+        this.sigVoiceIp = sigVoiceIp;
+    }
+
+    public String getManVlan() {
+        return manVlan;
+    }
+
+    public void setManVlan(String manVlan) {
+        this.manVlan = manVlan;
+    }
+
+    public String getDataVlan() {
+        return dataVlan;
+    }
+
+    public void setDataVlan(String dataVlan) {
+        this.dataVlan = dataVlan;
+    }
+
+    public String getSigVoiceVlan() {
+        return sigVoiceVlan;
+    }
+
+    public void setSigVoiceVlan(String sigVoiceVlan) {
+        this.sigVoiceVlan = sigVoiceVlan;
+    }
+
     int getNumberOfLCGs() {
         return numberOfLCGs;
     }
@@ -360,6 +416,14 @@ public class NodeB extends Cabinet {
 
     int getNumberOfChains() {
         return numberOfChains;
+    }
+
+    public String getSbtsId() {
+        return sbtsId;
+    }
+
+    public void setSbtsId(String sbtsId) {
+        this.sbtsId = sbtsId;
     }
 
     public String getRegion() {
@@ -402,6 +466,14 @@ public class NodeB extends Cabinet {
 
     String getPower() {
         return power;
+    }
+
+    public String getSctpPort() {
+        return sctpPort;
+    }
+
+    public void setSctpPort(String sctpPort) {
+        this.sctpPort = sctpPort;
     }
 
     public void setU900Power(int u900Power, int vam) {

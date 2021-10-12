@@ -18,12 +18,13 @@ public class Hardware {
     private ArrayList<HwItem> hwItems = new ArrayList<>();
     private Map<String, Long> modules = new LinkedHashMap<>();
     private String uniqueName, rfString, smString, txString;
-    private String rfIdentifier = "0.0.0.0.0.0.0.0.0.0.0.0.0.0.0";
+    private String rfIdentifier = "0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0";
     private String smIdentifier = "0.0.0.0.0.0.0.0";
     private String txIdentifier = "0.0.0.0.0.0";
     private String week = "W0";
     private String code;
     private String name;
+    private String SBTSId;
 
     // Constructor: generate hardware from hardware items
     public Hardware(ArrayList<HwItem> hwItems) {
@@ -33,6 +34,8 @@ public class Hardware {
 
     // Constructor: generate hardware from identifiers
     public Hardware(String rfIdentifier, String smIdentifier, String txIdentifier) {
+        if (rfIdentifier.length() < 31)
+            rfIdentifier = rfIdentifier + ".0";
         extractHwFromIdentifiers(Constants.rfMap, rfIdentifier);
         extractHwFromIdentifiers(Constants.smMap, smIdentifier);
         extractHwFromIdentifiers(Constants.txMap, txIdentifier);
@@ -149,8 +152,6 @@ public class Hardware {
             return hardware;
         };
     }
-
-
 
 
     void addHwItem(HwItem hwItem) {
@@ -273,6 +274,14 @@ public class Hardware {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setSBTSId(String sbtsId) {
+        this.SBTSId = sbtsId;
+    }
+
+    public String getSBTSId() {
+        return SBTSId;
     }
 }
 

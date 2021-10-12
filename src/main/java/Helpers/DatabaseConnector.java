@@ -34,11 +34,11 @@ public class DatabaseConnector {
         try {
             Statement statement = connection.createStatement();
             String query = "Select BSCId,BCFId,first(name),first(T),first(BSCName),first(newCellCount),first(newOnAirCount),first(TX),first(E),first(G),first(newDCount),first(LAC),first(RAC)," +
-                    "first(status), first(version) , first(ctrlIP) , first(manIp) , first(etp) , first(gConf) , first(dConf) " +
+                    "first(status), first(version) , first(ctrlIP) , first(manIp) , first(etp) , first(gConf) , first(dConf),first(SBTSId) " +
                     " from" +
                     "(Select BSCId,BCFId,count(TRXId) as T,sum(gprsEnabledTrx) as G from A_TRX group by BSCId,BCFId) as firstSet " +
                     "left join " +
-                    "(Select BSCId,BCFId,name,adminState as status,bcfPackVers as version,btsCuPlaneIpAddress as ctrlIP,btsMPlaneIpAddress as manIp, usedEtpId as etp " +
+                    "(Select BSCId,BCFId,name,adminState as status,bcfPackVers as version,btsCuPlaneIpAddress as ctrlIP,btsMPlaneIpAddress as manIp, usedEtpId as etp, SBTSId " +
                     "from A_BCF group by BSCId,BCFId) as secondSet " +
                     "on (firstSet.BSCId=secondSet.BSCId and firstSet.BCFId=secondSet.BCFId)" +
                     "left join " +
@@ -118,6 +118,7 @@ public class DatabaseConnector {
                 bcf.setUsedETP(resultSet.getString(18));
                 bcf.setgConf(resultSet.getString(19));
                 bcf.setdConf(resultSet.getString(20));
+                bcf.setSbtsId(resultSet.getString(21));
                 bcf.finishProperties();
                 bcfs.add(bcf);
             }
@@ -135,8 +136,8 @@ public class DatabaseConnector {
         String uQuery;
         uQuery = "Select  BTSAdditionalInfo,RncId,WBTSId,C,O,BTSAdditionalInfo,fC,onFC,sC,onSC,tC,onTC,uC,onUC,u2C,onU2C," +
                 "I,V,HD1,HD2,HD3,HU1,R99,P,S,Name,maxFPower,maxUPower," +
-                "vamF,vamU,LAC,RAC,IP,sfp,lcg,noOfChains from (" +
-                "(Select RncId,WBTSId,COCOId,BTSAdditionalInfo ,IubTransportMedia as I,NESWVersion as V,WBTSName as Name,BTSIPAddress as IP from A_WBTS ) as firstSet \n" +
+                "vamF,vamU,LAC,RAC,IP,sfp,lcg,noOfChains,SBTSId,dataIp,dataVlan,sigVoiceIp,sigVoiceVlan,manIp,manVlan,SCTP from (" +
+                "(Select RncId,WBTSId,COCOId,BTSAdditionalInfo ,IubTransportMedia as I,NESWVersion as V,WBTSName as Name,BTSIPAddress as IP,SBTSId from A_WBTS ) as firstSet \n" +
                 "left join\n" +
                 "(Select RncId,WBTSId,count(WBTSId) as C,sum(AdminCellState) as O, first(LAC) as LAC ,first(RAC) as RAC from A_WCEL group by RncId,WBTSId) as secondSet \n" +
                 "on (firstSet.RncId=secondSet.RncId and firstSet.WBTSId=secondSet.WBTSId) \n" +
@@ -163,8 +164,39 @@ public class DatabaseConnector {
                 "as R99,rfSharingEnabled as S  from A_WBTSF_RNC_WBTS_MRBTS_BTSSCW  ) as seventhSet \n" +
                 "on (firstSet.RncId=seventhSet.RncId and firstSet.WBTSId=seventhSet.WBTSId)\n" +
                 "left join\n" +
-                "(Select RncId,WBTSId,count(WBTSId) as lcg from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELGW group by RncId,WBTSId ) lcgSet " +
+                "(Select RncId,WBTSId,count(WBTSId) as lcg from A_WBTSF_WBTS_MRBTS_BTSSCW_LCELGW group by RncId,WBTSId ) as lcgSet " +
                 "on (firstSet.RncId=lcgSet.RncId and firstSet.WBTSId=lcgSet.WBTSId) " +
+                "left join\n" +
+                "(Select RncId,WBTSId,first(SCTPPortNumberCNBAP) as SCTP from A_IPNB group by RncId,WBTSId ) as sctpSet " +
+                "on (firstSet.RncId=sctpSet.RncId and firstSet.WBTSId=sctpSet.WBTSId) " +
+
+                "left join \n" +
+                " (Select RncId,WBTSId,dataIp,dataVlan from " +
+                "(Select RncId,WBTSId,uPlane2IpAddress as dataIp from A_FTM_RNC_WBTS_FTM_IPNO ) as ipnoSet " +
+                "left join " +
+                " (Select RncId,WBTSId,localIpAddr as dataIp ,vlanId as dataVlan from A_FTM_FTM_IPNO_IEIF_IVIF) as ivifSet " +
+                "on (ipnoSet.RncId=ivifSet.RncId and ipnoSet.WBTSId=ivifSet.WBTSId and ipnoSet.dataIp=ivifSet.dataIp)) as dataIpSet " +
+                "on (firstSet.RncId=dataIpSet.RncId and firstSet.WBTSId=dataIpSet.WBTSId) " +
+
+
+                "left join \n" +
+                " (Select RncId,WBTSId,sigVoiceIp,sigVoiceVlan from " +
+                "(Select RncId,WBTSId,uPlaneIpAddress as sigVoiceIp from A_FTM_RNC_WBTS_FTM_IPNO ) as ipnoSet " +
+                "left join " +
+                " (Select RncId,WBTSId,localIpAddr as sigVoiceIp ,vlanId as sigVoiceVlan from A_FTM_FTM_IPNO_IEIF_IVIF) as ivifSet " +
+                "on (ipnoSet.RncId=ivifSet.RncId and ipnoSet.WBTSId=ivifSet.WBTSId and ipnoSet.sigVoiceIp=ivifSet.sigVoiceIp)) as sigVoiceIpSet " +
+                "on (firstSet.RncId=sigVoiceIpSet.RncId and firstSet.WBTSId=sigVoiceIpSet.WBTSId) " +
+
+
+                "left join \n" +
+                " (Select RncId,WBTSId,manIp,manVlan from " +
+                "(Select RncId,WBTSId,sPlaneIpAddress as sIp from A_FTM_RNC_WBTS_FTM_IPNO ) as ipnoSet " +
+                "left join " +
+                " (Select RncId,WBTSId,localIpAddr as manIp ,vlanId as manVlan from A_FTM_FTM_IPNO_IEIF_IVIF where cir='500' ) as ivifSet " +
+                "on (ipnoSet.RncId=ivifSet.RncId and ipnoSet.WBTSId=ivifSet.WBTSId and ipnoSet.sIp!=ivifSet.manIp)) as manIpSet " +
+                "on (firstSet.RncId=manIpSet.RncId and firstSet.WBTSId=manIpSet.WBTSId) " +
+
+
                 "left join\n" +
                 "(Select RncId,WBTSId,count(positionInChain) as noOfChains from A_WBTSF_RMOD_CONNECTIONLIST " +
                 "where positionInChain = '2' group by RncId,WBTSId ) chainSet " +
@@ -211,11 +243,6 @@ public class DatabaseConnector {
             nodeB.createCellsCountMap(NodeB.cellsCountNames, cellCountIndices);
             nodeB.setTxMode(nResultSet.getString(17));
             nodeB.setVersion(nResultSet.getString(18));
-//            nodeB.setNumberOfHSDPASet1(nResultSet.getInt(19));
-//            nodeB.setNumberOfHSDPASet2(nResultSet.getInt(20));
-//            nodeB.setNumberOfHSDPASet3(nResultSet.getInt(21));
-//            nodeB.setNumberOfHSUPASet1(nResultSet.getInt(22));
-//            nodeB.setNumberOfChannelElements(nResultSet.getInt(23));
             int[] r99ParamsIndices = IntStream.range(19, 24).map(i -> {
                 try {
                     return nResultSet.getInt(i);
@@ -235,6 +262,14 @@ public class DatabaseConnector {
             nodeB.setSfp(nResultSet.getString(34));
             nodeB.setNumberOfLCGs(nResultSet.getInt(35));
             nodeB.setNumberOfChains(nResultSet.getInt(36));
+            nodeB.setSbtsId(nResultSet.getString(37));
+            nodeB.setDataIp(nResultSet.getString(38));
+            nodeB.setDataVlan(nResultSet.getString(39));
+            nodeB.setSigVoiceIp(nResultSet.getString(40));
+            nodeB.setSigVoiceVlan(nResultSet.getString(41));
+            nodeB.setManIp(nResultSet.getString(42));
+            nodeB.setManVlan(nResultSet.getString(43));
+            nodeB.setSctpPort(nResultSet.getString(44));
             nodeB.setConfiguration(uSectorsConfiguration.get(key));
             nodeB.analyzeConfiguration();
             nodeB.finishProperties();
@@ -247,7 +282,8 @@ public class DatabaseConnector {
     public ArrayList<Cabinet> getEnodeBs() throws SQLException {
         String lQuery;
         Statement statement = connection.createStatement();
-        lQuery = "Select mrbtsId,sum(C),sum(O),first(V),first(N),first(BW),first(M),sum(S),sum(SO),first(TAC),first(manIP),first(s1Ip),first(secIp),first(secGw),first(cAgg) from " +
+        lQuery = "Select mrbtsId,sum(C),sum(O),first(V),first(N),first(BW),first(M),sum(S),sum(SO),first(TAC),first(cAgg)," +
+                "first(ips),first(vlans),first(ifs),first(secIfId),first(remoteSec),first(sOneIfId),first(ifvflink),first(ipvlan),first(sranId) from " +
                 "(Select mrbtsId,count(mrbtsId) as C,sum(administrativeState) as O, first(tac) as TAC from A_LTE_MRBTS_LNBTS_LNCEL group by mrbtsId) as firstSet " +
                 "left join " +
                 "(Select mrbtsId,first(name) as N from A_LTE_MRBTS_LNBTS group by mrbtsId) as secondSet " +
@@ -263,20 +299,69 @@ public class DatabaseConnector {
                 "(Select mrbtsId,max(dlChBw) as BW,max(dlMimoMode) as M,sum(actSuperCell) as S from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD group by mrbtsId) as fourthSet " +
                 "on (firstSet.mrbtsId=fourthSet.mrbtsId)  " +
                 "left join " +
-                "(Select mrbtsId,first(softwareReleaseVersion) as V from A_LTE_MRBTS_LNBTS_FTM group by mrbtsId) as fifthSet " +
+                "(Select mrbtsId,first(version) as V,first(productVariantPlanned) as sranId from A_MNL group by mrbtsId) as fifthSet " +
                 "on (firstSet.mrbtsId=fifthSet.mrbtsId) " +
+
+
                 "left join " +
-                "(Select mrbtsId,first(mPlaneIpAddress) as manIP,first(uPlaneIpAddress) as s1Ip from A_LTE_MRBTS_LNBTS_FTM_IPNO group by mrbtsId) as sixthSet " +
-                "on (firstSet.mrbtsId=sixthSet.mrbtsId) " +
+                " (Select mrbtsId,ips,vlans,ifs,secIfId,remoteSec,sOneIfId,ifvflink,ipvlan from (" +
+
+
+                " (Select mrbtsId, group_concat(localIpAddr) as ips, group_concat(vlanId) as vlans,group_concat(concat(localIpAddr,'&&',vlanId)) as ipvlan," +
+                " group_concat(ipIfId) as ifs ,group_concat(conc) as ifvflink from " +
+
+                "((Select mrbtsId,ipIfId,localIpAddr,localIpPrefixLength from A_TNL_TNL_IPNO_IPIF_IPADDRESSV4 " +
+                "where ( localIpPrefixLength='27'  or localIpPrefixLength is null ) ) as a " +
+                " left join " +
+                "(SELECT mrbtsId,ipIfId,substr(interfaceDN,length(interfaceDn)) as vfId,concat(ipIfId,'/',substr(interfaceDN,length(interfaceDn))) as conc from A_TNL_TNLSVC_TNL_IPNO_IPIF) as b" +
+                " on (a.mrbtsId=b.mrbtsId AND a.ipIfId=b.ipIfId) " +
                 "left join " +
-                "(Select mrbtsId, first(localTunnelEndpoint) as secIp,first(remoteTunnelEndpoint) as secGw from A_LTE_IPSECC_SECURITYPOLICIES" +
-                " where ipSecStatus ='0' group by mrbtsId) as seventhSet " +
-                "on (firstSet.mrbtsId=seventhSet.mrbtsId) " +
+                "(SELECT mrbtsId,vlanIfId,vlanId from A_TNL_TNL_ETHSVC_ETHIF_VLANIF ) as c " +
+                "on (b.mrbtsId=c.mrbtsId AND b.vfId=c.vlanIfId)" +
+                " ) group by mrbtsId ) as k" +
+
+                " left join " +
+                " (Select  mrbtsId,substr(localTunnelEndpointDN,40,1) as secIfId,remoteTunnelEndpoint as remoteSec from A_TNL_TNL_IPAPP_IPSECC_IKEP) as d" +
+                " on (k.mrbtsId=d.mrbtsId)" +
+                ") left join " +
+                "(Select mrbtsId,ipIfId as sOneIfId from A_TNL_TNL_IPNO_IPIF_IPADDRESSV4 where localIpPrefixLength is null ) as e " +
+                "on (k.mrbtsId=e.mrbtsId) ) as ipSet " +
+
+
+                " on (firstSet.mrbtsId=ipSet.mrbtsId)" +
+
+
+
                 "left join " +
                 "(Select mrbtsId,first(actDLCAggr) as cAgg from A_LTE_LNBTS_CARRAGG group by mrbtsId) as eighthSet " +
                 "on (firstSet.mrbtsId=eighthSet.mrbtsId) " +
                 "group by " +
                 "mrbtsId";
+
+//        "left join "+
+//                "(Select mrbtsId,ipIfId,localIpAddress as manIp,vlanIfIdExtract, vlanId as managementVlan from (" +
+//
+//                " (Select mrbtsId,localIpAddress from A_TNL_TNL_IPAPP_IPSECC_SECPOL where ipSecAction= '2' and policyOrderNumber = '1' ) as secPolSet "+
+//                " left join " +
+//                " (Select mrbtsId,preSrcIpv4Addr from A_TNL_IPRT_R_FORWARDINGENTRIES) as forwardingSet "+
+//                " on (secPolSet.mrbtsId=forwardingSet.mrbtsId and secPolSet.localIpAddress=forwardingSet.preSrcIpv4Addr) "+
+//                " left join"+
+//                "(Select mrbtsId,ipIfId,localIpAddr from A_TNL_TNL_IPNO_IPIF_IPADDRESSV4 where localIpPrefixLength = '27' ) as addressSet " +
+//                "on (secPolSet.mrbtsId=addressSet.mrbtsId and secPolSet.localIpAddress=addressSet.localIpAddr) "+
+//
+//                " left join (Select mrbtsId,ipIfId,length(interfaceDN) as len, SUBSTR(interfaceDN,length(interfaceDN)) as vlanIfIdExtract from A_TNL_TNLSVC_TNL_IPNO_IPIF ) as vlanIfSet "+
+//                "on (addressSet.mrbtsId=vlanIfSet.mrbtsId and addressSet.ipIfId=vlanIfSet.ipIfId)  " +
+//
+//                " left join (Select mrbtsId,vlanIfId,vlanId from A_TNL_TNL_ETHSVC_ETHIF_VLANIF ) as vlanIdSet "+
+//                "on (vlanIfSet.mrbtsId=vlanIdSet.mrbtsId and vlanIfSet.vlanIfIdExtract=vlanIdSet.vlanIfId)  " +
+//                ")) as managementIpSet " +
+//
+//                "on (firstSet.mrbtsId=managementIpSet.mrbtsId) "+
+//
+//                " left join "+
+//                "(Select mrbtsId,template_set as secIP, policyOrderNumber as s1Ip, ipSecPDN as secVlan from A_TNL_TNL_IPAPP_IPSECC_SECPOL ) as AAAA "+
+//                "on (firstSet.mrbtsId=AAAA.mrbtsId) " +
+
         ArrayList<Cabinet> enodeBS = new ArrayList<>();
         ResultSet lResultSet = statement.executeQuery(lQuery);
         while (lResultSet.next()) {
@@ -289,11 +374,11 @@ public class DatabaseConnector {
             eNodeB.setBw(lResultSet.getInt(6));
             eNodeB.setMimo(lResultSet.getInt(7));
             eNodeB.setTac(lResultSet.getString(10));
-            eNodeB.setManIp(lResultSet.getString(11));
-            eNodeB.setS1Ip(lResultSet.getString(12));
-            eNodeB.setSecIp(lResultSet.getString(13));
-            eNodeB.setSecGw(lResultSet.getString(14));
-            eNodeB.setCarrierAggregation(lResultSet.getInt(15));
+            eNodeB.setCarrierAggregation(lResultSet.getInt(11));
+            eNodeB.setIpData(lResultSet.getString(12), lResultSet.getString(13), lResultSet.getString(14),
+                    lResultSet.getString(15), lResultSet.getString(16), lResultSet.getString(17), lResultSet.getString(18),
+                    lResultSet.getString(19));
+            eNodeB.setSran(lResultSet.getInt(20));
             eNodeB.finishProperties();
             enodeBS.add(eNodeB);
         }
@@ -304,21 +389,78 @@ public class DatabaseConnector {
     public ArrayList<Cabinet> getSBTSs() throws SQLException {
         String sbtsQuery;
         Statement statement = connection.createStatement();
-        sbtsQuery = "Select mrbtsId,name,version from " +
-                "(Select mrbtsId from A_MNL where productVariantPlanned ='10' ) as firstSet " +
+        sbtsQuery = "Select mrbtsId,name,version,BSCName,bscId,bcfId,rncId,wbtsId,numberOfR99ChannelElements,numberOfCCCHSet," +
+                "maxUPower,uVam,maxU9Power,u9Vam,numOfLCG,numOfLteCells,O,SO,S from " +
+                "(Select mrbtsId from A_MNL where productVariantPlanned ='10' ) as sbtsSet " +
                 " left join " +
-                " (Select mrbtsId,name,version from A_MRBTS) as secondSet " +
-                "on (firstSet.mrbtsId=secondSet.mrbtsId)";
+                " (Select mrbtsId,name,version from A_MRBTS) as mainSet " +
+                "on (sbtsSet.mrbtsId=mainSet.mrbtsId)"
+                +
+                " left join " +
+
+                " (Select mrbtsId,bscId,bcfId,BSCName from  (Select mrbtsId,bscId,bcfId from A_GNBCF) as gIdSet" +
+                " left join " +
+                "(Select bscId,name as BSCName from A_BSC) as BSCSet on (gIdSet.bscId=BSCSet.bscId) ) as gSet  " +
+
+
+                "on (sbtsSet.mrbtsId=gSet.mrbtsId)" +
+
+                " left join " +
+                " (Select mrbtsId,identifier as rncId from A_WNBTS_RNCCONFIGLIST) as rncSet " +
+                "on (sbtsSet.mrbtsId=rncSet.mrbtsId)"
+                +
+                " left join " +
+                " (Select mrbtsId,numberOfCCCHSet,numberOfR99ChannelElements,wbtsId from A_WNBTS) as wbtsSet " +
+                "on (sbtsSet.mrbtsId=wbtsSet.mrbtsId)" +
+
+                "left join " +
+                "(Select mrbtsId,first(vamEnabled) as uVam, max(maxCarrierPower) as maxUPower from A_WNCEL where ( defaultCarrier ='10612') and ( maxCarrierPower not like '65535' )" +
+                "group by mrbtsId ) as uPowerSet " +
+                "on (mainSet.mrbtsId=uPowerSet.mrbtsId) " +
+                "left join " +
+                "(Select mrbtsId,first(vamEnabled) as u9Vam,max(maxCarrierPower) as maxU9Power from A_WNCEL where ( defaultCarrier ='2988' or defaultCarrier ='3009') " +
+                "and ( maxCarrierPower not like '65535')  group by mrbtsId ) as u9PowerSet " +
+                "on (mainSet.mrbtsId=u9PowerSet.mrbtsId) " +
+                "left join " +
+                "(Select mrbtsId,count(mrbtsId) as numOfLCG from A_WNCELG group by mrbtsId ) as lcgSet " +
+                "on (sbtsSet.mrbtsId=lcgSet.mrbtsId)" +
+                "left join " +
+                "(Select mrbtsId,count(mrbtsId) as numOfLteCells , sum(administrativeState) as O from A_LTE_MRBTS_LNBTS_LNCEL group by mrbtsId ) as lCellsSet " +
+                "on (sbtsSet.mrbtsId=lCellsSet.mrbtsId)" +
+
+                "left join " +
+                "(Select mrbtsId,sum(actSuperCell) as SO from ( " +
+                "(Select mrbtsId,lnCelId,administrativeState from A_LTE_MRBTS_LNBTS_LNCEL ) as A " +
+                "left join \n" +
+                "(Select mrbtsId,lnCelId,actSuperCell from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD ) as B " +
+                "on(A.mrbtsId=B.mrbtsId and A.lnCelId=B.lnCelId) ) where administrativeState = '1' group by mrbtsId) as thirdSet " +
+                "on (sbtsSet.mrbtsId=thirdSet.mrbtsId) " +
+                "left join " +
+                "(Select mrbtsId,max(dlChBw) as BW,max(dlMimoMode) as M,sum(actSuperCell) as S from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD group by mrbtsId) as lteDataSet " +
+                "on (sbtsSet.mrbtsId=lteDataSet.mrbtsId)  "
+        ;
         ArrayList<Cabinet> sBtsS = new ArrayList<>();
-        ResultSet lResultSet = statement.executeQuery(sbtsQuery);
-        while (lResultSet.next()) {
+        ResultSet sResultSet = statement.executeQuery(sbtsQuery);
+        while (sResultSet.next()) {
             SBTS sbts = new SBTS();
-            sbts.setControllerId(lResultSet.getString(1));
+            sbts.setControllerId(sResultSet.getString(1));
 //            eNodeB.setNumberOfCells(lResultSet.getInt(2) + lResultSet.getInt(8));
 //            eNodeB.setNumberOfOnAirCells(lResultSet.getInt(3), lResultSet.getInt(9));
 
-            sbts.setName(lResultSet.getString(2));
-            sbts.setVersion(lResultSet.getString(3));
+            sbts.setName(sResultSet.getString(2));
+            sbts.setVersion(sResultSet.getString(3));
+            sbts.setBscName(sResultSet.getString(4));
+            sbts.setBscId(sResultSet.getString(5));
+            sbts.setBcfId(sResultSet.getString(6));
+            sbts.setRncId(sResultSet.getString(7));
+            sbts.setWbtsId(sResultSet.getString(8));
+            sbts.setNumberOfR99(sResultSet.getInt(9));
+            sbts.setNumberOfCCCHs(sResultSet.getInt(10));
+            sbts.setuPower(sResultSet.getInt(11), sResultSet.getInt(12));
+            sbts.setU9Power(sResultSet.getInt(13), sResultSet.getInt(14));
+            sbts.setNumberOfLCGs(sResultSet.getInt(15));
+            sbts.setNumberOfLTECells(sResultSet.getInt(16) + sResultSet.getInt(18));
+            sbts.setNumberOfOnAirLTECells(sResultSet.getInt(17), sResultSet.getInt(19));
 //            eNodeB.setBw(lResultSet.getInt(6));
 //            eNodeB.setMimo(lResultSet.getInt(7));
 //            eNodeB.setTac(lResultSet.getString(10));
@@ -364,7 +506,6 @@ public class DatabaseConnector {
                 "on (lCelSet.RncId=sectorIdSet.RncId and lCelSet.WBTSId=sectorIdSet.WBTSId and lCelSet.lCelwId=sectorIdSet.LcrId) " +
                 ") " +
                 " group by RncId,WBTSId,lCelwId";
-
 
         ResultSet nResultSet = statement.executeQuery(uSecConfQuery);
         HashMap<String, NodeConfiguration> uSectorConfs = new HashMap<>();
@@ -414,8 +555,8 @@ public class DatabaseConnector {
 
     public ResultSet getTRXSheet() throws SQLException {
         Statement statement = connection.createStatement();
-        String query = "Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower,name,cellId,frequencyBandInUse,segmentId from " +
-                "(Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower from A_TRX ) as firstSet "
+        String query = "Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower,name,cellId,frequencyBandInUse,segmentId,adminState from " +
+                "(Select BSCId,BCFId,BTSId,TRXId,channel0Pcm,channel0Tsl,lapdLinkName,tsc,trxRfPower,adminState from A_TRX ) as firstSet "
                 + "left join "
                 + "(Select BSCId,BCFId,name from A_BCF group by BSCId,BCFId )as secondSet "
                 + "on (firstSet.BSCId=secondSet.BSCId and firstSet.BCFId=secondSet.BCFId) "
@@ -463,50 +604,23 @@ public class DatabaseConnector {
                 + "on (firstSet.RncId=thirdSet.RncId and firstSet.WBTSId=thirdSet.WBTSId and firstSet.LcrId=thirdSet.lcelwId)";
         return statement.executeQuery(query);
     }
-//    public ResultSet getUcellsSheet() throws SQLException {
-//        Statement statement = connection.createStatement();
-//        String query = "Select BTSAdditionalInfo,name,RncId,WBTSId,AdminCellState,CId,LAC,MaxDLPowerCapability,RAC," +
-//                "UARFCN,cName,vamEnabled,group_concat(antId),group_concat(rModId)," + "group_concat(prodCode),group_concat(sModId),group_concat(positionInChain)," +
-//                "group_concat(linkId),first(defaultCarrier),first(SectorID),first(name),"
-//                + "first(vamEnabled),first(MaxDLPowerCapability)  from " +
-//                "(Select RncId,WBTSId,LcrId,AdminCellState,CId,LAC,MaxDLPowerCapability,RAC,UARFCN,name as cName from A_WCEL ) as firstSet "
-//                + "left join "
-//                + "(Select RncId,WBTSId,BTSAdditionalInfo,name from A_WBTS )as secondSet "
-//                + "on (firstSet.RncId=secondSet.RncId and firstSet.WBTSId=secondSet.WBTSId)"
-//                + "left join "
-//                + "(SELECT RncId,WBTSId,lCelwId,vamEnabled FROM A_WBTSF_WBTS_MRBTS_BTSSCW_LCELW )as thirdSet "
-//                + "on (firstSet.RncId=thirdSet.RncId and firstSet.WBTSId=thirdSet.WBTSId and firstSet.LcrId=thirdSet.lcelwId)" +
-//
-//                "(SELECT RncId,WBTSId,lCelwId,antlId FROM A_WBTSF_LCELW_RESOURCELIST) as lCelSet " +
-//                "LEFT JOIN" +
-//                "(SELECT RncId,WBTSId,antId,antlId,rModId FROM A_WBTSF_RNC_WBTS_MRBTS_ANTL) as antSet " +
-//                "on (lCelSet.RncId=antSet.RncId and lCelSet.WBTSId=antSet.WBTSId and lCelSet.antlId=antSet.antlId) " +
-//                "left join " +
-//                "(SELECT RncId,WBTSId,rModId,linkId,positionInChain,sModId FROM A_WBTSF_RMOD_CONNECTIONLIST) as connectionSet " +
-//                "on (antSet.RncId=connectionSet.RncId and antSet.WBTSId=connectionSet.WBTSId and antSet.rModId=connectionSet.rModId) " +
-//                "left join " +
-//                "(SELECT RncId,WBTSId,rModId,prodCode,serNum FROM A_WBTSF_RNC_WBTS_MRBTS_RMOD) as rModSet " +
-//                "on (antSet.RncId=rModSet.RncId and antSet.WBTSId=rModSet.WBTSId and antSet.rModId=rModSet.rModId)" +
-//                "left join " +
-//                "(SELECT RncId,WBTSId,LcrId,SectorID FROM A_WCEL_AC) as sectorIdSet " +
-//                "on (lCelSet.RncId=sectorIdSet.RncId and lCelSet.WBTSId=sectorIdSet.WBTSId and lCelSet.lCelwId=sectorIdSet.LcrId) " +
-//                ") ";
-//        return statement.executeQuery(query);
-//    }
 
     public ResultSet getLcellsSheet() throws SQLException {
         Statement statement = connection.createStatement();
-        String query = "Select name,mrbtsId,administrativeState,eutraCelId,tac,dlChBw,dlMimoMode,pMax,cellName from " +
+        String query = "Select name,mrbtsId,administrativeState,eutraCelId,tac,dlChBw,dlMimoMode,pMax,cellName,earfcnDL,maxNumRrc from " +
                 "(Select mrbtsId,administrativeState,cellName,eutraCelId,tac,lnCelId from A_LTE_MRBTS_LNBTS_LNCEL ) as firstSet " +
                 "left join " +
                 "(Select mrbtsId,name from A_LTE_MRBTS_LNBTS) as secondSet " +
                 "on (firstSet.mrbtsId=secondSet.mrbtsId) " +
                 "left join " +
-                "(Select mrbtsId,dlChBw,dlMimoMode,lnCelId from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD) as thirdSet " +
+                "(Select mrbtsId,dlChBw,dlMimoMode,lnCelId,earfcnDL from A_LTE_MRBTS_LNBTS_LNCEL_LNCEL_FDD) as thirdSet " +
                 "on (firstSet.mrbtsId=thirdSet.mrbtsId and firstSet.lnCelId=thirdSet.lnCelId) "
                 + "left join " +
                 "(Select mrbtsId,pMax,lnCelId from A_LTE_LNCEL_PC) as fourthSet " +
-                "on (firstSet.mrbtsId=fourthSet.mrbtsId and firstSet.lnCelId=fourthSet.lnCelId) ";
+                "on (firstSet.mrbtsId=fourthSet.mrbtsId and firstSet.lnCelId=fourthSet.lnCelId) "
+                + "left join " +
+                "(Select mrbtsId,lnCelId,maxNumRrc from A_LTE_LNBTS_LNCEL_LNCEL_FDD_MPUCCH_FDD) as fifthSet " +
+                "on (firstSet.mrbtsId=fifthSet.mrbtsId and firstSet.lnCelId=fifthSet.lnCelId) ";
         return statement.executeQuery(query);
     }
 

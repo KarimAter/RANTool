@@ -32,10 +32,13 @@ public abstract class Cabinet {
     // Todo: seperate package for cabinets
     // Todo:generate uniqueName here
     protected String uniqueName, code, name, region, key, properties,
-            version, cellIdentifier, txMode;
+            version, cellIdentifier, txMode, sbtsId;
     protected int onAir, numberOfCells, numberOfOnAirCells, numberOfE1s, numberOfSectors;
     protected Hardware hardware;
     protected NodeConfiguration nodeConfiguration;
+
+    abstract public String getSbtsId();
+
 
     abstract public int getTechnology();
 

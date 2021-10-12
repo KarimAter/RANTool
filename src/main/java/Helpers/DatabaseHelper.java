@@ -378,12 +378,14 @@ public class DatabaseHelper {
         resultSet = statement.executeQuery(hwQuery);
         while (resultSet.next()) {
 //            if (!resultSet.getString(1).equals("")) {
-            if (resultSet.getString(1) != null) {
-                hardware = new Hardware(resultSet.getString(1),
+            String rfIdentifier = resultSet.getString(1);
+            if (rfIdentifier != null) {
+                hardware = new Hardware(rfIdentifier,
                         resultSet.getString(2),
                         resultSet.getString(3));
                 hardware.setWeek(resultSet.getString(4));
                 connection.close();
+
                 return hardware;
             }
         }
@@ -615,6 +617,8 @@ public class DatabaseHelper {
             cabinet.setControllerId(resultSet.getString(CONTROLLER_ID));
             cabinet.setNodeId(resultSet.getString(NODE_ID));
             cabinet.setProperties(resultSet.getString(PROPERTIES));
+
+
             Hardware hardware = new Hardware(resultSet.getString(RF_IDENTIFIER),
                     resultSet.getString(SM_IDENTIFIER), resultSet.getString(TX_IDENTIFIER));
             hardware.setWeek(resultSet.getString(WEEK));
@@ -656,6 +660,38 @@ public class DatabaseHelper {
         }
         return dumpHwMap;
     }
+
+    public HashMap<String, Hardware> loadSbtsNodeRelations() {
+        ResultSet resultSet;
+        Statement statement;
+        HashMap<String, Hardware> dumpHwMap = new HashMap<>();
+        try {
+            statement = connection.createStatement();
+            String nodeBQuery = "Select " + ID + "," + CODE + "," + NAME + "," + TECHNOLOGY + ","
+                    + PROPERTIES + "," + CONTROLLER_ID + "," + WEEK + " from W" + tableName;
+            resultSet = statement.executeQuery(nodeBQuery);
+            while (resultSet.next()) {
+                Hardware hardware = new Hardware(resultSet.getString(WEEK));
+                String key = resultSet.getString(ID);
+                int tech = resultSet.getInt(TECHNOLOGY);
+                if (tech != 1) {
+                    Cabinet cabinet = Cabinet.nodeProvider(tech);
+                    cabinet.setProperties(resultSet.getString(PROPERTIES));
+                    if (tech == 4)
+                        cabinet.setControllerId(CONTROLLER_ID);
+                    hardware.setSBTSId(cabinet.getSbtsId());
+                } else hardware.setSBTSId(resultSet.getString(CONTROLLER_ID));
+
+                hardware.setCode(resultSet.getString(CODE));
+                hardware.setName(resultSet.getString(NAME));
+                dumpHwMap.put(key, hardware);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return dumpHwMap;
+    }
+
 
     public boolean isWeekInserted(int tech) throws SQLException {
         ResultSet resultSet;

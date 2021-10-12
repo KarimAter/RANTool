@@ -77,11 +77,6 @@ class SiteMapper {
             params.add(cabinet.getNumberOfOnAirCells());
             Map<String, Integer> r99CountMap = ((NodeB) cabinet).getR99CountMap();
             r99CountMap.forEach((key, value) -> params.add(value));
-//            params.add(((NodeB) cabinet).getNumberOfHSDPASet1());
-//            params.add(((NodeB) cabinet).getNumberOfHSDPASet2());
-//            params.add(((NodeB) cabinet).getNumberOfHSDPASet3());
-//            params.add(((NodeB) cabinet).getNumberOfHSUPASet1());
-//            params.add(((NodeB) cabinet).getNumberOfChannelElements());
             statBox.setParam(params);
             return statBox;
         }).collect(Collectors.groupingBy(StatBox::getControllerId));

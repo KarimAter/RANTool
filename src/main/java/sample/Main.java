@@ -30,6 +30,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static Helpers.Constants.hwShortNameConversionMap;
+
 
 public class Main extends Application {
 
@@ -119,9 +121,10 @@ public class Main extends Application {
                 ArrayList<Cabinet> gCabinets = databaseHelper.loadCabinets(2);
                 ArrayList<Cabinet> uCabinets = databaseHelper.loadCabinets(3);
                 ArrayList<Cabinet> lCabinets = databaseHelper.loadCabinets(4);
+                ArrayList<Cabinet> sbtsCabinets = databaseHelper.loadCabinets(1);
 
 
-//                int x = 1;
+                int x = 1;
                 Exporter exporter = new Exporter(weekName);
                 // Exporting Hardware Map..
                 exporter.exportSiteHardwareMap(getHwMap());
@@ -143,6 +146,25 @@ public class Main extends Application {
                 SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver(serialDatabasePath);
 
                 exporter.exportHardwareCount(serialDatabaseSaver.getHardwareCount(), "Hardware Count");
+
+
+                try {
+
+                    List<Cabinet> sRanBcfs = gCabinets.stream().filter(cabinet -> !(((BCF) cabinet).getSbtsId().equals("null")))
+                            .collect(Collectors.toList());
+
+                    List<Cabinet> sRanNodeBs = uCabinets.stream().filter(cabinet -> !(((NodeB) cabinet).getSbtsId().equals("null")))
+                            .collect(Collectors.toList());
+
+
+//                    exporter.exportBcfTx(gCabinets);
+                    exporter.exportNodeBTx(uCabinets);
+                    exporter.exportEnodeBTx(sRanBcfs, sRanNodeBs, lCabinets);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -210,31 +232,42 @@ public class Main extends Application {
                     if (fileName.contains("RNC")) {
                         Hardware hardware = parse3GHardwareXML(xmlFile);
                         nodeBHWHashMap.put(hardware.getUniqueName(), hardware);
-                        hwHashMap.putAll(nodeBHWHashMap);
+
                     } else if (fileName.contains("SRAN")) {
-                        Hardware hardware = parseSBTSHardwareXML(xmlFile);
+                        Hardware hardware = parseSBTSHardwareXML(xmlFile, "SBTS");
                         sbtsHwMap.put(hardware.getUniqueName(), hardware);
-                        hwHashMap.putAll(sbtsHwMap);
+
                     } else if (fileName.contains("MRBTS")) {
-                        Hardware hardware = parse4GHardwareXML(xmlFile);
-                        lteHwMap.put(hardware.getUniqueName(), hardware);
-                        hwHashMap.putAll(lteHwMap);
+                        if (fileName.contains("lte")) {
+                            Hardware hardware = parse4GHardwareXML(xmlFile);
+                            lteHwMap.put(hardware.getUniqueName(), hardware);
+                        } else {
+                            Hardware hardware = parseSBTSHardwareXML(xmlFile, "4G");
+                            lteHwMap.put(hardware.getUniqueName(), hardware);
+                        }
+
                     } else {
                         Hardware hardware = parse2GHardwareXML(xmlFile);
                         btsHwHashMap.put(hardware.getUniqueName(), hardware);
-                        hwHashMap.putAll(btsHwHashMap);
+
                     }
 
-                } catch (ParserConfigurationException | SAXException | IOException e) {
+                } catch (ParserConfigurationException | SAXException | IOException | NullPointerException e) {
+                    System.out.println("XML parsing problem in: " + xmlFile.getName());
                     e.printStackTrace();
                 }
             }
+            hwHashMap.putAll(nodeBHWHashMap);
+            hwHashMap.putAll(sbtsHwMap);
+            hwHashMap.putAll(lteHwMap);
+            hwHashMap.putAll(btsHwHashMap);
             System.out.println(Utils.getTime());
             System.out.println("Number of 2G XML files: " + btsHwHashMap.size());
             System.out.println("Number of 3G XML files: " + nodeBHWHashMap.size());
             System.out.println("Number of 4G XML files: " + lteHwMap.size());
             System.out.println("Number of SBTS XML files: " + sbtsHwMap.size());
             System.out.println("Total number of XML files: " + hwHashMap.size());
+//            hwHashMap.forEach((s, hardware) -> System.out.println(s));
             System.out.println(Utils.getTime());
         });
 
@@ -479,9 +512,8 @@ public class Main extends Application {
         {
             String uniqueName = cabinet.getUniqueName();
             Hardware hardware = hardwareMap.get(uniqueName);
-            if (hardware != null) {
-                cabinet.setHardware(hardware);
-            } else {
+            if (hardware != null) cabinet.setHardware(hardware);
+            else {
                 SerialDatabaseSaver serialDatabaseSaver = new SerialDatabaseSaver(serialDatabasePath);
                 Hardware serialsDbHardware = serialDatabaseSaver.getMissinHw(uniqueName,
                         ToolCalendar.getPreviousWeek(weekName));
@@ -536,7 +568,11 @@ public class Main extends Application {
                         if (!bcfSerials.contains(unitSerial) && !unitSerial.equals("")) {
                             HwItem hwItem = new HwItem();
                             bcfSerials.add(unitSerial);
-                            hwItem.setUserLabel(unitElement.getAttribute("unitTypeActual"));
+                            String userLabel = unitElement.getAttribute("unitTypeActual");
+                            if (userLabel.equals("FXX")) {
+                                int x = 1;
+                            }
+                            hwItem.setUserLabel(userLabel);
                             hwItem.setSerialNumber(unitSerial);
                             hwItem.setIdentificationCode(unitElement.getAttribute("identificationCode"));
                             hwItems.add(hwItem);
@@ -619,7 +655,8 @@ public class Main extends Application {
         return hardware;
     }
 
-    private Hardware parse4GHardwareXML(File xmlFile) throws ParserConfigurationException, SAXException, IOException {
+    private Hardware parse4GHardwareXML(File xmlFile) throws ParserConfigurationException, SAXException, IOException,
+            NullPointerException {
         ArrayList<HwItem> hwItems = new ArrayList<>();
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
@@ -687,7 +724,7 @@ public class Main extends Application {
         return hardware;
     }
 
-    private Hardware parseSBTSHardwareXML(File xmlFile) throws ParserConfigurationException, SAXException, IOException {
+    private Hardware parseSBTSHardwareXML(File xmlFile, String type) throws ParserConfigurationException, SAXException, IOException {
         ArrayList<HwItem> hwItems = new ArrayList<>();
         String sbtsId = "";
         boolean sbtsIdExtracted = false;
@@ -715,11 +752,17 @@ public class Main extends Application {
                 String className = attributes.getNamedItem("class").getNodeValue();
                 if (!sbtsIdExtracted) {
                     String mrbtsLongName = attributes.getNamedItem("distName").getNodeValue();
-                    int lastIndex = mrbtsLongName.lastIndexOf("MRBTS-");
-                    sbtsId = mrbtsLongName.substring(lastIndex + 6, lastIndex + 11);
+                    String[] parts = mrbtsLongName.split("/");
+                    for (String part : parts) {
+                        if (part.contains("MRBTS-"))
+                            sbtsId = part.replace("MRBTS-", "");
+                    }
+//                    int lastIndex = mrbtsLongName.lastIndexOf("MRBTS-");
+//                    sbtsId = mrbtsLongName.substring(lastIndex + 6, lastIndex + 11);
                     sbtsIdExtracted = true;
                 }
-                if (!className.equalsIgnoreCase("SMOD_CORE") && className.contains("MOD")) {
+                if ((!className.equalsIgnoreCase("SMOD_CORE") && className.contains("MOD"))
+                        || className.contains("INVUNIT")) {
                     HashMap<String, String> kvalue = new HashMap<>();
                     w++;
                     NodeList childNodes1 = item.getChildNodes();
@@ -731,27 +774,48 @@ public class Main extends Application {
                             if (attributes1 != null) {
                                 for (int k = 0; k < attributes1.getLength(); k++) {
                                     Node item2 = attributes1.item(k);
-                                    kvalue.put(item2.getNodeValue(), item1.getFirstChild().getNodeValue());
+                                    String x = item2.getNodeValue();
+                                    String y = "";
+                                    Node firstChild = item1.getFirstChild();
+                                    if (firstChild != null)
+                                        y = firstChild.getNodeValue();
+                                    if (x != null)
+                                        kvalue.put(x, y);
                                 }
                             }
                         }
                     }
 
                     HwItem hwItem = new HwItem();
-                    String userLabel = kvalue.get("inventoryUnitType");
+                    String hwDescription = null;
                     try {
-                        hwItem.setUserLabel(userLabel.substring(userLabel.length() - 4));
-                        hwItem.setSerialNumber(kvalue.get("serialNumber"));
-                        hwItem.setIdentificationCode(kvalue.get("vendorUnitTypeNumber"));
-                        hwItems.add(hwItem);
+                        hwDescription = kvalue.get("inventoryUnitType");
+                        if (!hwDescription.equals("CORE_Flexi System Module Outdoor FSMF")) {
+                            try {
+                                try {
+                                    hwItem.setUserLabel(hwShortNameConversionMap.get(hwDescription));
+                                } catch (NullPointerException e) {
+                                    hwItem.setUserLabel(hwDescription);
+                                }
+                                String serialNumber = kvalue.get("serialNumber");
+                                if (serialNumber != null)
+                                    hwItem.setSerialNumber(serialNumber);
+                                else hwItem.setSerialNumber("");
+                                hwItem.setIdentificationCode(kvalue.get("vendorUnitTypeNumber"));
+                                hwItems.add(hwItem);
+                            } catch (Exception e) {
+
+                            }
+                        }
                     } catch (Exception e) {
-                        System.out.println("Exception at " + sbtsId + " " + className);
+
                     }
+
                 }
             }
         }
         Hardware hardware = new Hardware(hwItems);
-        hardware.setUniqueName("SBTS_" + sbtsId);
+        hardware.setUniqueName(type + "_" + sbtsId);
         hardware.setWeek('W' + weekName);
         return hardware;
     }

@@ -1,13 +1,21 @@
 package sample;
 
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 public class EnodeB extends Cabinet {
     private static final int TECHNOLOGY = 4;
     private String mrbtsId;
     private int bw, mimo;
     private Hardware hardware;
-    private String tac, ipIdentifier, manIp, s1Ip, secIp, secGw;
-    private boolean carrierAggregation;
+    private String tac, ipIdentifier, manIp, s1Ip, secIp, secGw, manVlan, secVlan;
+    private boolean carrierAggregation, sRan;
+
+    @Override
+    public String getSbtsId() {
+        return sRan ? mrbtsId : "null";
+    }
 
     @Override
     public int getTechnology() {
@@ -66,19 +74,22 @@ public class EnodeB extends Cabinet {
                         "__" +
                         this.version.replace("_", "-") +
                         "__" +
-                        this.carrierAggregation;
+                        this.carrierAggregation +
+                        "__" +
+                        this.sRan;
     }
 
     @Override
     protected void extractProperties() {
         String[] parts = properties.split("__");
         this.setCellIdentifier(parts[0]);
-        this.setIpIdentifier(parts[1]);
+        this.ipIdentifier = parts[1];
         this.setBw(Integer.valueOf(parts[2]));
         this.setMimo(Integer.valueOf(parts[3]));
         this.setTac(parts[4]);
         this.setVersion(parts[5]);
         this.carrierAggregation = Boolean.valueOf((parts[6]));
+        this.sRan = Boolean.valueOf((parts[7]));
         this.setTxMode("Full IP");
     }
 
@@ -102,7 +113,7 @@ public class EnodeB extends Cabinet {
         this.generateUniqueName();
         this.findCodeAndRegion();
         this.generateCellIdentifier();
-        this.generateIpIdentifier();
+//        this.generateIpIdentifier();
         this.generateProperties();
     }
 
@@ -125,24 +136,11 @@ public class EnodeB extends Cabinet {
         numberOfSectors = this.numberOfCells;
     }
 
-    private void generateIpIdentifier() {
-        this.ipIdentifier = this.manIp +
-                "-" +
-                this.s1Ip +
-                "-" +
-                this.secIp +
-                "-" +
-                this.secGw;
-    }
+    public void setIpData(String ips, String vlans, String ifs, String secIf, String remote, String s1If, String ifvflink, String ipvlan) {
 
-    private void extractIpsFromIdentifier() {
-        String[] parts = ipIdentifier.split("-");
-        manIp = parts[0];
-        s1Ip = parts[1];
-        secIp = parts[2];
-        secGw = parts[3];
+        this.ipIdentifier = Stream.of(ipvlan, ifs, secIf, remote, s1If)
+                .map(String::valueOf).collect(Collectors.joining(";"));
     }
-
 
     public Hardware getHardware() {
         return hardware;
@@ -152,42 +150,25 @@ public class EnodeB extends Cabinet {
         this.hardware = hardware;
     }
 
-    public void setIpIdentifier(String ipIdentifier) {
-        this.ipIdentifier = ipIdentifier;
-        extractIpsFromIdentifier();
-    }
-
     String getManIp() {
         return manIp;
     }
 
-    public void setManIp(String manIp) {
-        this.manIp = manIp;
-    }
 
     String getS1Ip() {
         return s1Ip;
     }
 
-    public void setS1Ip(String s1Ip) {
-        this.s1Ip = s1Ip;
-    }
 
     String getSecIp() {
         return secIp;
     }
 
-    public void setSecIp(String secIp) {
-        this.secIp = secIp;
-    }
 
     String getSecGw() {
         return secGw;
     }
 
-    public void setSecGw(String secGw) {
-        this.secGw = secGw;
-    }
 
     public void setENodeBId(String eNodeBId) {
         this.mrbtsId = eNodeBId;
@@ -236,4 +217,28 @@ public class EnodeB extends Cabinet {
     public void setCarrierAggregation(int carrierAggregation) {
         this.carrierAggregation = carrierAggregation == 1;
     }
+
+    public boolean isSran() {
+        return sRan;
+    }
+
+    public void setSran(int sRan) {
+        this.sRan = sRan == 10;
+    }
+
+    public String getManVlan() {
+        return manVlan;
+    }
+
+
+    public String getSecVlan() {
+        return secVlan;
+    }
+
+
+    public String getIpIdentifier() {
+        return ipIdentifier;
+    }
+
+
 }

@@ -37,14 +37,14 @@ public class NodeConfiguration {
             if (sectorsPower == Double.valueOf(power))
                 return power;
             else {
-                System.out.println(this.key + " Main and all sectors inconsistency ");
+//                System.out.println(this.key + " Main and all sectors inconsistency ");
                 return String.valueOf(sectorsPower);
             }
         } else {
             String sectorPowers = powerMap.entrySet().stream().map(doubleListEntry -> doubleListEntry.getKey() + "W "
                     + "(S" + doubleListEntry.getValue().stream().map(SectorConfiguration::getSectorId).distinct().collect(Collectors.joining(",S")) + ")")
                     .collect(Collectors.joining(","));
-            System.out.println(this.key + "Inconsistency between all sectors " + sectorPowers);
+//            System.out.println(this.key + "Inconsistency between all sectors " + sectorPowers);
             return sectorPowers;
         }
     }
@@ -52,9 +52,6 @@ public class NodeConfiguration {
     void extractSectorsMapping() {
 
         String connectionType2100;
-//        if (key.equals("28_88") || key.equals("24_665") || key.equals("14_175")|| key.equals("62_43")|| key.equals("58_32") || key.equals("58_50") || key.equals("62_12") || key.equals("48_289")) {
-//            int x = 1;
-//        }
 
         // extract map of 2100 sectors with sectors id available
         Map<String, List<SectorConfiguration>> sectorsMap2100 = sectorsConfiguration.stream().filter(s -> !s.isU9Sector() && !s.isNoSectorId())
