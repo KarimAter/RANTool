@@ -15,11 +15,11 @@ import static java.util.stream.Collectors.joining;
 
 public class Hardware {
     private int tech;
-    private ArrayList<HwItem> hwItems = new ArrayList<>();
+    private List<HwItem> hwItems = new ArrayList<>();
     private Map<String, Long> modules = new LinkedHashMap<>();
     private String uniqueName, rfString, smString, txString;
-    private String rfIdentifier = "0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0";
-    private String smIdentifier = "0.0.0.0.0.0.0.0";
+    private String rfIdentifier = "0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0";
+    private String smIdentifier = "0.0.0.0.0.0.0.0.0.0.0.0.0";
     private String txIdentifier = "0.0.0.0.0.0";
     private String week = "W0";
     private String code;
@@ -27,15 +27,17 @@ public class Hardware {
     private String SBTSId;
 
     // Constructor: generate hardware from hardware items
-    public Hardware(ArrayList<HwItem> hwItems) {
+    public Hardware(List<HwItem> hwItems) {
         this.hwItems = hwItems;
         generate();
     }
 
     // Constructor: generate hardware from identifiers
     public Hardware(String rfIdentifier, String smIdentifier, String txIdentifier) {
-        if (rfIdentifier.length() < 31)
-            rfIdentifier = rfIdentifier + ".0";
+        if (rfIdentifier.length() < 45)
+            rfIdentifier = rfIdentifier + ".0.0.0.0.0.0.0";
+        if (smIdentifier.length() < 25)
+            smIdentifier = smIdentifier + ".0.0.0.0.0";
         extractHwFromIdentifiers(Constants.rfMap, rfIdentifier);
         extractHwFromIdentifiers(Constants.smMap, smIdentifier);
         extractHwFromIdentifiers(Constants.txMap, txIdentifier);
@@ -94,9 +96,9 @@ public class Hardware {
         // Generate count of each module
         modules = countModules(hwItems);
         // generate hardware Strings
-        rfString = concatenateHwString(filterHw(modules, "FR", "FX"));
-        smString = concatenateHwString(filterHw(modules, "ES", "FS", "FB"));
-        txString = concatenateHwString(filterHw(modules, "FT", "FI"));
+        rfString = concatenateHwString(filterHw(modules, "FR", "FX", "AR", "AH", "AZ"));
+        smString = concatenateHwString(filterHw(modules, "ES", "FS", "FB", "AS", "AB"));
+        txString = concatenateHwString(filterHw(modules));
     }
 
 
@@ -108,7 +110,7 @@ public class Hardware {
     }
 
     // counts each hwItem and returns them to sortedMap by hwItemName
-    private Map<String, Long> countModules(ArrayList<HwItem> hwItems) {
+    private Map<String, Long> countModules(List<HwItem> hwItems) {
         return hwItems.stream()
                 .collect(Collectors.groupingBy(HwItem::getUserLabel, Collectors.counting()))
                 .entrySet().stream().sorted(Map.Entry.comparingByKey())
@@ -118,16 +120,17 @@ public class Hardware {
 
 
     // filterHw modules according to hardware type
-    private Map<String, Long> filterHw(Map<String, Long> modules, String prefix1, String prefix2) {
+    private Map<String, Long> filterHw(Map<String, Long> modules, String prefix1, String prefix2, String prefix3, String prefix4, String prefix5) {
         return modules.entrySet().stream()
-                .filter(name -> name.getKey().contains(prefix1) || name.getKey().contains(prefix2))
+                .filter(name -> name.getKey().contains(prefix1) || name.getKey().contains(prefix2)
+                        || name.getKey().contains(prefix3) || name.getKey().contains(prefix4) || name.getKey().contains(prefix5))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (prev, next) -> next, LinkedHashMap::new));
 
     }
 
-    private Map<String, Long> filterHw(Map<String, Long> modules, String prefix1, String prefix2, String prefix3) {
+    private Map<String, Long> filterHw(Map<String, Long> modules) {
         return modules.entrySet().stream()
-                .filter(name -> name.getKey().contains(prefix1) || name.getKey().contains(prefix2) || name.getKey().contains(prefix3))
+                .filter(name -> name.getKey().contains("FT") || name.getKey().contains("FI"))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (prev, next) -> next, LinkedHashMap::new));
     }
 
@@ -212,7 +215,6 @@ public class Hardware {
     }
 
     public String getRfIdentifier() {
-//        return rfIdentifier==null ? "0.0.0.0.0.0.0.0.0.0.0.0.0.0.0":rfIdentifier;
         return rfIdentifier;
     }
 
@@ -221,7 +223,6 @@ public class Hardware {
     }
 
     public String getSmIdentifier() {
-//        return smIdentifier==null ? "0.0.0.0.0.0.0.0":smIdentifier;
         return smIdentifier;
     }
 
@@ -230,7 +231,6 @@ public class Hardware {
     }
 
     public String getTxIdentifier() {
-//        return txIdentifier==null ? "0.0.0.0.0.0":txIdentifier;
         return txIdentifier;
     }
 
@@ -238,7 +238,7 @@ public class Hardware {
         this.txIdentifier = txIdentifier;
     }
 
-    public ArrayList<HwItem> getHwItems() {
+    public List<HwItem> getHwItems() {
         return hwItems;
     }
 

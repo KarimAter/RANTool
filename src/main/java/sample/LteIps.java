@@ -22,10 +22,6 @@ public class LteIps {
     private void process() {
         String[] ifs = ifstring.split(",");
         String[] ipVlans = ipVlanString.split(",");
-//        String[] vLans = vlanString.split(",");
-//        String[] iFvFs = ifvflink.split(",");
-//        Map<String, String> iFivMap = Stream.of(ifvflink.split(",")).map(s -> s.split("/")).collect(Collectors.toMap(a -> a[0], b -> b[1]));
-
         for (int i = 0; i < ifs.length; i++) {
             String iF = ifs[i];
             String[] split = ipVlans[i].split("&&");

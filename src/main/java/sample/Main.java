@@ -717,8 +717,16 @@ public class Main extends Application {
                 }
             }
         }
-
-        Hardware hardware = new Hardware(hwItems);
+        Hardware hardware = new Hardware(hwItems.stream().filter(hwItem -> !hwItem.getUserLabel().equals("CABINET") ||
+                !hwItem.getUserLabel().equals("RET") ||
+                !hwItem.getUserLabel().equals("SAD") ||
+                !hwItem.getUserLabel().equals("LNA") ||
+                !hwItem.getUserLabel().equals("Other") ||
+                !hwItem.getUserLabel().equals("INET") ||
+                !hwItem.getUserLabel().equals("-ODM") ||
+                !hwItem.getUserLabel().equals("vice") ||
+                !hwItem.getUserLabel().equals("MAD") ||
+                !hwItem.getUserLabel().equals("WMHD")).collect(Collectors.toList()));
         hardware.setUniqueName("4G_" + mrbtsId);
         hardware.setWeek('W' + weekName);
         return hardware;
@@ -757,8 +765,6 @@ public class Main extends Application {
                         if (part.contains("MRBTS-"))
                             sbtsId = part.replace("MRBTS-", "");
                     }
-//                    int lastIndex = mrbtsLongName.lastIndexOf("MRBTS-");
-//                    sbtsId = mrbtsLongName.substring(lastIndex + 6, lastIndex + 11);
                     sbtsIdExtracted = true;
                 }
                 if ((!className.equalsIgnoreCase("SMOD_CORE") && className.contains("MOD"))
@@ -814,18 +820,22 @@ public class Main extends Application {
                 }
             }
         }
-        Hardware hardware = new Hardware(hwItems);
+        Hardware hardware = new Hardware(hwItems.stream().filter(hwItem -> !(hwItem.getUserLabel().equals("CABINET") ||
+                hwItem.getUserLabel().equals("RET") ||
+                hwItem.getUserLabel().equals("SAD") ||
+                hwItem.getUserLabel().equals("LNA") ||
+                hwItem.getUserLabel().equals("Other") ||
+                hwItem.getUserLabel().equals("INET") ||
+                hwItem.getUserLabel().equals("-ODM") ||
+                hwItem.getUserLabel().equals("vice") ||
+                hwItem.getUserLabel().equals("MAD") ||
+                hwItem.getUserLabel().equals("FAN") ||
+                hwItem.getUserLabel().equals("WMHD"))).collect(Collectors.toList()));
         hardware.setUniqueName(type + "_" + sbtsId);
         hardware.setWeek('W' + weekName);
         return hardware;
     }
 
-
-    private void clearLists() {
-//        gSitesList = new ArrayList<>();
-//        uSitesList = new ArrayList<>();
-        lSitesList = new ArrayList<>();
-    }
 
     private void createDumpsSelector(ArrayList<String> tableNames) {
         Button currentBu = new Button("Load current dump");

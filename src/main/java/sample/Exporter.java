@@ -1701,7 +1701,7 @@ class Exporter {
 
         bcfs.forEach(bcf ->
         {
-            ArrayList<HwItem> hwItems = bcf.getHardware().getHwItems();
+            List<HwItem> hwItems = bcf.getHardware().getHwItems();
             for (HwItem hwItem : hwItems) {
                 ArrayList<XSSFCell> cells = new ArrayList<>();
                 XSSFRow row = sheet.createRow(r[0]);

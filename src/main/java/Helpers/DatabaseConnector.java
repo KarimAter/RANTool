@@ -202,10 +202,11 @@ public class DatabaseConnector {
                 "where positionInChain = '2' group by RncId,WBTSId ) chainSet " +
                 "on (firstSet.RncId=chainSet.RncId and firstSet.WBTSId=chainSet.WBTSId) " +
                 "left join\n" +
+
                 "(Select RncId ,WBTSId,COCOId from A_WBTS ) as twelvthSet\n" +
                 "on (firstSet.RncId=twelvthSet.RncId and firstSet.WBTSId=twelvthSet.WBTSId)\n" +
                 "left join\n" +
-                "(Select RncId ,COCOId,P from\n" +
+                "(Select RncId ,COCOId,P from " +
                 "(Select RncId ,COCOId,max(cast (AAL2UPPCR01Egr as int)) as P from A_COCO_AAL2TP  group by RncId,COCOId)) as thirteenthSet\n" +
                 "on (firstSet.RncId=thirteenthSet.RncId and firstSet.COCOId=thirteenthSet.COCOId)\n" +
                 "left join\n" +
@@ -301,17 +302,12 @@ public class DatabaseConnector {
                 "left join " +
                 "(Select mrbtsId,first(version) as V,first(productVariantPlanned) as sranId from A_MNL group by mrbtsId) as fifthSet " +
                 "on (firstSet.mrbtsId=fifthSet.mrbtsId) " +
-
-
                 "left join " +
                 " (Select mrbtsId,ips,vlans,ifs,secIfId,remoteSec,sOneIfId,ifvflink,ipvlan from (" +
-
-
                 " (Select mrbtsId, group_concat(localIpAddr) as ips, group_concat(vlanId) as vlans,group_concat(concat(localIpAddr,'&&',vlanId)) as ipvlan," +
                 " group_concat(ipIfId) as ifs ,group_concat(conc) as ifvflink from " +
-
                 "((Select mrbtsId,ipIfId,localIpAddr,localIpPrefixLength from A_TNL_TNL_IPNO_IPIF_IPADDRESSV4 " +
-                "where ( localIpPrefixLength='27'  or localIpPrefixLength is null ) ) as a " +
+                "where ( localIpPrefixLength='27' or localIpPrefixLength is null ) ) as a " +
                 " left join " +
                 "(SELECT mrbtsId,ipIfId,substr(interfaceDN,length(interfaceDn)) as vfId,concat(ipIfId,'/',substr(interfaceDN,length(interfaceDn))) as conc from A_TNL_TNLSVC_TNL_IPNO_IPIF) as b" +
                 " on (a.mrbtsId=b.mrbtsId AND a.ipIfId=b.ipIfId) " +
@@ -326,8 +322,6 @@ public class DatabaseConnector {
                 ") left join " +
                 "(Select mrbtsId,ipIfId as sOneIfId from A_TNL_TNL_IPNO_IPIF_IPADDRESSV4 where localIpPrefixLength is null ) as e " +
                 "on (k.mrbtsId=e.mrbtsId) ) as ipSet " +
-
-
                 " on (firstSet.mrbtsId=ipSet.mrbtsId)" +
 
 
@@ -338,29 +332,6 @@ public class DatabaseConnector {
                 "group by " +
                 "mrbtsId";
 
-//        "left join "+
-//                "(Select mrbtsId,ipIfId,localIpAddress as manIp,vlanIfIdExtract, vlanId as managementVlan from (" +
-//
-//                " (Select mrbtsId,localIpAddress from A_TNL_TNL_IPAPP_IPSECC_SECPOL where ipSecAction= '2' and policyOrderNumber = '1' ) as secPolSet "+
-//                " left join " +
-//                " (Select mrbtsId,preSrcIpv4Addr from A_TNL_IPRT_R_FORWARDINGENTRIES) as forwardingSet "+
-//                " on (secPolSet.mrbtsId=forwardingSet.mrbtsId and secPolSet.localIpAddress=forwardingSet.preSrcIpv4Addr) "+
-//                " left join"+
-//                "(Select mrbtsId,ipIfId,localIpAddr from A_TNL_TNL_IPNO_IPIF_IPADDRESSV4 where localIpPrefixLength = '27' ) as addressSet " +
-//                "on (secPolSet.mrbtsId=addressSet.mrbtsId and secPolSet.localIpAddress=addressSet.localIpAddr) "+
-//
-//                " left join (Select mrbtsId,ipIfId,length(interfaceDN) as len, SUBSTR(interfaceDN,length(interfaceDN)) as vlanIfIdExtract from A_TNL_TNLSVC_TNL_IPNO_IPIF ) as vlanIfSet "+
-//                "on (addressSet.mrbtsId=vlanIfSet.mrbtsId and addressSet.ipIfId=vlanIfSet.ipIfId)  " +
-//
-//                " left join (Select mrbtsId,vlanIfId,vlanId from A_TNL_TNL_ETHSVC_ETHIF_VLANIF ) as vlanIdSet "+
-//                "on (vlanIfSet.mrbtsId=vlanIdSet.mrbtsId and vlanIfSet.vlanIfIdExtract=vlanIdSet.vlanIfId)  " +
-//                ")) as managementIpSet " +
-//
-//                "on (firstSet.mrbtsId=managementIpSet.mrbtsId) "+
-//
-//                " left join "+
-//                "(Select mrbtsId,template_set as secIP, policyOrderNumber as s1Ip, ipSecPDN as secVlan from A_TNL_TNL_IPAPP_IPSECC_SECPOL ) as AAAA "+
-//                "on (firstSet.mrbtsId=AAAA.mrbtsId) " +
 
         ArrayList<Cabinet> enodeBS = new ArrayList<>();
         ResultSet lResultSet = statement.executeQuery(lQuery);
@@ -586,7 +557,8 @@ public class DatabaseConnector {
                 "(Select BSCId,BCFId,BTSId,segmentId,frequencyBandInUse from A_BTS ) as bDSet " +
                 "on (xDSet.BSCId=bDSet.BSCId and xDSet.BTSId=bDSet.BTSId ) " +
                 "GROUP BY BSCId,BCFId,segmentId,frequencyBandInUse ) as eighthSet " +
-                "on (firstSet.BSCId=eighthSet.BSCId and firstSet.BCFId=eighthSet.BCFId and firstSet.segmentId=eighthSet.segmentId and firstSet.BTSId=eighthSet.fBTSId)";
+                "on (firstSet.BSCId=eighthSet.BSCId and firstSet.BCFId=eighthSet.BCFId and firstSet.segmentId=eighthSet.segmentId " +
+                "and firstSet.BTSId=eighthSet.fBTSId)";
 
         return statement.executeQuery(query);
     }

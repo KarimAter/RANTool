@@ -71,6 +71,13 @@ public class Constants {
             put("471835A", "FRGM");
             put("471231A", "FRGC");
             put("472956A.102", "FRGU");
+            put("474198A.101", "AREA");
+            put("474800A.102", "ARGA");
+            put("474840A", "ARDA");
+            put("475122A", "ARDB");
+            put("474257A", "AHDB");
+            put("475432A", "AZHL");
+            put("473941A", "AZHA");
         }
     };
 
@@ -93,6 +100,13 @@ public class Constants {
             put(13, "FRGU");
             put(14, "FRGX");
             put(15, "FXEF");
+            put(16, "AREA");
+            put(17, "ARGA");
+            put(18, "ARDA");
+            put(19, "ARDB");
+            put(20, "AHDB");
+            put(21, "AZHL");
+            put(22, "AZHA");
         }
     };
 
@@ -106,6 +120,12 @@ public class Constants {
             put(5, "FSME");
             put(6, "FBBA");
             put(7, "FBBC");
+            put(8, "ASIA");
+            put(9, "ASIB");
+            put(10, "ABIA");
+            put(11, "ABIC");
+            put(12, "ABIO");
+
         }
     };
 
@@ -152,6 +172,8 @@ public class Constants {
             put("FXDA", "FXDA");
             put("AMIA AirScale Indoor Subrack", "AMIA");
             put("AMOB AirScale Outdoor Subrack", "AMOB");
+            put("CORE_ASIA AirScale Common", "ASIA");
+
         }
     };
 }

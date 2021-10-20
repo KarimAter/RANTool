@@ -138,6 +138,7 @@ public class EnodeB extends Cabinet {
 
     public void setIpData(String ips, String vlans, String ifs, String secIf, String remote, String s1If, String ifvflink, String ipvlan) {
 
+        // concatenation with ;
         this.ipIdentifier = Stream.of(ipvlan, ifs, secIf, remote, s1If)
                 .map(String::valueOf).collect(Collectors.joining(";"));
     }
